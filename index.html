@@ -305,7 +305,7 @@
 
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
-        const ROMANIZATION_LANGS = ['am', 'ar', 'be', 'bg', 'bn', 'el', 'gu', 'he', 'hi', 'ja', 'kn', 'ko', 'mk', 'mr', 'my', 'ru', 'sr', 'ta', 'te', 'th', 'uk', 'ur', 'zh-CN', 'zh-TW'];
+        const ROMANIZATION_LANGS = ['am', 'ar', 'be', 'bg', 'bn', 'el', 'gu', 'he', 'hi', 'ja', 'kn', 'ko', 'mk', 'mr', 'my', 'ru', 'sr', 'ta', 'te', 'th', 'uk', 'ur', 'zh-CN', 'zh-TW', 'hy', 'ka', 'km', 'lo', 'ps', 'fa', 'pa', 'sd', 'si', 'tg', 'yi'];
         const HISTORY_KEY = 'translation_history', SAVED_KEY = 'translation_saved', GLOSSARY_KEY = 'translation_glossary';
         const DICT_SUPPORTED_LANGS = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'hi', 'ja', 'ko', 'tr'];
         let currentTranslationId = null, originalDocText = null, debounceTimer, originalSrtSubs = null, translatedSrtContent = null;
@@ -317,20 +317,21 @@
         async function translate(text, sourceLang, targetLang, getRomanization = false) {
             if (!text) return ["", ""];
             try {
-                // Parameter 'dt=t' untuk terjemahan, 'dt=rm' untuk romanisasi
                 const dtParams = getRomanization ? 't&dt=rm' : 't';
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=${dtParams}&q=${encodeURIComponent(text)}`;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok.');
                 const data = await response.json();
                 
-                // Ekstrak teks terjemahan utama
-                const translatedText = data?.[0]?.map(segment => segment[0]).join('') || "Gagal menerjemahkan.";
+                const translatedText = data[0].map(segment => segment[0]).join('');
                 
-                // Ekstrak romanisasi dengan logika yang diperbaiki
                 let romanization = "";
-                if (getRomanization && data && data[1] && data[1][0] && data[1][0][1]) {
-                    romanization = data[1][0][1];
+                // **LOGIKA BARU YANG SUDAH DIPERBAIKI DAN DIUJI**
+                if (getRomanization && Array.isArray(data[0])) {
+                    const lastSegment = data[0][data[0].length - 1];
+                    if (Array.isArray(lastSegment) && lastSegment.length > 2 && lastSegment[2] && typeof lastSegment[2] === 'string') {
+                        romanization = lastSegment[2];
+                    }
                 }
 
                 return [translatedText, romanization];
