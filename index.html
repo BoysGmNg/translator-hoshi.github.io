@@ -75,6 +75,10 @@
             box-sizing: border-box;
             animation: rotation 1s linear infinite;
         }
+        .ai-action-btn .loader {
+             border-color: #3b82f6;
+             border-bottom-color: transparent;
+        }
         @keyframes rotation {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -110,7 +114,7 @@
                 <!-- Tabs -->
                 <div class="flex border-b border-slate-200 dark:border-gray-700 mb-4 overflow-x-auto">
                     <button class="tab-btn tab-active flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold border-b-2 border-transparent transition-colors" data-tab="text">Teks</button>
-                    <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="rewrite">AI</button>
+                    <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="ai">Ringkas AI</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="image">Gambar</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="document">Dokumen</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="subtitle">Subtitle</button>
@@ -131,7 +135,9 @@
                             <div class="p-4 border-r-0 md:border-r border-slate-200 dark:border-gray-700 flex flex-col">
                                 <textarea id="source-text" class="w-full h-48 bg-transparent resize-none focus:outline-none text-lg flex-grow" placeholder="Masukkan teks..."></textarea>
                                 <div class="flex justify-between items-center mt-2">
-                                    <div class="flex gap-2"><button id="source-speak-btn" aria-label="Dengarkan teks sumber" title="Dengarkan teks sumber" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button></div>
+                                    <div class="flex gap-2">
+                                        <button id="source-speak-btn" aria-label="Dengarkan teks sumber" title="Dengarkan teks sumber" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button>
+                                    </div>
                                     <div class="text-right text-xs text-slate-400" id="char-count">0 / 5.000</div>
                                 </div>
                             </div>
@@ -165,20 +171,22 @@
                     <div id="dictionary-result" class="mt-4 p-4 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg hidden shadow-sm"></div>
                 </div>
 
-                <!-- Rewrite Panel -->
-                <div id="rewrite-panel" class="tab-panel hidden">
+                <!-- AI Panel -->
+                <div id="ai-panel" class="tab-panel hidden">
                     <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <h2 class="text-lg font-semibold mb-2 text-center">Pengubah Gaya Tulisan (AI)</h2>
+                        <h2 class="text-lg font-semibold mb-2 text-center">Asisten Tulisan AI</h2>
                         <div class="grid md:grid-cols-2 gap-4">
-                            <textarea id="rewrite-source" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan teks (ID/EN) untuk diubah oleh AI..."></textarea>
-                            <textarea id="rewrite-result" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none" placeholder="Hasil yang disempurnakan..." readonly></textarea>
+                            <textarea id="ai-source" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan teks untuk diubah oleh AI..."></textarea>
+                            <textarea id="ai-result" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none" placeholder="Hasil yang disempurnakan oleh AI..." readonly></textarea>
                         </div>
-                        <div class="flex justify-center items-center gap-4 mt-4">
-                            <button id="rewrite-style-btn" class="bg-gray-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">Gaya: Standar</button>
-                            <button id="rewrite-btn" class="bg-blue-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span id="rewrite-btn-text">Perbaiki Teks</span>
-                                <div id="rewrite-loader" class="loader hidden"></div>
-                            </button>
+                        <div class="flex flex-wrap justify-center items-center gap-2 mt-4">
+                            <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="shorten"><span class="btn-text">Persingkat</span><div class="loader hidden"></div></button>
+                            <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="lengthen"><span class="btn-text">Perpanjang</span><div class="loader hidden"></div></button>
+                            <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="simplify"><span class="btn-text">Sederhanakan</span><div class="loader hidden"></div></button>
+                            <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="casual"><span class="btn-text">Buat Kasual</span><div class="loader hidden"></div></button>
+                            <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="professional"><span class="btn-text">Buat Profesional</span><div class="loader hidden"></div></button>
+                            <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="informative"><span class="btn-text">Buat Informatif</span><div class="loader hidden"></div></button>
+                            <button id="ai-change-style-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Ubah Gaya Lainnya...</button>
                         </div>
                     </div>
                 </div>
@@ -268,9 +276,9 @@
     <div id="history-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Histori Terjemahan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="history-list" class="p-4 overflow-y-auto scrollable"></div></div></div>
     <div id="saved-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Terjemahan Tersimpan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="saved-list" class="p-4 overflow-y-auto scrollable"></div></div></div>
     <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pengaturan Suara</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><fieldset><legend class="font-semibold mb-2">Kecepatan Suara</legend><div class="flex gap-4" id="speed-settings"><label><input type="radio" name="speed" value="1" checked> Normal</label><label><input type="radio" name="speed" value="0.7"> Lambat</label><label><input type="radio" name="speed" value="0.4"> Lebih Lambat</label></div></fieldset><fieldset><legend class="font-semibold mb-2">Jenis Suara</legend><div class="flex gap-4" id="voice-settings"><label><input type="radio" name="voice" value="female" checked> Wanita</label><label><input type="radio" name="voice" value="male"> Pria</label></div></fieldset></div></div></div>
-    <div id="rewrite-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="rewrite-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="rewrite-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="rewrite-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="rewrite-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="rewrite-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="rewrite-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="rewrite-style" value="Kasual"> Kasual</label><label class="block"><input type="radio" name="rewrite-style" value="Percaya Diri"> Percaya Diri</label><label class="block"><input type="radio" name="rewrite-style" value="Ramah"> Ramah</label><label class="block"><input type="radio" name="rewrite-style" value="Senang"> Senang</label><label class="block"><input type="radio" name="rewrite-style" value="Gembira"> Gembira</label><label class="block"><input type="radio" name="rewrite-style" value="Marah"> Marah</label><label class="block"><input type="radio" name="rewrite-style" value="Sedih"> Sedih</label><label class="block"><input type="radio" name="rewrite-style" value="Menjiwai"> Menjiwai</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan</button></div></div></div>
+    <div id="ai-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="ai-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="ai-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="ai-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="ai-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="ai-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="ai-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="ai-style" value="Kasual"> Kasual</label><label class="block"><input type="radio" name="ai-style" value="Percaya Diri"> Percaya Diri</label><label class="block"><input type="radio" name="ai-style" value="Ramah"> Ramah</label><label class="block"><input type="radio" name="ai-style" value="Senang"> Senang</label><label class="block"><input type="radio" name="ai-style" value="Gembira"> Gembira</label><label class="block"><input type="radio" name="ai-style" value="Marah"> Marah</label><label class="block"><input type="radio" name="ai-style" value="Sedih"> Sedih</label><label class="block"><input type="radio" name="ai-style" value="Menjiwai"> Menjiwai</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Gaya</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
-
+    
     <!-- Notification -->
     <div id="notification" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300">Teks disalin!</div>
 
@@ -299,10 +307,10 @@
         const sourceSpeakBtn = document.getElementById('source-speak-btn'), targetSpeakBtn = document.getElementById('target-speak-btn');
         const copyBtn = document.getElementById('copy-btn'), shareBtn = document.getElementById('share-btn'), googleSearchBtn = document.getElementById('google-search-btn');
         const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal');
-        const rewriteSourceEl = document.getElementById('rewrite-source'), rewriteResultEl = document.getElementById('rewrite-result'), rewriteBtn = document.getElementById('rewrite-btn'), rewriteStyleBtn = document.getElementById('rewrite-style-btn'), rewriteStyleModal = document.getElementById('rewrite-style-modal'), applyStyleBtn = document.getElementById('apply-style-btn'), rewriteBtnText = document.getElementById('rewrite-btn-text'), rewriteLoader = document.getElementById('rewrite-loader');
+        const aiSourceEl = document.getElementById('ai-source'), aiResultEl = document.getElementById('ai-result'), aiChangeStyleBtn = document.getElementById('ai-change-style-btn'), aiStyleModal = document.getElementById('ai-style-modal'), applyStyleBtn = document.getElementById('apply-style-btn');
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
-
+        
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
         const ROMANIZATION_LANGS = ['am', 'ar', 'be', 'bg', 'bn', 'el', 'gu', 'he', 'hi', 'ja', 'kn', 'ko', 'mk', 'mr', 'my', 'ru', 'sr', 'ta', 'te', 'th', 'uk', 'ur', 'zh-CN', 'zh-TW', 'hy', 'ka', 'km', 'lo', 'ps', 'fa', 'pa', 'sd', 'si', 'tg', 'yi'];
@@ -326,7 +334,6 @@
                 const translatedText = data[0].map(segment => segment[0]).join('');
                 
                 let romanization = "";
-                // **LOGIKA BARU YANG SUDAH DIPERBAIKI DAN DIUJI**
                 if (getRomanization && Array.isArray(data[0])) {
                     const lastSegment = data[0][data[0].length - 1];
                     if (Array.isArray(lastSegment) && lastSegment.length > 2 && lastSegment[2] && typeof lastSegment[2] === 'string') {
@@ -545,7 +552,44 @@
         async function handleDocumentUpload(file) { if (!file) return; docStatus.textContent = `Membaca file: ${file.name}...`; originalDocText = null; const reader = new FileReader(); reader.onload = async (e) => { const text = e.target.result; originalDocText = text; docStatus.textContent = 'Menerjemahkan konten...'; const [translated] = await translate(text, 'auto', docTargetLangEl.value); docTextResult.textContent = translated; docStatus.textContent = 'Terjemahan dokumen selesai.'; saveToHistory({ id: Date.now(), sourceLang: 'auto', targetLang: docTargetLangEl.value, sourceText: `[Dokumen: ${file.name}]`, translatedText: translated }); }; reader.onerror = () => { docStatus.textContent = 'Gagal membaca file.'; }; reader.readAsText(file); }
         function handleSiteTranslation() { const url = siteUrlInput.value.trim(); if (!url.startsWith('http')) { showNotification('URL tidak valid. Contoh: https://example.com'); return; } const targetLang = siteTargetLangEl.value; const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=${targetLang}&u=${encodeURIComponent(url)}`; window.open(googleTranslateUrl, '_blank'); }
         function handleSaveClick() { if (!currentTranslationId) return; let saved = getFromStorage(SAVED_KEY); const history = getFromStorage(HISTORY_KEY); const isAlreadySaved = saved.some(item => item.id === currentTranslationId); if (isAlreadySaved) { saved = saved.filter(item => item.id !== currentTranslationId); showNotification("Dihapus dari simpanan."); } else { const itemToSave = history.find(item => item.id === currentTranslationId); if (itemToSave) saved.unshift(itemToSave); showNotification("Terjemahan disimpan!"); } saveToStorage(SAVED_KEY, saved); updateSaveButtonState(); }
-        async function handleRewrite() { const text = rewriteSourceEl.value.trim(); if (!text) return; const style = document.querySelector('input[name="rewrite-style"]:checked').value; rewriteBtn.disabled = true; rewriteBtnText.classList.add('hidden'); rewriteLoader.classList.remove('hidden'); rewriteResultEl.value = 'AI sedang berpikir...'; const prompt = `Perbaiki dan ubah gaya tulisan berikut menjadi lebih "${style}" agar lebih jelas, profesional, dan ringkas tanpa mengubah makna aslinya. Berikan hanya teks yang sudah diubah gayanya. Teks: "${text}"`; const result = await callGeminiAPI(prompt); rewriteResultEl.value = result; rewriteBtn.disabled = false; rewriteBtnText.classList.remove('hidden'); rewriteLoader.add('hidden'); }
+        
+        async function handleAiAction(action, buttonEl) {
+            const text = aiSourceEl.value.trim();
+            if (!text) {
+                showNotification("Masukkan teks terlebih dahulu.");
+                return;
+            }
+
+            let instruction = '';
+            switch (action) {
+                case 'shorten': instruction = 'Ringkas teks berikut menjadi lebih pendek dan padat'; break;
+                case 'lengthen': instruction = 'Perpanjang teks berikut agar lebih detail dan deskriptif'; break;
+                case 'simplify': instruction = 'Sederhanakan teks berikut agar lebih mudah dipahami oleh orang awam'; break;
+                case 'casual': instruction = 'Ubah gaya tulisan berikut menjadi lebih kasual dan santai'; break;
+                case 'professional': instruction = 'Ubah gaya tulisan berikut menjadi lebih profesional dan formal'; break;
+                case 'informative': instruction = 'Kembangkan teks berikut agar lebih informatif dengan menambahkan detail atau data yang relevan'; break;
+                default:
+                    // Untuk gaya dari modal
+                    instruction = `Ubah gaya tulisan berikut menjadi lebih "${action}"`;
+            }
+
+            const prompt = `${instruction}, tanpa mengubah makna aslinya. Berikan hanya teks hasilnya saja. Teks: "${text}"`;
+            
+            buttonEl.disabled = true;
+            const loader = buttonEl.querySelector('.loader');
+            const btnText = buttonEl.querySelector('.btn-text');
+            if(loader) loader.classList.remove('hidden');
+            if(btnText) btnText.classList.add('hidden');
+            aiResultEl.value = 'AI sedang berpikir...';
+
+            const result = await callGeminiAPI(prompt);
+            aiResultEl.value = result;
+
+            buttonEl.disabled = false;
+            if(loader) loader.classList.add('hidden');
+            if(btnText) btnText.classList.remove('hidden');
+        }
+
         async function handleSubtitleUpload(file) { if (!file) return; videoStatusEl.textContent = 'Membaca file subtitle...'; const srtContent = await file.text(); subtitleOriginalEl.textContent = srtContent; originalSrtSubs = parseSRT(srtContent); await retranslateSubtitles(); }
         async function retranslateSubtitles() { if (!originalSrtSubs) return; videoStatusEl.textContent = `Menerjemahkan ${originalSrtSubs.length} baris subtitle dengan AI...`; const targetLang = languages[videoTargetLangEl.value]; const allText = originalSrtSubs.map(s => s.text).join('\n---\n'); const prompt = `Translate the following subtitle lines to ${targetLang}. Maintain the line breaks separated by "---". Provide only the translated text, with "---" as the separator. Text:\n${allText}`; const translatedBlob = await callGeminiAPI(prompt); const translatedLines = translatedBlob.split('\n---\n'); if (translatedLines.length !== originalSrtSubs.length) { videoStatusEl.textContent = 'Error: AI translation returned unexpected format.'; return; } originalSrtSubs.forEach((sub, index) => { sub.translatedText = translatedLines[index] || sub.text; }); translatedSrtContent = generateSRT(originalSrtSubs); subtitleTranslatedEl.textContent = translatedSrtContent; downloadSrtBtn.classList.remove('hidden'); videoStatusEl.textContent = 'Subtitle siap diunduh!'; }
         function handleDownloadSRT() { if (!translatedSrtContent) return; const blob = new Blob([translatedSrtContent], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'subtitle_terjemahan.srt'; a.click(); URL.revokeObjectURL(url); }
@@ -578,7 +622,15 @@
         const exampleImageUrl = 'https://placehold.co/600x400/FFFFFF/000000/png?text=Halo!%5CnApa+kabar%3F&font=inter';
         handleImageTranslation(exampleImageUrl);
 
-        sourceTextEl.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(handleTextTranslation, 500); charCountEl.textContent = `${sourceTextEl.value.length} / 5.000`; currentTranslationId = null; updateSaveButtonState(); });
+        function triggerTranslationUpdate() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(handleTextTranslation, 500);
+            charCountEl.textContent = `${sourceTextEl.value.length} / 5.000`;
+            currentTranslationId = null;
+            updateSaveButtonState();
+        }
+
+        sourceTextEl.addEventListener('input', triggerTranslationUpdate);
         targetLangEl.addEventListener('change', handleTextTranslation);
         swapBtn.addEventListener('click', handleSwap);
         
@@ -626,12 +678,14 @@
         document.getElementById('speed-settings').addEventListener('change', saveVoiceSettings);
         document.getElementById('voice-settings').addEventListener('change', saveVoiceSettings);
         
-        rewriteBtn.addEventListener('click', handleRewrite);
-        rewriteStyleBtn.addEventListener('click', () => rewriteStyleModal.classList.add('flex'));
+        document.querySelectorAll('.ai-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => handleAiAction(e.currentTarget.dataset.action, e.currentTarget));
+        });
+        aiChangeStyleBtn.addEventListener('click', () => aiStyleModal.classList.add('flex'));
         applyStyleBtn.addEventListener('click', () => {
-            const selectedStyle = document.querySelector('input[name="rewrite-style"]:checked').value;
-            rewriteStyleBtn.textContent = `Gaya: ${selectedStyle}`;
-            rewriteStyleModal.classList.remove('flex');
+            const selectedStyle = document.querySelector('input[name="ai-style"]:checked').value;
+            handleAiAction(selectedStyle, aiChangeStyleBtn);
+            aiStyleModal.classList.remove('flex');
         });
         
         subtitleUpload.addEventListener('change', e => handleSubtitleUpload(e.target.files[0]));
@@ -642,6 +696,7 @@
         glossaryManageBtn.addEventListener('click', () => { renderGlossary(); glossaryModal.classList.add('flex'); });
         addGlossaryBtn.addEventListener('click', () => { const sourceText = glossarySourceText.value.trim(); const targetText = glossaryTargetText.value.trim(); if (!sourceText || !targetText) return; let glossary = getFromStorage(GLOSSARY_KEY); glossary.push({ sourceLang: glossarySourceLang.value, targetLang: glossaryTargetLang.value, sourceText, targetText }); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); glossarySourceText.value = ''; glossaryTargetText.value = ''; });
         glossaryListEl.addEventListener('click', e => { if (e.target.classList.contains('delete-glossary-btn')) { let glossary = getFromStorage(GLOSSARY_KEY); glossary.splice(e.target.dataset.index, 1); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); } });
+    
     });
     </script>
 </body>
