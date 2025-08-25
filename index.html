@@ -45,7 +45,13 @@
         .saved .save-btn-icon { fill: currentColor; stroke: currentColor; }
         
         /* Pratinjau Gambar & Drop Zone */
-        #image-preview-container canvas { max-width: 100%; height: auto; object-fit: contain; border-radius: 0.5rem; }
+        #image-viewport { cursor: grab; overflow: hidden; border-radius: 0.5rem; position: relative; }
+        #image-viewport:active { cursor: grabbing; }
+        #image-transformer { transition: transform 0.1s ease-out; }
+        #image-preview-container { position: relative; }
+        #image-preview-container canvas { max-width: 100%; height: auto; display: block; }
+        #translated-canvas { position: absolute; top: 0; left: 0; }
+
         .drop-zone { border: 2px dashed #d1d5db; transition: background-color 0.2s, border-color 0.2s; }
         .dark .drop-zone { border-color: #4b5563; }
         .dragover { background-color: #e0f2fe; border-color: #3b82f6; }
@@ -55,8 +61,8 @@
         .dict-word { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
         .toggle-label { transition: background-color 0.2s ease-in; }
         .toggle-label .dot { transition: transform 0.2s ease-in; }
-        #glossary-toggle:checked + .toggle-label { background-color: #3b82f6; }
-        #glossary-toggle:checked + .toggle-label .dot { transform: translateX(100%); }
+        #glossary-toggle:checked + .toggle-label, #compare-toggle:checked + .toggle-label { background-color: #3b82f6; }
+        #glossary-toggle:checked + .toggle-label .dot, #compare-toggle:checked + .toggle-label .dot { transform: translateX(100%); }
 
         /* Loader/Spinner untuk Tombol AI */
         .loader {
@@ -140,7 +146,10 @@
                                     </label>
                                     <button id="glossary-manage-btn" class="ml-2 text-blue-500 hover:underline text-sm font-semibold hidden">Kelola</button>
                                 </div>
-                                <div id="translated-output" class="w-full h-48 bg-transparent resize-none text-lg flex-grow overflow-y-auto scrollable"></div>
+                                <div id="translated-output-container" class="w-full h-48 bg-transparent resize-none text-lg flex-grow overflow-y-auto scrollable">
+                                    <div id="translated-output"></div>
+                                    <div id="romanization-output" class="text-base italic text-slate-500 dark:text-slate-400 mt-1"></div>
+                                </div>
                                 <div class="flex justify-between items-center mt-2">
                                     <div class="flex gap-2"><button id="target-speak-btn" aria-label="Dengarkan terjemahan" title="Dengarkan terjemahan" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button></div>
                                     <div class="flex gap-2">
@@ -183,8 +192,27 @@
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">atau seret & lepas gambar di sini</p>
                         <div id="ocr-status" class="mt-4 text-sm font-medium"></div>
                         <div id="ocr-progress" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-2 hidden"><div id="ocr-progress-bar" class="bg-blue-600 h-2.5 rounded-full"></div></div>
-                        <div id="image-preview-container" class="mt-4 w-full bg-slate-100 dark:bg-gray-700 rounded-lg flex items-center justify-center min-h-[300px]">
-                            <!-- Canvas akan dimasukkan di sini oleh JavaScript -->
+                        
+                        <div id="image-viewport" class="mt-4 w-full bg-slate-100 dark:bg-gray-700 min-h-[300px]">
+                            <div id="image-transformer">
+                                <div id="image-preview-container">
+                                    <!-- Canvases will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="image-controls" class="mt-4 flex items-center justify-center gap-4 bg-slate-100 dark:bg-gray-700 p-2 rounded-lg">
+                            <button id="zoom-out-btn" class="font-bold text-lg px-3 py-1 rounded-md hover:bg-slate-200 dark:hover:bg-gray-600">-</button>
+                            <span id="zoom-level-display" class="font-semibold text-sm w-16 text-center">100%</span>
+                            <button id="zoom-in-btn" class="font-bold text-lg px-3 py-1 rounded-md hover:bg-slate-200 dark:hover:bg-gray-600">+</button>
+                            <button id="reset-view-btn" class="text-sm font-semibold px-3 py-1 rounded-md hover:bg-slate-200 dark:hover:bg-gray-600">Reset</button>
+                            <label for="compare-toggle" class="flex items-center cursor-pointer text-sm font-medium text-slate-600 dark:text-slate-300">
+                                <div class="relative inline-block w-10 ml-2 align-middle select-none">
+                                    <input type="checkbox" name="toggle" id="compare-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="compare-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer"><span class="dot absolute left-0 top-0 block w-6 h-6 rounded-full bg-white shadow-md"></span></label>
+                                </div>
+                                <span class="ml-2">Bandingkan Asli</span>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -240,7 +268,7 @@
     <div id="history-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Histori Terjemahan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="history-list" class="p-4 overflow-y-auto scrollable"></div></div></div>
     <div id="saved-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Terjemahan Tersimpan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="saved-list" class="p-4 overflow-y-auto scrollable"></div></div></div>
     <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pengaturan Suara</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><fieldset><legend class="font-semibold mb-2">Kecepatan Suara</legend><div class="flex gap-4" id="speed-settings"><label><input type="radio" name="speed" value="1" checked> Normal</label><label><input type="radio" name="speed" value="0.7"> Lambat</label><label><input type="radio" name="speed" value="0.4"> Lebih Lambat</label></div></fieldset><fieldset><legend class="font-semibold mb-2">Jenis Suara</legend><div class="flex gap-4" id="voice-settings"><label><input type="radio" name="voice" value="female" checked> Wanita</label><label><input type="radio" name="voice" value="male"> Pria</label></div></fieldset></div></div></div>
-    <div id="rewrite-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="rewrite-style-options"><div class="space-y-2"><label class="block"><input type="radio" name="rewrite-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="rewrite-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="rewrite-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="rewrite-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="rewrite-style" value="Kasual"> Kasual</label><label class="block"><input type="radio" name="rewrite-style" value="Percaya Diri"> Percaya Diri</label><label class="block"><input type="radio" name="rewrite-style" value="Ramah"> Ramah</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan</button></div></div></div>
+    <div id="rewrite-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="rewrite-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="rewrite-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="rewrite-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="rewrite-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="rewrite-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="rewrite-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="rewrite-style" value="Kasual"> Kasual</label><label class="block"><input type="radio" name="rewrite-style" value="Percaya Diri"> Percaya Diri</label><label class="block"><input type="radio" name="rewrite-style" value="Ramah"> Ramah</label><label class="block"><input type="radio" name="rewrite-style" value="Senang"> Senang</label><label class="block"><input type="radio" name="rewrite-style" value="Gembira"> Gembira</label><label class="block"><input type="radio" name="rewrite-style" value="Marah"> Marah</label><label class="block"><input type="radio" name="rewrite-style" value="Sedih"> Sedih</label><label class="block"><input type="radio" name="rewrite-style" value="Menjiwai"> Menjiwai</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
 
     <!-- Notification -->
@@ -253,112 +281,77 @@
     document.addEventListener('DOMContentLoaded', () => {
 
         // --- 1. DOM ELEMENTS ---
-        // Elemen-elemen utama
         const sourceLangEl = document.getElementById('source-lang'), targetLangEl = document.getElementById('target-lang');
-        const sourceTextEl = document.getElementById('source-text'), translatedOutput = document.getElementById('translated-output');
+        const sourceTextEl = document.getElementById('source-text'), translatedOutput = document.getElementById('translated-output'), romanizationOutput = document.getElementById('romanization-output');
         const charCountEl = document.getElementById('char-count');
         const swapBtn = document.getElementById('swap-btn');
         const notification = document.getElementById('notification');
         const dictionaryResultEl = document.getElementById('dictionary-result');
-        
-        // Tema
         const themeMenuButton = document.getElementById('theme-menu-button'), themeMenu = document.getElementById('theme-menu');
-        
-        // Tab
         const tabBtns = document.querySelectorAll('.tab-btn'), tabPanels = document.querySelectorAll('.tab-panel');
-        
-        // Modal (Histori & Tersimpan)
         const historyBtn = document.getElementById('history-btn'), savedBtn = document.getElementById('saved-btn');
         const historyModal = document.getElementById('history-modal'), savedModal = document.getElementById('saved-modal');
         const historyList = document.getElementById('history-list'), savedList = document.getElementById('saved-list');
-        
-        // Fitur Terjemahan Gambar (OCR)
-        const imageUpload = document.getElementById('image-upload'), ocrStatus = document.getElementById('ocr-status'), ocrProgress = document.getElementById('ocr-progress'), ocrProgressBar = document.getElementById('ocr-progress-bar'), imagePreviewContainer = document.getElementById('image-preview-container'), imageTargetLangEl = document.getElementById('image-target-lang'), imageDropZone = document.getElementById('image-drop-zone');
-        
-        // Fitur Terjemahan Dokumen
+        const imageUpload = document.getElementById('image-upload'), ocrStatus = document.getElementById('ocr-status'), ocrProgress = document.getElementById('ocr-progress'), ocrProgressBar = document.getElementById('ocr-progress-bar'), imagePreviewContainer = document.getElementById('image-preview-container'), imageTargetLangEl = document.getElementById('image-target-lang'), imageDropZone = document.getElementById('image-drop-zone'), imageViewport = document.getElementById('image-viewport'), imageTransformer = document.getElementById('image-transformer'), zoomInBtn = document.getElementById('zoom-in-btn'), zoomOutBtn = document.getElementById('zoom-out-btn'), zoomLevelDisplay = document.getElementById('zoom-level-display'), resetViewBtn = document.getElementById('reset-view-btn'), compareToggle = document.getElementById('compare-toggle');
         const docUpload = document.getElementById('doc-upload'), docStatus = document.getElementById('doc-status'), docTextResult = document.getElementById('doc-text-result'), docTargetLangEl = document.getElementById('doc-target-lang'), docDropZone = document.getElementById('doc-drop-zone');
-        
-        // Fitur Terjemahan Situs
         const siteUrlInput = document.getElementById('site-url-input'), translateSiteBtn = document.getElementById('translate-site-btn'), siteTargetLangEl = document.getElementById('site-target-lang');
-        
-        // Tombol Aksi
         const saveTranslationBtn = document.getElementById('save-translation-btn');
         const sourceSpeakBtn = document.getElementById('source-speak-btn'), targetSpeakBtn = document.getElementById('target-speak-btn');
         const copyBtn = document.getElementById('copy-btn'), shareBtn = document.getElementById('share-btn'), googleSearchBtn = document.getElementById('google-search-btn');
-        
-        // Modal Pengaturan
         const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal');
-        
-        // Fitur AI Rewrite
         const rewriteSourceEl = document.getElementById('rewrite-source'), rewriteResultEl = document.getElementById('rewrite-result'), rewriteBtn = document.getElementById('rewrite-btn'), rewriteStyleBtn = document.getElementById('rewrite-style-btn'), rewriteStyleModal = document.getElementById('rewrite-style-modal'), applyStyleBtn = document.getElementById('apply-style-btn'), rewriteBtnText = document.getElementById('rewrite-btn-text'), rewriteLoader = document.getElementById('rewrite-loader');
-        
-        // Fitur Terjemahan Subtitle
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
-        
-        // Fitur Glosarium
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
-
 
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
+        const ROMANIZATION_LANGS = ['am', 'ar', 'be', 'bg', 'bn', 'el', 'gu', 'he', 'hi', 'ja', 'kn', 'ko', 'mk', 'mr', 'my', 'ru', 'sr', 'ta', 'te', 'th', 'uk', 'ur', 'zh-CN', 'zh-TW'];
         const HISTORY_KEY = 'translation_history', SAVED_KEY = 'translation_saved', GLOSSARY_KEY = 'translation_glossary';
         const DICT_SUPPORTED_LANGS = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'hi', 'ja', 'ko', 'tr'];
         let currentTranslationId = null, originalDocText = null, debounceTimer, originalSrtSubs = null, translatedSrtContent = null;
-        let currentImageSrc = null; // Menyimpan src gambar saat ini untuk re-translate
+        let currentImageSrc = null;
+        let zoomState = { level: 1, pan: { x: 0, y: 0 }, isPanning: false, start: { x: 0, y: 0 } };
         
         // --- 3. API & CORE FUNCTIONS ---
 
-        /**
-         * Menerjemahkan teks menggunakan Google Translate API tidak resmi.
-         * @param {string} text - Teks yang akan diterjemahkan.
-         * @param {string} sourceLang - Kode bahasa sumber.
-         * @param {string} targetLang - Kode bahasa tujuan.
-         * @returns {Promise<string>} Teks yang telah diterjemahkan.
-         */
-        async function translate(text, sourceLang, targetLang) {
-            if (!text) return "";
+        async function translate(text, sourceLang, targetLang, getRomanization = false) {
+            if (!text) return ["", ""];
             try {
-                const textWithTokens = text.replace(/\n/g, '|||');
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(textWithTokens)}`;
+                // Parameter 'dt=t' untuk terjemahan, 'dt=rm' untuk romanisasi
+                const dtParams = getRomanization ? 't&dt=rm' : 't';
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=${dtParams}&q=${encodeURIComponent(text)}`;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok.');
                 const data = await response.json();
-                let translatedText = data?.[0]?.map(segment => segment[0]).join('') || "Gagal menerjemahkan.";
-                return translatedText.replace(/\|\|\|/g, '\n');
+                
+                // Ekstrak teks terjemahan utama
+                const translatedText = data?.[0]?.map(segment => segment[0]).join('') || "Gagal menerjemahkan.";
+                
+                // Ekstrak romanisasi dengan logika yang diperbaiki
+                let romanization = "";
+                if (getRomanization && data && data[1] && data[1][0] && data[1][0][1]) {
+                    romanization = data[1][0][1];
+                }
+
+                return [translatedText, romanization];
             } catch (error) {
                 console.error('Translation error:', error);
-                return 'Terjadi kesalahan saat menerjemahkan.';
+                return ['Terjadi kesalahan saat menerjemahkan.', ''];
             }
         }
 
-        /**
-         * Menghubungi Gemini API untuk memproses prompt.
-         * @param {string} prompt - Prompt yang akan dikirim ke AI.
-         * @returns {Promise<string>} Respons teks dari AI.
-         */
         async function callGeminiAPI(prompt) {
-            // Kunci API yang Anda berikan telah dimasukkan di sini.
             const apiKey = "AIzaSyCbGaxl_qYZuZvREoGtUHW7UM1daPOnxfU"; 
-            
-            if (!apiKey) {
-                return "Kesalahan: Kunci API Gemini belum diatur.";
-            }
+            if (!apiKey) return "Kesalahan: Kunci API Gemini belum diatur.";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
-                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                    return result.candidates[0].content.parts[0].text;
-                } else {
-                    console.error("Unexpected Gemini API response:", result);
-                    const reason = result.promptFeedback?.blockReason || 'alasan keamanan';
-                    return `Permintaan diblokir oleh AI karena: ${reason}. Coba dengan teks yang berbeda.`;
-                }
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) return result.candidates[0].content.parts[0].text;
+                console.error("Unexpected Gemini API response:", result);
+                const reason = result.promptFeedback?.blockReason || 'alasan keamanan';
+                return `Permintaan diblokir oleh AI karena: ${reason}. Coba dengan teks yang berbeda.`;
             } catch (error) {
                 console.error("Gemini API Error:", error);
                 return "Gagal menghubungi AI. Periksa koneksi internet atau kunci API Anda, lalu coba lagi.";
@@ -381,14 +374,55 @@
         function generateSRT(subs) { return subs.map(s => `${s.id}\n${s.startTime} --> ${s.endTime}\n${s.translatedText}`).join('\n\n'); }
         
         // --- 5. EVENT HANDLERS ---
-        async function handleTextTranslation() { let sourceText = sourceTextEl.value.trim(); translatedOutput.innerHTML = ''; dictionaryResultEl.classList.add('hidden'); if (!sourceText) return; if (glossaryToggle.checked) { sourceText = applyGlossary(sourceText, sourceLangEl.value, targetLangEl.value); } translatedOutput.textContent = 'Menerjemahkan...'; const translated = await translate(sourceText, sourceLangEl.value, targetLangEl.value); const words = translated.split(/(\s+)/); translatedOutput.innerHTML = ''; words.forEach(word => { if (word.trim().length > 0) { const span = document.createElement('span'); span.textContent = word; span.className = 'dict-word'; span.onclick = () => getDefinition(word.trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""), targetLangEl.value); translatedOutput.appendChild(span); } else { translatedOutput.appendChild(document.createTextNode(word)); } }); currentTranslationId = Date.now(); saveToHistory({ id: currentTranslationId, sourceLang: sourceLangEl.value, targetLang: targetLangEl.value, sourceText: sourceTextEl.value.trim(), translatedText: translated }); updateSaveButtonState(); }
+        async function handleTextTranslation() {
+            let sourceText = sourceTextEl.value.trim();
+            translatedOutput.innerHTML = '';
+            romanizationOutput.innerHTML = '';
+            dictionaryResultEl.classList.add('hidden');
+            if (!sourceText) return;
+
+            if (glossaryToggle.checked) {
+                sourceText = applyGlossary(sourceText, sourceLangEl.value, targetLangEl.value);
+            }
+
+            translatedOutput.textContent = 'Menerjemahkan...';
+            const needsRomanization = ROMANIZATION_LANGS.includes(targetLangEl.value);
+            const [translated, romanization] = await translate(sourceText, sourceLangEl.value, targetLangEl.value, needsRomanization);
+            
+            const words = translated.split(/(\s+)/);
+            translatedOutput.innerHTML = '';
+            words.forEach(word => {
+                if (word.trim().length > 0) {
+                    const span = document.createElement('span');
+                    span.textContent = word;
+                    span.className = 'dict-word';
+                    span.onclick = () => getDefinition(word.trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""), targetLangEl.value);
+                    translatedOutput.appendChild(span);
+                } else {
+                    translatedOutput.appendChild(document.createTextNode(word));
+                }
+            });
+
+            if (romanization) {
+                romanizationOutput.textContent = romanization;
+            }
+
+            currentTranslationId = Date.now();
+            saveToHistory({ id: currentTranslationId, sourceLang: sourceLangEl.value, targetLang: targetLangEl.value, sourceText: sourceTextEl.value.trim(), translatedText: translated });
+            updateSaveButtonState();
+        }
         
-        /**
-         * Fungsi utama untuk memproses terjemahan gambar, kini menggunakan AI Gemini untuk akurasi lebih tinggi.
-         * @param {string|File} imageSource - Bisa berupa URL gambar atau objek File
-         */
+        function getFitFontSize(ctx, text, fontFace, maxWidth, maxHeight) {
+            let fontSize = maxHeight;
+            do {
+                ctx.font = `bold ${fontSize--}px ${fontFace}`;
+            } while (ctx.measureText(text).width > maxWidth && fontSize > 5);
+            return fontSize + 1;
+        }
+
         async function handleImageTranslation(imageSource) {
             if (!imageSource) return;
+            resetZoom();
             ocrStatus.textContent = 'Memuat gambar...';
             ocrProgress.classList.remove('hidden');
             ocrProgressBar.style.width = '0%';
@@ -397,12 +431,21 @@
             const img = new Image();
             img.crossOrigin = "Anonymous";
             img.onload = async () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                imagePreviewContainer.appendChild(canvas);
+                const originalCanvas = document.createElement('canvas');
+                originalCanvas.id = 'original-canvas';
+                const translatedCanvas = document.createElement('canvas');
+                translatedCanvas.id = 'translated-canvas';
+
+                [originalCanvas, translatedCanvas].forEach(canvas => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                });
+                
+                imagePreviewContainer.append(originalCanvas, translatedCanvas);
+                compareToggle.checked = false;
+                translatedCanvas.style.visibility = 'visible';
 
                 try {
                     ocrStatus.textContent = 'Mempersiapkan pendeteksian teks...';
@@ -423,40 +466,36 @@
 
                     ocrStatus.textContent = `Terdeteksi ${data.lines.length} baris teks. Menerjemahkan dengan AI...`;
                     
-                    // Menggabungkan semua teks yang terdeteksi dengan pemisah unik
                     const originalTexts = data.lines.map(line => line.text.trim()).join('\n---\n');
                     const targetLangName = languages[imageTargetLangEl.value] || 'English';
                     
-                    // Membuat prompt yang jelas untuk AI
-                    const prompt = `Translate the following text lines to ${targetLangName}. Each line is separated by "---". Maintain the exact number of lines and the "---" separator in your response. Provide only the translated text.\n\nOriginal text:\n${originalTexts}`;
+                    const prompt = `Translate the following text lines to ${targetLangName}, considering the full context. Each line is separated by "---". Maintain the exact number of lines and the "---" separator in your response. Provide only the high-quality, natural-sounding translated text.\n\nOriginal text:\n${originalTexts}`;
                     
-                    // Memanggil Gemini API untuk terjemahan yang lebih baik
                     const translatedBlob = await callGeminiAPI(prompt);
                     const translatedTexts = translatedBlob.split('\n---\n');
 
                     if (translatedTexts.length !== data.lines.length) {
                          console.warn("Mismatch between original and translated line count. Fallback to simple translation.");
-                         // Fallback jika AI tidak mengembalikan format yang benar
-                         const fallbackTranslation = (await translate(originalTexts.replace(/\n---\n/g, '\n'), 'auto', imageTargetLangEl.value)).split('\n');
-                         translatedTexts.splice(0, translatedTexts.length, ...fallbackTranslation);
+                         const [fallbackTranslation] = await translate(originalTexts.replace(/\n---\n/g, '\n'), 'auto', imageTargetLangEl.value);
+                         translatedTexts.splice(0, translatedTexts.length, ...fallbackTranslation.split('\n'));
                     }
-
-                    // Gambar ulang dengan teks terjemahan
-                    ctx.drawImage(img, 0, 0);
                     
+                    const translatedCtx = translatedCanvas.getContext('2d');
                     data.lines.forEach((line, index) => {
                         const bbox = line.bbox;
                         const translatedText = translatedTexts[index]?.trim() || '';
+                        
+                        translatedCtx.fillStyle = getAverageColor(translatedCtx, bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
+                        translatedCtx.fillRect(bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
 
-                        ctx.fillStyle = getAverageColor(ctx, bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
-                        ctx.fillRect(bbox.x0, bbox.y0, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0);
-
-                        const fontSize = (bbox.y1 - bbox.y0) * 0.8;
-                        ctx.font = `bold ${fontSize}px 'Inter', sans-serif`;
-                        ctx.fillStyle = 'black';
-                        ctx.textAlign = 'left';
-                        ctx.textBaseline = 'top';
-                        ctx.fillText(translatedText, bbox.x0, bbox.y0 + (bbox.y1 - bbox.y0) * 0.1); // Penyesuaian kecil posisi vertikal
+                        const maxFontSize = (bbox.y1 - bbox.y0) * 0.9;
+                        const fittedSize = getFitFontSize(translatedCtx, translatedText, "'Inter', sans-serif", bbox.x1 - bbox.x0, maxFontSize);
+                        
+                        translatedCtx.font = `bold ${fittedSize}px 'Inter', sans-serif`;
+                        translatedCtx.fillStyle = 'black';
+                        translatedCtx.textAlign = 'left';
+                        translatedCtx.textBaseline = 'middle';
+                        translatedCtx.fillText(translatedText, bbox.x0, bbox.y0 + (bbox.y1 - bbox.y0) / 2);
                     });
 
                     ocrStatus.textContent = 'Terjemahan gambar AI selesai!';
@@ -483,7 +522,6 @@
         
         function getAverageColor(ctx, x, y, width, height) {
             try {
-                // Ambil sampel dari area yang sedikit lebih kecil untuk menghindari tepi huruf
                 const sampleX = x + width * 0.1;
                 const sampleY = y + height * 0.1;
                 const sampleWidth = Math.max(1, width * 0.8);
@@ -503,7 +541,7 @@
         }
 
 
-        async function handleDocumentUpload(file) { if (!file) return; docStatus.textContent = `Membaca file: ${file.name}...`; originalDocText = null; const reader = new FileReader(); reader.onload = async (e) => { const text = e.target.result; originalDocText = text; docStatus.textContent = 'Menerjemahkan konten...'; const translated = await translate(text, 'auto', docTargetLangEl.value); docTextResult.textContent = translated; docStatus.textContent = 'Terjemahan dokumen selesai.'; saveToHistory({ id: Date.now(), sourceLang: 'auto', targetLang: docTargetLangEl.value, sourceText: `[Dokumen: ${file.name}]`, translatedText: translated }); }; reader.onerror = () => { docStatus.textContent = 'Gagal membaca file.'; }; reader.readAsText(file); }
+        async function handleDocumentUpload(file) { if (!file) return; docStatus.textContent = `Membaca file: ${file.name}...`; originalDocText = null; const reader = new FileReader(); reader.onload = async (e) => { const text = e.target.result; originalDocText = text; docStatus.textContent = 'Menerjemahkan konten...'; const [translated] = await translate(text, 'auto', docTargetLangEl.value); docTextResult.textContent = translated; docStatus.textContent = 'Terjemahan dokumen selesai.'; saveToHistory({ id: Date.now(), sourceLang: 'auto', targetLang: docTargetLangEl.value, sourceText: `[Dokumen: ${file.name}]`, translatedText: translated }); }; reader.onerror = () => { docStatus.textContent = 'Gagal membaca file.'; }; reader.readAsText(file); }
         function handleSiteTranslation() { const url = siteUrlInput.value.trim(); if (!url.startsWith('http')) { showNotification('URL tidak valid. Contoh: https://example.com'); return; } const targetLang = siteTargetLangEl.value; const googleTranslateUrl = `https://translate.google.com/translate?sl=auto&tl=${targetLang}&u=${encodeURIComponent(url)}`; window.open(googleTranslateUrl, '_blank'); }
         function handleSaveClick() { if (!currentTranslationId) return; let saved = getFromStorage(SAVED_KEY); const history = getFromStorage(HISTORY_KEY); const isAlreadySaved = saved.some(item => item.id === currentTranslationId); if (isAlreadySaved) { saved = saved.filter(item => item.id !== currentTranslationId); showNotification("Dihapus dari simpanan."); } else { const itemToSave = history.find(item => item.id === currentTranslationId); if (itemToSave) saved.unshift(itemToSave); showNotification("Terjemahan disimpan!"); } saveToStorage(SAVED_KEY, saved); updateSaveButtonState(); }
         async function handleRewrite() { const text = rewriteSourceEl.value.trim(); if (!text) return; const style = document.querySelector('input[name="rewrite-style"]:checked').value; rewriteBtn.disabled = true; rewriteBtnText.classList.add('hidden'); rewriteLoader.classList.remove('hidden'); rewriteResultEl.value = 'AI sedang berpikir...'; const prompt = `Perbaiki dan ubah gaya tulisan berikut menjadi lebih "${style}" agar lebih jelas, profesional, dan ringkas tanpa mengubah makna aslinya. Berikan hanya teks yang sudah diubah gayanya. Teks: "${text}"`; const result = await callGeminiAPI(prompt); rewriteResultEl.value = result; rewriteBtn.disabled = false; rewriteBtnText.classList.remove('hidden'); rewriteLoader.add('hidden'); }
@@ -516,30 +554,33 @@
         function renderList(listContainer, items, type) { listContainer.innerHTML = items.length === 0 ? `<p class="text-slate-500 dark:text-slate-400 text-center">Tidak ada item.</p>` : ''; items.forEach(item => { const isSaved = getFromStorage(SAVED_KEY).some(s => s.id === item.id); const itemEl = document.createElement('div'); itemEl.className = 'p-3 border-b dark:border-gray-700'; let buttons = ''; if (type === 'history') { buttons = `<button class="action-btn text-blue-500 disabled:text-gray-400" data-action="save" data-id="${item.id}" ${isSaved ? 'disabled' : ''}>${isSaved ? 'Tersimpan' : 'Simpan'}</button><button class="action-btn text-red-500" data-action="delete-history" data-id="${item.id}">Hapus</button>`; } else { buttons = `<button class="action-btn text-yellow-500" data-action="unsave" data-id="${item.id}">Hapus Simpanan</button>`; } itemEl.innerHTML = `<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">${languages[item.sourceLang] || 'Auto'} &rarr; ${languages[item.targetLang]}</div><p class="font-semibold truncate">${item.sourceText}</p><p class="text-blue-500 dark:text-blue-400 truncate">${item.translatedText}</p><div class="flex gap-4 mt-2 text-xs">${buttons}</div>`; listContainer.appendChild(itemEl); }); }
         function handleListAction(e) { if (!e.target.classList.contains('action-btn')) return; const { action, id } = e.target.dataset; let history = getFromStorage(HISTORY_KEY); let saved = getFromStorage(SAVED_KEY); const numericId = parseInt(id, 10); if (action === 'save') { const itemToSave = history.find(item => item.id === numericId); if (itemToSave && !saved.some(s => s.id === numericId)) { saved.unshift(itemToSave); saveToStorage(SAVED_KEY, saved); } } else if (action === 'unsave') { saved = saved.filter(item => item.id !== numericId); saveToStorage(SAVED_KEY, saved); } else if (action === 'delete-history') { history = history.filter(item => item.id !== numericId); saved = saved.filter(item => item.id !== numericId); saveToStorage(HISTORY_KEY, history); saveToStorage(SAVED_KEY, saved); } renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); updateSaveButtonState(); }
         function renderGlossary() { const glossary = getFromStorage(GLOSSARY_KEY); glossaryListEl.innerHTML = ''; glossary.forEach((entry, index) => { const itemEl = document.createElement('div'); itemEl.className = 'flex items-center justify-between p-2 border-b dark:border-gray-700'; itemEl.innerHTML = `<span>${entry.sourceText} &rarr; ${entry.targetText}</span><button data-index="${index}" class="delete-glossary-btn text-red-500 font-bold">&times;</button>`; glossaryListEl.appendChild(itemEl); }); }
+        function updateView() {
+            imageTransformer.style.transform = `scale(${zoomState.level}) translate(${zoomState.pan.x}px, ${zoomState.pan.y}px)`;
+            zoomLevelDisplay.textContent = `${Math.round(zoomState.level * 100)}%`;
+        }
+        function resetZoom() {
+            zoomState = { level: 1, pan: { x: 0, y: 0 }, isPanning: false, start: { x: 0, y: 0 } };
+            updateView();
+        }
 
         // --- 7. INITIALIZATION & EVENT LISTENERS ---
-        // Populate language dropdowns
         const sortedLanguages = Object.entries(languages).filter(([code]) => code !== 'auto').sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
         const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; sourceLangEl.appendChild(autoOption);
         const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, siteTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang];
         sortedLanguages.forEach(([code, name]) => { const option = document.createElement('option'); option.value = code; option.textContent = name; sourceLangEl.appendChild(option.cloneNode(true)); allSelects.forEach(sel => sel.appendChild(option.cloneNode(true))); });
         sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; siteTargetLangEl.value = 'id'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en';
         
-        // Load settings
         loadVoiceSettings();
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         
-        // Muat gambar contoh saat halaman dimuat
         const exampleImageUrl = 'https://placehold.co/600x400/FFFFFF/000000/png?text=Halo!%5CnApa+kabar%3F&font=inter';
         handleImageTranslation(exampleImageUrl);
 
-        // Text Translation
         sourceTextEl.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(handleTextTranslation, 500); charCountEl.textContent = `${sourceTextEl.value.length} / 5.000`; currentTranslationId = null; updateSaveButtonState(); });
         targetLangEl.addEventListener('change', handleTextTranslation);
         swapBtn.addEventListener('click', handleSwap);
         
-        // Action Buttons
         saveTranslationBtn.addEventListener('click', handleSaveClick);
         sourceSpeakBtn.addEventListener('click', () => speak(sourceTextEl.value, sourceLangEl.value));
         targetSpeakBtn.addEventListener('click', () => speak(translatedOutput.textContent, targetLangEl.value));
@@ -547,22 +588,18 @@
         googleSearchBtn.addEventListener('click', () => { if(translatedOutput.textContent) window.open(`https://www.google.com/search?q=${encodeURIComponent(translatedOutput.textContent)}`, '_blank')});
         shareBtn.addEventListener('click', async () => { if (navigator.share && translatedOutput.textContent) { try { await navigator.share({ title: 'Terjemahan', text: translatedOutput.textContent }); } catch (err) { console.error("Share error:", err); showNotification('Gagal membagikan.'); } } else { showNotification('Fitur bagikan tidak didukung.'); } });
 
-        // Theme
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
         
-        // Tabs
         tabBtns.forEach(btn => btn.addEventListener('click', () => { tabBtns.forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-slate-500', 'dark:text-slate-400'); }); btn.classList.add('tab-active'); btn.classList.remove('text-slate-500', 'dark:text-slate-400'); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); }));
         
-        // Modals
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
         document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
         historyList.addEventListener('click', handleListAction); savedList.addEventListener('click', handleListAction);
         
-        // File Uploads & Drag-n-Drop
         imageUpload.addEventListener('change', (e) => handleImageTranslation(e.target.files[0]));
         docUpload.addEventListener('change', (e) => handleDocumentUpload(e.target.files[0]));
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { [imageDropZone, docDropZone].forEach(zone => zone.addEventListener(eventName, e => e.preventDefault())); });
@@ -571,18 +608,23 @@
         imageDropZone.addEventListener('drop', e => handleImageTranslation(e.dataTransfer.files[0]));
         docDropZone.addEventListener('drop', e => handleDocumentUpload(e.dataTransfer.files[0]));
         
-        // Retranslation on language change
+        zoomInBtn.addEventListener('click', () => { zoomState.level = Math.min(4, zoomState.level + 0.25); updateView(); });
+        zoomOutBtn.addEventListener('click', () => { zoomState.level = Math.max(1, zoomState.level - 0.25); updateView(); });
+        resetViewBtn.addEventListener('click', resetZoom);
+        compareToggle.addEventListener('change', (e) => { const translatedCanvas = document.getElementById('translated-canvas'); if (translatedCanvas) { translatedCanvas.style.visibility = e.target.checked ? 'hidden' : 'visible'; } });
+        imageViewport.addEventListener('mousedown', (e) => { e.preventDefault(); zoomState.isPanning = true; zoomState.start = { x: e.clientX - zoomState.pan.x, y: e.clientY - zoomState.pan.y }; });
+        imageViewport.addEventListener('mousemove', (e) => { if (!zoomState.isPanning) return; e.preventDefault(); zoomState.pan.x = e.clientX - zoomState.start.x; zoomState.pan.y = e.clientY - zoomState.start.y; updateView(); });
+        imageViewport.addEventListener('mouseup', () => { zoomState.isPanning = false; });
+        imageViewport.addEventListener('mouseleave', () => { zoomState.isPanning = false; });
+
         imageTargetLangEl.addEventListener('change', () => handleImageTranslation(currentImageSrc));
-        docTargetLangEl.addEventListener('change', async () => { if (originalDocText) { docStatus.textContent = `Menerjemahkan ulang...`; const translated = await translate(originalDocText, 'auto', docTargetLangEl.value); docTextResult.textContent = translated; docStatus.textContent = 'Selesai.'; } });
+        docTargetLangEl.addEventListener('change', async () => { if (originalDocText) { docStatus.textContent = `Menerjemahkan ulang...`; const [translated] = await translate(originalDocText, 'auto', docTargetLangEl.value); docTextResult.textContent = translated; docStatus.textContent = 'Selesai.'; } });
         
-        // Site Translation
         translateSiteBtn.addEventListener('click', handleSiteTranslation);
         
-        // Voice Settings
         document.getElementById('speed-settings').addEventListener('change', saveVoiceSettings);
         document.getElementById('voice-settings').addEventListener('change', saveVoiceSettings);
         
-        // AI Rewrite
         rewriteBtn.addEventListener('click', handleRewrite);
         rewriteStyleBtn.addEventListener('click', () => rewriteStyleModal.classList.add('flex'));
         applyStyleBtn.addEventListener('click', () => {
@@ -591,12 +633,10 @@
             rewriteStyleModal.classList.remove('flex');
         });
         
-        // Subtitle
         subtitleUpload.addEventListener('change', e => handleSubtitleUpload(e.target.files[0]));
         downloadSrtBtn.addEventListener('click', handleDownloadSRT);
         videoTargetLangEl.addEventListener('change', retranslateSubtitles);
         
-        // Glossary
         glossaryToggle.addEventListener('change', () => { glossaryManageBtn.classList.toggle('hidden', !glossaryToggle.checked); handleTextTranslation(); });
         glossaryManageBtn.addEventListener('click', () => { renderGlossary(); glossaryModal.classList.add('flex'); });
         addGlossaryBtn.addEventListener('click', () => { const sourceText = glossarySourceText.value.trim(); const targetText = glossaryTargetText.value.trim(); if (!sourceText || !targetText) return; let glossary = getFromStorage(GLOSSARY_KEY); glossary.push({ sourceLang: glossarySourceLang.value, targetLang: glossaryTargetLang.value, sourceText, targetText }); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); glossarySourceText.value = ''; glossaryTargetText.value = ''; });
