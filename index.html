@@ -157,7 +157,14 @@
                                     <div id="romanization-output" class="text-base italic text-slate-500 dark:text-slate-400 mt-1"></div>
                                 </div>
                                 <div class="flex justify-between items-center mt-2">
-                                    <div class="flex gap-2"><button id="target-speak-btn" aria-label="Dengarkan terjemahan" title="Dengarkan terjemahan" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button></div>
+                                    <div class="flex gap-2 items-center">
+                                        <button id="target-speak-btn" aria-label="Dengarkan terjemahan" title="Dengarkan terjemahan" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button>
+                                        <select id="voice-tone-select" class="text-xs bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-1 focus:outline-none">
+                                            <option value="standar">Nada Standar</option>
+                                            <option value="kasual">Nada Kasual</option>
+                                            <option value="formal">Nada Formal</option>
+                                        </select>
+                                    </div>
                                     <div class="flex gap-2">
                                         <button id="copy-btn" aria-label="Salin" title="Salin" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3.5A1.5 1.5 0 018.5 2h5.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 01.439 1.061V16.5A1.5 1.5 0 0116.5 18h-8A1.5 1.5 0 017 16.5v-13z" /><path d="M6 4.5A2.5 2.5 0 003.5 7v10A2.5 2.5 0 006 19.5h7A2.5 2.5 0 0015.5 17V7A2.5 2.5 0 0013 4.5H6z" /></svg></button>
                                         <button id="google-search-btn" aria-label="Telusuri dengan Google" title="Telusuri dengan Google" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.75 8.36,4.73 12.19,4.73C15.28,4.73 17.04,6.84 17.04,6.84L19.05,4.83C19.05,4.83 16.56,2 12.19,2C6.42,2 2.03,6.8 2.03,12C2.03,17.2 6.42,22 12.19,22C17.6,22 21.54,18.33 21.54,12.25C21.54,11.76 21.48,11.43 21.35,11.1Z" /></svg></button>
@@ -310,7 +317,8 @@
         const aiSourceEl = document.getElementById('ai-source'), aiResultEl = document.getElementById('ai-result'), aiChangeStyleBtn = document.getElementById('ai-change-style-btn'), aiStyleModal = document.getElementById('ai-style-modal'), applyStyleBtn = document.getElementById('apply-style-btn');
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
-        
+        const voiceToneSelect = document.getElementById('voice-tone-select');
+
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
         const ROMANIZATION_LANGS = ['am', 'ar', 'be', 'bg', 'bn', 'el', 'gu', 'he', 'hi', 'ja', 'kn', 'ko', 'mk', 'mr', 'my', 'ru', 'sr', 'ta', 'te', 'th', 'uk', 'ur', 'zh-CN', 'zh-TW', 'hy', 'ka', 'km', 'lo', 'ps', 'fa', 'pa', 'sd', 'si', 'tg', 'yi'];
@@ -371,7 +379,38 @@
         const getFromStorage = (key) => JSON.parse(localStorage.getItem(key)) || [];
         function saveToHistory(item) { let history = getFromStorage(HISTORY_KEY); history.unshift(item); if (history.length > 50) history.pop(); saveToStorage(HISTORY_KEY, history); }
         function updateSaveButtonState() { const savedItems = getFromStorage(SAVED_KEY); if (currentTranslationId && savedItems.some(item => item.id === currentTranslationId)) { saveTranslationBtn.classList.add('saved', 'text-yellow-500'); saveTranslationBtn.title = "Hapus dari simpanan"; } else { saveTranslationBtn.classList.remove('saved', 'text-yellow-500'); saveTranslationBtn.title = "Simpan terjemahan"; } }
-        function speak(text, lang) { if (!text || !('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); const settings = getVoiceSettings(); utterance.rate = settings.speed; const voices = window.speechSynthesis.getVoices().filter(v => v.lang.replace('_', '-') === lang.replace('_', '-')); let selectedVoice = voices.find(v => v.name.toLowerCase().includes(settings.voice)) || voices.find(v => !v.name.toLowerCase().includes(settings.voice === 'male' ? 'female' : 'male')) || voices[0]; utterance.voice = selectedVoice; utterance.lang = lang; window.speechSynthesis.speak(utterance); }
+        
+        function speak(text, lang, tone = 'standar') {
+            if (!text || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const settings = getVoiceSettings();
+            
+            // Terapkan nada
+            switch (tone) {
+                case 'kasual':
+                    utterance.pitch = 0.9;
+                    utterance.rate = 1.1;
+                    break;
+                case 'formal':
+                    utterance.pitch = 1.0;
+                    utterance.rate = 0.9;
+                    break;
+                default: // standar
+                    utterance.pitch = 1.0;
+                    utterance.rate = 1.0;
+            }
+            
+            // Gabungkan dengan pengaturan kecepatan dari modal
+            utterance.rate *= settings.speed;
+
+            const voices = window.speechSynthesis.getVoices().filter(v => v.lang.replace('_', '-') === lang.replace('_', '-'));
+            let selectedVoice = voices.find(v => v.name.toLowerCase().includes(settings.voice)) || voices.find(v => !v.name.toLowerCase().includes(settings.voice === 'male' ? 'female' : 'male')) || voices[0];
+            utterance.voice = selectedVoice;
+            utterance.lang = lang;
+            window.speechSynthesis.speak(utterance);
+        }
+
         function showNotification(message) { notification.textContent = message; notification.classList.remove('opacity-0'); setTimeout(() => notification.classList.add('opacity-0'), 2000); }
         async function getDefinition(word, lang) { if(!DICT_SUPPORTED_LANGS.includes(lang)) { window.open(`https://www.google.com/search?q=arti+${encodeURIComponent(word)}`, '_blank'); return; } dictionaryResultEl.innerHTML = `Mencari definisi untuk "<b>${word}</b>"...`; dictionaryResultEl.classList.remove('hidden'); try { const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/${lang}/${word}`); if (!response.ok) throw new Error('Definisi tidak ditemukan.'); const data = await response.json(); let content = `<h3>Definisi untuk <b>${data[0].word}</b></h3>`; data[0].meanings.forEach(meaning => { content += `<p class="italic text-slate-500 mt-2">${meaning.partOfSpeech}</p>`; meaning.definitions.forEach((def, i) => { content += `<p class="ml-2">${i + 1}. ${def.definition}</p>`; if(def.example) content += `<p class="ml-4 text-sm text-slate-400">Contoh: "${def.example}"</p>`}); }); dictionaryResultEl.innerHTML = content; } catch (error) { window.open(`https://www.google.com/search?q=arti+${encodeURIComponent(word)}`, '_blank'); dictionaryResultEl.classList.add('hidden'); } }
         function getVoiceSettings() { const speed = document.querySelector('input[name="speed"]:checked')?.value || 1; const voice = document.querySelector('input[name="voice"]:checked')?.value || 'female'; return { speed: parseFloat(speed), voice }; }
@@ -569,7 +608,6 @@
                 case 'professional': instruction = 'Ubah gaya tulisan berikut menjadi lebih profesional dan formal'; break;
                 case 'informative': instruction = 'Kembangkan teks berikut agar lebih informatif dengan menambahkan detail atau data yang relevan'; break;
                 default:
-                    // Untuk gaya dari modal
                     instruction = `Ubah gaya tulisan berikut menjadi lebih "${action}"`;
             }
 
@@ -636,7 +674,7 @@
         
         saveTranslationBtn.addEventListener('click', handleSaveClick);
         sourceSpeakBtn.addEventListener('click', () => speak(sourceTextEl.value, sourceLangEl.value));
-        targetSpeakBtn.addEventListener('click', () => speak(translatedOutput.textContent, targetLangEl.value));
+        targetSpeakBtn.addEventListener('click', () => speak(translatedOutput.textContent, targetLangEl.value, voiceToneSelect.value));
         copyBtn.addEventListener('click', () => { if(translatedOutput.textContent) { navigator.clipboard.writeText(translatedOutput.textContent).then(() => showNotification('Teks disalin!'), () => showNotification('Gagal menyalin.')); }});
         googleSearchBtn.addEventListener('click', () => { if(translatedOutput.textContent) window.open(`https://www.google.com/search?q=${encodeURIComponent(translatedOutput.textContent)}`, '_blank')});
         shareBtn.addEventListener('click', async () => { if (navigator.share && translatedOutput.textContent) { try { await navigator.share({ title: 'Terjemahan', text: translatedOutput.textContent }); } catch (err) { console.error("Share error:", err); showNotification('Gagal membagikan.'); } } else { showNotification('Fitur bagikan tidak didukung.'); } });
