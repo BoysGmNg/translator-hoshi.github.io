@@ -29,7 +29,8 @@
         textarea::-webkit-scrollbar-track, .scrollable::-webkit-scrollbar-track { background: #f1f5f9; }
         textarea::-webkit-scrollbar-thumb, .scrollable::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark textarea::-webkit-scrollbar-track, .dark .scrollable::-webkit-scrollbar-track { background: #1e293b; }
-        .dark textarea::-webkit-scrollbar-thumb, .dark .scrollable::-webkit-scrollbar-thumb { background: #475569; }
+        .dark .scrollable::-webkit-scrollbar-thumb { background: #475569; }
+        .dark #conversation-view::-webkit-scrollbar-thumb { background: #475569; }
         
         /* Styling Tab Aktif */
         .tab-active { border-bottom-color: #3b82f6; color: #3b82f6; }
@@ -84,11 +85,23 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Tombol Rekam Suara */
-        #record-btn.recording {
+        /* Tombol Rekam Suara (Mode Percakapan) */
+        .mic-btn.recording {
             animation: pulse 1.5s infinite;
+            background-color: #ef4444; /* red-500 */
+        }
+        .mic-btn.recording:hover {
+            background-color: #dc2626; /* red-600 */
         }
         @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .mic-btn.recording.pulse-red {
+             animation-name: pulse-red;
+        }
+        @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
@@ -124,7 +137,7 @@
                 <!-- Tabs -->
                 <div class="flex border-b border-slate-200 dark:border-gray-700 mb-4 overflow-x-auto">
                     <button class="tab-btn tab-active flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold border-b-2 border-transparent transition-colors" data-tab="text">Teks</button>
-                    <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="voice">Suara</button>
+                    <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="voice">Percakapan</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="ai">Ringkas AI</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="image">Gambar</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="document">Dokumen</button>
@@ -198,36 +211,26 @@
                     <div id="dictionary-result" class="mt-4 p-4 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg hidden shadow-sm"></div>
                 </div>
 
-                <!-- Voice Translation Panel -->
+                <!-- Voice Translation Panel (Conversation Mode) -->
                 <div id="voice-panel" class="tab-panel hidden">
-                    <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <h2 class="text-lg font-semibold mb-2 text-center">Terjemahkan dari Suara</h2>
-                        <div id="speech-recognition-unsupported" class="hidden text-center text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 p-3 rounded-lg">
+                    <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg shadow-sm flex flex-col" style="height: 60vh;">
+                        <div id="speech-recognition-unsupported" class="hidden text-center text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 p-3 rounded-t-lg">
                             Maaf, browser Anda tidak mendukung fitur pengenalan suara. Coba gunakan Google Chrome.
                         </div>
-                        <div id="speech-recognition-content">
-                            <div class="flex justify-center items-center gap-2 mb-4">
-                                <span>Terjemahkan ke:</span>
-                                <select id="voice-target-lang" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-1 text-sm"></select>
-                            </div>
-                            <div class="text-center">
-                                <button id="record-btn" class="bg-blue-600 text-white rounded-full p-4 hover:bg-blue-700 transition-colors duration-300 focus:outline-none">
-                                    <svg id="mic-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" /><path fill-rule="evenodd" d="M5.5 8.5A.5.5 0 016 9v1a4 4 0 004 4 4 4 0 004-4V9a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V17h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-2.025A5 5 0 015 10V9a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg>
-                                    <svg id="stop-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 10a.5.5 0 01.5.5v3A1.5 1.5 0 007 15h6a1.5 1.5 0 001.5-1.5v-3a.5.5 0 011 0v3A2.5 2.5 0 0113 16H7a2.5 2.5 0 01-2.5-2.5v-3A.5.5 0 015 10z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M5 5a2 2 0 012-2h6a2 2 0 012 2v2a2 2 0 01-2 2H7a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v2a1 1 0 001 1h6a1 1 0 001-1V5a1 1 0 00-1-1H7z" clip-rule="evenodd" /></svg>
-                                </button>
-                                <p id="voice-status" class="mt-2 text-sm text-slate-500 dark:text-slate-400">Klik untuk mulai merekam</p>
-                            </div>
-                            <div class="mt-4 grid md:grid-cols-2 gap-4">
-                                <textarea id="voice-source-text" class="w-full h-40 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none" placeholder="Teks yang diucapkan akan muncul di sini..." readonly></textarea>
-                                <div id="voice-translated-text" class="w-full h-40 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 overflow-y-auto scrollable" placeholder="Terjemahan akan muncul di sini..."></div>
-                            </div>
-                            <hr class="my-6 border-slate-200 dark:border-gray-700">
-                            <div class="text-center opacity-50">
-                                <h3 class="font-semibold">Unggah File Audio</h3>
-                                <p class="text-sm text-slate-500 dark:text-slate-400">Fitur mendatang: Terjemahkan dari file .mp3 atau .wav</p>
-                                <input type="file" id="audio-upload" accept="audio/*" class="hidden" disabled/>
-                                <button class="mt-2 bg-slate-300 dark:bg-gray-600 text-slate-600 dark:text-gray-400 font-semibold py-2 px-8 rounded-lg cursor-not-allowed" disabled>Pilih File</button>
-                            </div>
+                        <div id="conversation-view" class="flex-grow p-4 overflow-y-auto scrollable">
+                            <p id="conversation-placeholder" class="text-center text-slate-400 dark:text-slate-500 h-full flex items-center justify-center">Ketuk tombol mikrofon untuk memulai percakapan...</p>
+                            <!-- Conversation bubbles will be added here -->
+                        </div>
+                        <div class="flex items-center justify-around p-4 border-t border-slate-200 dark:border-gray-700">
+                            <select id="conversation-lang-1" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-2 text-sm font-semibold"></select>
+                            <button id="mic-btn-1" data-lang-select="conversation-lang-1" class="mic-btn bg-blue-600 text-white rounded-full p-4 hover:bg-blue-700 transition-colors duration-300 focus:outline-none">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" /><path fill-rule="evenodd" d="M5.5 8.5A.5.5 0 016 9v1a4 4 0 004 4 4 4 0 004-4V9a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V17h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-2.025A5 5 0 015 10V9a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            <button id="mic-btn-2" data-lang-select="conversation-lang-2" class="mic-btn bg-blue-600 text-white rounded-full p-4 hover:bg-blue-700 transition-colors duration-300 focus:outline-none">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" /><path fill-rule="evenodd" d="M5.5 8.5A.5.5 0 016 9v1a4 4 0 004 4 4 4 0 004-4V9a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V17h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-2.025A5 5 0 015 10V9a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <select id="conversation-lang-2" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-2 text-sm font-semibold"></select>
                         </div>
                     </div>
                 </div>
@@ -372,8 +375,11 @@
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
         const voiceToneSelect = document.getElementById('voice-tone-select');
-        // Elemen baru untuk fitur suara
-        const recordBtn = document.getElementById('record-btn'), voiceStatus = document.getElementById('voice-status'), voiceSourceText = document.getElementById('voice-source-text'), voiceTranslatedText = document.getElementById('voice-translated-text'), voiceTargetLang = document.getElementById('voice-target-lang'), micIcon = document.getElementById('mic-icon'), stopIcon = document.getElementById('stop-icon'), speechRecognitionUnsupported = document.getElementById('speech-recognition-unsupported'), speechRecognitionContent = document.getElementById('speech-recognition-content');
+        // Elemen baru untuk mode percakapan
+        const conversationView = document.getElementById('conversation-view'), conversationPlaceholder = document.getElementById('conversation-placeholder');
+        const micBtn1 = document.getElementById('mic-btn-1'), micBtn2 = document.getElementById('mic-btn-2');
+        const conversationLang1 = document.getElementById('conversation-lang-1'), conversationLang2 = document.getElementById('conversation-lang-2');
+        const speechRecognitionUnsupported = document.getElementById('speech-recognition-unsupported');
 
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
@@ -385,6 +391,7 @@
         let zoomState = { level: 1, pan: { x: 0, y: 0 }, isPanning: false, start: { x: 0, y: 0 } };
         let isRecording = false;
         let recognition;
+        let activeMicButton = null;
         
         // --- 3. API & CORE FUNCTIONS ---
 
@@ -704,70 +711,85 @@
             zoomState = { level: 1, pan: { x: 0, y: 0 }, isPanning: false, start: { x: 0, y: 0 } };
             updateView();
         }
+        function addConversationBubble(sourceText, translatedText, sourceLang) {
+            conversationPlaceholder.classList.add('hidden');
+            const bubble = document.createElement('div');
+            const isLang1 = sourceLang === conversationLang1.value;
+            bubble.className = `w-full flex ${isLang1 ? 'justify-end' : 'justify-start'}`;
+            bubble.innerHTML = `
+                <div class="max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-lg ${isLang1 ? 'bg-blue-500 text-white' : 'bg-slate-200 dark:bg-gray-700'}">
+                    <p class="font-semibold">${sourceText}</p>
+                    <p class="text-sm opacity-90 mt-1">${translatedText}</p>
+                </div>
+            `;
+            conversationView.appendChild(bubble);
+            conversationView.scrollTop = conversationView.scrollHeight;
+        }
 
         // --- 7. INITIALIZATION & EVENT LISTENERS ---
         function initializeSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 speechRecognitionUnsupported.classList.remove('hidden');
-                speechRecognitionContent.classList.add('hidden');
+                micBtn1.disabled = true;
+                micBtn2.disabled = true;
                 return;
             }
             recognition = new SpeechRecognition();
-            recognition.continuous = true;
+            recognition.continuous = false; // Set to false for single utterances
             recognition.interimResults = true;
-            recognition.lang = 'id-ID';
 
             recognition.onstart = () => {
                 isRecording = true;
-                voiceStatus.textContent = 'Mendengarkan...';
-                recordBtn.classList.add('recording', 'bg-red-500', 'hover:bg-red-600');
-                recordBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                micIcon.classList.add('hidden');
-                stopIcon.classList.remove('hidden');
+                if(activeMicButton) {
+                    activeMicButton.classList.add('recording', 'pulse-red');
+                }
             };
 
             recognition.onend = () => {
                 isRecording = false;
-                voiceStatus.textContent = 'Klik untuk mulai merekam';
-                recordBtn.classList.remove('recording', 'bg-red-500', 'hover:bg-red-600');
-                recordBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                micIcon.classList.remove('hidden');
-                stopIcon.classList.add('hidden');
+                if(activeMicButton) {
+                    activeMicButton.classList.remove('recording', 'pulse-red');
+                    activeMicButton = null;
+                }
             };
 
             recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
-                voiceStatus.textContent = `Error: ${event.error}. Coba lagi.`;
+                if(activeMicButton) {
+                    activeMicButton.classList.remove('recording', 'pulse-red');
+                }
             };
 
             recognition.onresult = async (event) => {
-                let interimTranscript = '';
                 let finalTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
                         finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
                     }
                 }
-                voiceSourceText.value = voiceSourceText.value.split('\n')[0] + interimTranscript;
 
-                if (finalTranscript) {
-                    voiceSourceText.value = finalTranscript;
-                    voiceTranslatedText.textContent = 'Menerjemahkan...';
-                    const [translated] = await translate(finalTranscript, 'auto', voiceTargetLang.value);
-                    voiceTranslatedText.textContent = translated;
-                    saveToHistory({ id: Date.now(), sourceLang: 'auto', targetLang: voiceTargetLang.value, sourceText: `[Suara] ${finalTranscript}`, translatedText: translated });
+                if (finalTranscript && activeMicButton) {
+                    const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value;
+                    const targetLang = sourceLang === conversationLang1.value ? conversationLang2.value : conversationLang1.value;
+                    
+                    const [translated] = await translate(finalTranscript, sourceLang, targetLang);
+                    addConversationBubble(finalTranscript, translated, sourceLang);
+                    
+                    // Automatically speak the translation
+                    speak(translated, targetLang);
+                    
+                    saveToHistory({ id: Date.now(), sourceLang: sourceLang, targetLang: targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated });
                 }
             };
         }
 
         const sortedLanguages = Object.entries(languages).filter(([code]) => code !== 'auto').sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
         const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; sourceLangEl.appendChild(autoOption);
-        const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, siteTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, voiceTargetLang];
+        const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, siteTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, conversationLang1, conversationLang2];
         sortedLanguages.forEach(([code, name]) => { const option = document.createElement('option'); option.value = code; option.textContent = name; sourceLangEl.appendChild(option.cloneNode(true)); allSelects.forEach(sel => sel.appendChild(option.cloneNode(true))); });
-        sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; siteTargetLangEl.value = 'id'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en'; voiceTargetLang.value = 'en';
+        sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; siteTargetLangEl.value = 'id'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en';
+        conversationLang1.value = 'id'; conversationLang2.value = 'ja';
         
         loadVoiceSettings();
         initializeSpeechRecognition();
@@ -852,17 +874,21 @@
         addGlossaryBtn.addEventListener('click', () => { const sourceText = glossarySourceText.value.trim(); const targetText = glossaryTargetText.value.trim(); if (!sourceText || !targetText) return; let glossary = getFromStorage(GLOSSARY_KEY); glossary.push({ sourceLang: glossarySourceLang.value, targetLang: glossaryTargetLang.value, sourceText, targetText }); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); glossarySourceText.value = ''; glossaryTargetText.value = ''; });
         glossaryListEl.addEventListener('click', e => { if (e.target.classList.contains('delete-glossary-btn')) { let glossary = getFromStorage(GLOSSARY_KEY); glossary.splice(e.target.dataset.index, 1); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); } });
 
-        // Event listener untuk tombol rekam
-        recordBtn.addEventListener('click', () => {
-            if (isRecording) {
-                recognition.stop();
-            } else {
-                if (recognition) {
-                   voiceSourceText.value = '';
-                   voiceTranslatedText.textContent = '';
-                   recognition.start();
+        // Event listener untuk tombol rekam percakapan
+        [micBtn1, micBtn2].forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    if (recognition) {
+                        const langSelectId = btn.dataset.langSelect;
+                        const langCode = document.getElementById(langSelectId).value;
+                        recognition.lang = langCode;
+                        activeMicButton = btn;
+                        recognition.start();
+                    }
                 }
-            }
+            });
         });
     
     });
