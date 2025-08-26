@@ -226,7 +226,9 @@
                             <button id="mic-btn-1" data-lang-select="conversation-lang-1" class="mic-btn bg-blue-600 text-white rounded-full p-4 hover:bg-blue-700 transition-colors duration-300 focus:outline-none">
                                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" /><path fill-rule="evenodd" d="M5.5 8.5A.5.5 0 016 9v1a4 4 0 004 4 4 4 0 004-4V9a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V17h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-2.025A5 5 0 015 10V9a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg>
                             </button>
-                            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            <button id="conversation-swap-btn" title="Tukar bahasa percakapan" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            </button>
                             <button id="mic-btn-2" data-lang-select="conversation-lang-2" class="mic-btn bg-blue-600 text-white rounded-full p-4 hover:bg-blue-700 transition-colors duration-300 focus:outline-none">
                                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" /><path fill-rule="evenodd" d="M5.5 8.5A.5.5 0 016 9v1a4 4 0 004 4 4 4 0 004-4V9a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V17h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-2.025A5 5 0 015 10V9a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg>
                             </button>
@@ -380,6 +382,7 @@
         const micBtn1 = document.getElementById('mic-btn-1'), micBtn2 = document.getElementById('mic-btn-2');
         const conversationLang1 = document.getElementById('conversation-lang-1'), conversationLang2 = document.getElementById('conversation-lang-2');
         const speechRecognitionUnsupported = document.getElementById('speech-recognition-unsupported');
+        const conversationSwapBtn = document.getElementById('conversation-swap-btn');
 
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
@@ -714,8 +717,8 @@
         function addConversationBubble(sourceText, translatedText, sourceLang) {
             conversationPlaceholder.classList.add('hidden');
             const bubble = document.createElement('div');
-            const isLang1 = sourceLang === conversationLang1.value;
-            bubble.className = `w-full flex ${isLang1 ? 'justify-end' : 'justify-start'}`;
+            const isLang1 = sourceLang === conversationLang1.value || (sourceLang === 'auto' && activeMicButton.id === 'mic-btn-1');
+            bubble.className = `w-full flex mb-2 ${isLang1 ? 'justify-end' : 'justify-start'}`;
             bubble.innerHTML = `
                 <div class="max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-lg ${isLang1 ? 'bg-blue-500 text-white' : 'bg-slate-200 dark:bg-gray-700'}">
                     <p class="font-semibold">${sourceText}</p>
@@ -770,8 +773,9 @@
                 }
 
                 if (finalTranscript && activeMicButton) {
-                    const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value;
-                    const targetLang = sourceLang === conversationLang1.value ? conversationLang2.value : conversationLang1.value;
+                    const sourceLangSelect = document.getElementById(activeMicButton.dataset.langSelect);
+                    const sourceLang = sourceLangSelect.value;
+                    const targetLang = sourceLangSelect.id === 'conversation-lang-1' ? conversationLang2.value : conversationLang1.value;
                     
                     const [translated] = await translate(finalTranscript, sourceLang, targetLang);
                     addConversationBubble(finalTranscript, translated, sourceLang);
@@ -785,11 +789,28 @@
         }
 
         const sortedLanguages = Object.entries(languages).filter(([code]) => code !== 'auto').sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
-        const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; sourceLangEl.appendChild(autoOption);
+        const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; 
+        sourceLangEl.appendChild(autoOption.cloneNode(true));
+        conversationLang1.appendChild(autoOption.cloneNode(true));
+
         const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, siteTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, conversationLang1, conversationLang2];
-        sortedLanguages.forEach(([code, name]) => { const option = document.createElement('option'); option.value = code; option.textContent = name; sourceLangEl.appendChild(option.cloneNode(true)); allSelects.forEach(sel => sel.appendChild(option.cloneNode(true))); });
+        sortedLanguages.forEach(([code, name]) => { 
+            const option = document.createElement('option'); 
+            option.value = code; 
+            option.textContent = name; 
+            sourceLangEl.appendChild(option.cloneNode(true)); 
+            allSelects.forEach(sel => {
+                // Mencegah "Deteksi Otomatis" ditambahkan dua kali ke conversationLang1
+                if (sel.id === 'conversation-lang-1' && sel.querySelector('option[value="auto"]')) {
+                    sel.appendChild(option.cloneNode(true));
+                } else if (sel.id !== 'conversation-lang-1') {
+                    sel.appendChild(option.cloneNode(true));
+                }
+            }); 
+        });
+        
         sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; siteTargetLangEl.value = 'id'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en';
-        conversationLang1.value = 'id'; conversationLang2.value = 'ja';
+        conversationLang1.value = 'auto'; conversationLang2.value = 'ja';
         
         loadVoiceSettings();
         initializeSpeechRecognition();
@@ -882,13 +903,31 @@
                 } else {
                     if (recognition) {
                         const langSelectId = btn.dataset.langSelect;
-                        const langCode = document.getElementById(langSelectId).value;
-                        recognition.lang = langCode;
+                        let langCode = document.getElementById(langSelectId).value;
+                        // Speech Recognition API tidak mendukung 'auto', jadi kita setel bahasa default untuk mendengarkan.
+                        // API terjemahan akan tetap menggunakan 'auto' jika itu yang dipilih.
+                        recognition.lang = (langCode === 'auto') ? 'id-ID' : langCode;
                         activeMicButton = btn;
                         recognition.start();
                     }
                 }
             });
+        });
+
+        // Event listener untuk tombol tukar bahasa percakapan
+        conversationSwapBtn.addEventListener('click', () => {
+            const lang1 = conversationLang1.value;
+            const lang2 = conversationLang2.value;
+            
+            // Logika baru: jika lang1 adalah 'auto', kita tidak bisa menukarnya ke sisi kanan
+            // yang tidak mendukung 'auto'. Jadi kita tukar dengan bahasa default (misal: Indonesia)
+            if (lang1 === 'auto') {
+                conversationLang1.value = lang2;
+                conversationLang2.value = 'id'; // Setel bahasa default
+            } else {
+                conversationLang1.value = lang2;
+                conversationLang2.value = lang1;
+            }
         });
     
     });
