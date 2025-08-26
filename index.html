@@ -14,19 +14,16 @@
     <!-- Firebase SDK -->
     <script type="module">
         // KONFIGURASI FIREBASE ANDA
-        // TODO: Ganti dengan konfigurasi proyek Firebase Anda
-        // Anda bisa mendapatkannya dari Project Settings > General di Firebase Console
         const firebaseConfig = {
             apiKey: "AIzaSyCybId57osSubD6X5wA0V780dtMjgA69o8",
             authDomain: "translator-hoshi.firebaseapp.com",
             projectId: "translator-hoshi",
             storageBucket: "translator-hoshi.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
+            messagingSenderId: "...", // Anda bisa melengkapi ini dari Firebase Console jika perlu
+            appId: "..." // Anda bisa melengkapi ini dari Firebase Console jika perlu
         };
 
         // Inisialisasi Firebase
-        // Jangan ubah kode di bawah ini
         try {
             const app = firebase.initializeApp(firebaseConfig);
             const auth = firebase.auth();
@@ -35,7 +32,6 @@
             console.log("Firebase initialized successfully");
         } catch (e) {
             console.error("Error initializing Firebase. Please check your config.", e);
-            // Sembunyikan tombol login jika Firebase gagal diinisialisasi
             document.addEventListener('DOMContentLoaded', () => {
                 const authContainer = document.getElementById('auth-container');
                 if(authContainer) authContainer.innerHTML = '<p class="text-xs text-red-500">Firebase Gagal Terhubung</p>';
@@ -342,9 +338,7 @@
                             <button id="ai-change-style-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Ubah Gaya Lainnya...</button>
                         </div>
                          <div id="premium-lock-overlay" class="hidden text-center mt-4">
-                            <p class="font-semibold text-slate-700 dark:text-slate-200">Fitur Premium Terkunci 🔒</p>
-                            <p class="text-sm text-slate-500 dark:text-slate-400">Login dan masukkan Gemini API Key untuk membuka fitur canggih ini.</p>
-                            <button id="unlock-premium-btn" class="mt-2 bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">Login untuk Membuka</button>
+                            <!-- Konten ini akan diisi oleh JavaScript -->
                         </div>
                     </div>
                 </div>
@@ -471,7 +465,6 @@
         const aiContentWrapper = document.getElementById('ai-content-wrapper');
         const aiSourceEl = document.getElementById('ai-source'), aiResultEl = document.getElementById('ai-result'), aiChangeStyleBtn = document.getElementById('ai-change-style-btn'), aiStyleModal = document.getElementById('ai-style-modal'), applyStyleBtn = document.getElementById('apply-style-btn');
         const premiumLockOverlay = document.getElementById('premium-lock-overlay');
-        const unlockPremiumBtn = document.getElementById('unlock-premium-btn');
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
         const voiceToneSelect = document.getElementById('voice-tone-select');
@@ -567,11 +560,27 @@
                 aiSourceEl.placeholder = "Masukkan teks untuk diubah oleh AI...";
                 aiSourceEl.disabled = false;
             } else {
-                // Premium Mode: Locked
+                // Premium Mode: Locked (either logged out, or logged in with no key)
                 aiContentWrapper.classList.add('premium-locked');
                 premiumLockOverlay.classList.remove('hidden');
+                
+                // Regenerate the content of the overlay
+                premiumLockOverlay.innerHTML = `
+                    <p class="font-semibold text-slate-700 dark:text-slate-200">Fitur Premium Terkunci 🔒</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">${currentUser ? "Masukkan Gemini API Key untuk membuka fitur canggih ini." : "Login dan masukkan Gemini API Key untuk membuka fitur canggih ini."}</p>
+                    <button id="unlock-premium-btn" class="mt-2 bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">${currentUser ? 'Masukkan Kunci API' : 'Login untuk Membuka'}</button>
+                `;
+                
+                // The old button was destroyed, so we need to re-attach the listener
+                document.getElementById('unlock-premium-btn').addEventListener('click', () => { 
+                    if(!currentUser) { 
+                        loginModal.classList.add('flex'); 
+                    } else { 
+                        apiKeyModal.classList.add('flex'); 
+                    } 
+                });
+                
                 aiSourceEl.placeholder = currentUser ? "Masukkan Kunci API untuk membuka fitur ini." : "Login dan masukkan Kunci API untuk membuka fitur ini.";
-                unlockPremiumBtn.textContent = currentUser ? 'Masukkan Kunci API' : 'Login untuk Membuka';
                 aiSourceEl.disabled = true;
                 aiResultEl.value = '';
             }
@@ -1019,6 +1028,7 @@
                 console.error("Error getting API key:", error);
                 userApiKey = null;
             } finally {
+                // Update the UI after the async operation is complete.
                 checkPremiumStatus();
             }
         }
@@ -1057,7 +1067,13 @@
         
         loadVoiceSettings();
         initializeSpeechRecognition();
-        checkPremiumStatus();
+        
+        // PERBAIKAN: Tampilkan status loading awal
+        premiumLockOverlay.classList.remove('hidden');
+        premiumLockOverlay.innerHTML = `<p class="text-sm text-slate-500 dark:text-slate-400">Memeriksa status akun...</p>`;
+        aiContentWrapper.classList.add('premium-locked');
+        aiSourceEl.disabled = true;
+
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         
@@ -1094,7 +1110,7 @@
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
         apiKeyBtn.addEventListener('click', () => { if(!currentUser) { showNotification("Silakan login terlebih dahulu."); loginModal.classList.add('flex'); return; } apiKeyInput.value = userApiKey || ''; apiKeyModal.classList.add('flex'); });
-        unlockPremiumBtn.addEventListener('click', () => { if(!currentUser) { loginModal.classList.add('flex'); } else { apiKeyModal.classList.add('flex'); } });
+        
         saveApiKeyBtn.addEventListener('click', () => { if(!currentUser) return; const key = apiKeyInput.value.trim(); if(key) { saveApiKeyToFirestore(currentUser.uid, key); apiKeyModal.classList.remove('flex'); } else { showNotification('Kunci API tidak boleh kosong.'); } });
 
         document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
@@ -1130,7 +1146,7 @@
         document.querySelectorAll('.ai-action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => handleAiAction(e.currentTarget.dataset.action, e.currentTarget));
         });
-        aiChangeStyleBtn.addEventListener('click', () => { if (!currentUser || !userApiKey) { unlockPremiumBtn.click(); } else { aiStyleModal.classList.add('flex'); } });
+        aiChangeStyleBtn.addEventListener('click', () => { if (!currentUser || !userApiKey) { document.getElementById('unlock-premium-btn')?.click(); } else { aiStyleModal.classList.add('flex'); } });
         applyStyleBtn.addEventListener('click', () => {
             const selectedStyle = document.querySelector('input[name="ai-style"]:checked').value;
             handleAiAction(selectedStyle, aiChangeStyleBtn);
