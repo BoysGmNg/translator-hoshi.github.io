@@ -106,6 +106,23 @@
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+        
+        /* Opsi Terjemahan Alternatif */
+        .alternative-translation {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .alternative-translation:hover {
+            background-color: #eef2ff; /* indigo-50 */
+        }
+        .dark .alternative-translation:hover {
+            background-color: #374151; /* gray-700 */
+        }
+        #alternative-translations {
+            max-height: 80px; /* Batas tinggi untuk opsi alternatif */
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -176,9 +193,10 @@
                                     </label>
                                     <button id="glossary-manage-btn" class="ml-2 text-blue-500 hover:underline text-sm font-semibold hidden">Kelola</button>
                                 </div>
-                                <div id="translated-output-container" class="w-full h-48 bg-transparent resize-none text-lg flex-grow overflow-y-auto scrollable">
+                                <div id="translated-output-container" class="w-full bg-transparent resize-none text-lg flex-grow overflow-y-auto scrollable">
                                     <div id="translated-output"></div>
                                     <div id="romanization-output" class="text-base italic text-slate-500 dark:text-slate-400 mt-1"></div>
+                                    <div id="alternative-translations" class="mt-2 text-sm text-slate-600 dark:text-slate-300 space-y-1 overflow-y-auto scrollable"></div>
                                 </div>
                                 <div class="flex justify-between items-center mt-2">
                                     <div class="flex gap-2 items-center">
@@ -377,6 +395,7 @@
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
         const voiceToneSelect = document.getElementById('voice-tone-select');
+        const alternativeTranslationsEl = document.getElementById('alternative-translations');
         // Elemen baru untuk mode percakapan
         const conversationView = document.getElementById('conversation-view'), conversationPlaceholder = document.getElementById('conversation-placeholder');
         const micBtn1 = document.getElementById('mic-btn-1'), micBtn2 = document.getElementById('mic-btn-2');
@@ -398,10 +417,11 @@
         
         // --- 3. API & CORE FUNCTIONS ---
 
-        async function translate(text, sourceLang, targetLang, getRomanization = false) {
-            if (!text) return ["", ""];
+        async function translate(text, sourceLang, targetLang) {
+             if (!text) return ["", "", []];
             try {
-                const dtParams = getRomanization ? 't&dt=rm' : 't';
+                // Meminta terjemahan utama, romanisasi, dan alternatif
+                const dtParams = 't&dt=rm&dt=at';
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=${dtParams}&q=${encodeURIComponent(text)}`;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok.');
@@ -410,17 +430,19 @@
                 const translatedText = data[0].map(segment => segment[0]).join('');
                 
                 let romanization = "";
-                if (getRomanization && Array.isArray(data[0])) {
-                    const lastSegment = data[0][data[0].length - 1];
-                    if (Array.isArray(lastSegment) && lastSegment.length > 2 && lastSegment[2] && typeof lastSegment[2] === 'string') {
-                        romanization = lastSegment[2];
-                    }
+                if (data[0] && data[0][data[0].length - 1] && data[0][data[0].length - 1][2]) {
+                    romanization = data[0][data[0].length - 1][2];
                 }
 
-                return [translatedText, romanization];
+                let alternatives = [];
+                if (data[5] && data[5][0] && data[5][0][2]) {
+                    alternatives = data[5][0][2].map(alt => alt[0]);
+                }
+
+                return [translatedText, romanization, alternatives];
             } catch (error) {
                 console.error('Translation error:', error);
-                return ['Terjadi kesalahan saat menerjemahkan.', ''];
+                return ['Terjadi kesalahan saat menerjemahkan.', '', []];
             }
         }
 
@@ -494,6 +516,7 @@
             let sourceText = sourceTextEl.value.trim();
             translatedOutput.innerHTML = '';
             romanizationOutput.innerHTML = '';
+            alternativeTranslationsEl.innerHTML = '';
             dictionaryResultEl.classList.add('hidden');
             if (!sourceText) return;
 
@@ -502,25 +525,16 @@
             }
 
             translatedOutput.textContent = 'Menerjemahkan...';
-            const needsRomanization = ROMANIZATION_LANGS.includes(targetLangEl.value);
-            const [translated, romanization] = await translate(sourceText, sourceLangEl.value, targetLangEl.value, needsRomanization);
+            const [translated, romanization, alternatives] = await translate(sourceText, sourceLangEl.value, targetLangEl.value);
             
-            const words = translated.split(/(\s+)/);
-            translatedOutput.innerHTML = '';
-            words.forEach(word => {
-                if (word.trim().length > 0) {
-                    const span = document.createElement('span');
-                    span.textContent = word;
-                    span.className = 'dict-word';
-                    span.onclick = () => getDefinition(word.trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""), targetLangEl.value);
-                    translatedOutput.appendChild(span);
-                } else {
-                    translatedOutput.appendChild(document.createTextNode(word));
-                }
-            });
-
+            renderMainTranslation(translated);
+            
             if (romanization) {
                 romanizationOutput.textContent = romanization;
+            }
+            
+            if (alternatives && alternatives.length > 0) {
+                renderAlternatives(alternatives);
             }
 
             currentTranslationId = Date.now();
@@ -703,9 +717,120 @@
         function handleSwap() { if (sourceLangEl.value === 'auto') { showNotification("Tidak bisa menukar 'Deteksi Otomatis'."); return; } const sourceLang = sourceLangEl.value; const targetLang = targetLangEl.value; const sourceText = sourceTextEl.value; const targetText = translatedOutput.textContent; sourceLangEl.value = targetLang; targetLangEl.value = sourceLang; sourceTextEl.value = targetText; handleTextTranslation(); }
         
         // --- 6. RENDER & UI FUNCTIONS ---
-        function renderList(listContainer, items, type) { listContainer.innerHTML = items.length === 0 ? `<p class="text-slate-500 dark:text-slate-400 text-center">Tidak ada item.</p>` : ''; items.forEach(item => { const isSaved = getFromStorage(SAVED_KEY).some(s => s.id === item.id); const itemEl = document.createElement('div'); itemEl.className = 'p-3 border-b dark:border-gray-700'; let buttons = ''; if (type === 'history') { buttons = `<button class="action-btn text-blue-500 disabled:text-gray-400" data-action="save" data-id="${item.id}" ${isSaved ? 'disabled' : ''}>${isSaved ? 'Tersimpan' : 'Simpan'}</button><button class="action-btn text-red-500" data-action="delete-history" data-id="${item.id}">Hapus</button>`; } else { buttons = `<button class="action-btn text-yellow-500" data-action="unsave" data-id="${item.id}">Hapus Simpanan</button>`; } itemEl.innerHTML = `<div class="text-xs text-slate-500 dark:text-slate-400 mb-1">${languages[item.sourceLang] || 'Auto'} &rarr; ${languages[item.targetLang]}</div><p class="font-semibold truncate">${item.sourceText}</p><p class="text-blue-500 dark:text-blue-400 truncate">${item.translatedText}</p><div class="flex gap-4 mt-2 text-xs">${buttons}</div>`; listContainer.appendChild(itemEl); }); }
-        function handleListAction(e) { if (!e.target.classList.contains('action-btn')) return; const { action, id } = e.target.dataset; let history = getFromStorage(HISTORY_KEY); let saved = getFromStorage(SAVED_KEY); const numericId = parseInt(id, 10); if (action === 'save') { const itemToSave = history.find(item => item.id === numericId); if (itemToSave && !saved.some(s => s.id === numericId)) { saved.unshift(itemToSave); saveToStorage(SAVED_KEY, saved); } } else if (action === 'unsave') { saved = saved.filter(item => item.id !== numericId); saveToStorage(SAVED_KEY, saved); } else if (action === 'delete-history') { history = history.filter(item => item.id !== numericId); saved = saved.filter(item => item.id !== numericId); saveToStorage(HISTORY_KEY, history); saveToStorage(SAVED_KEY, saved); } renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); updateSaveButtonState(); }
-        function renderGlossary() { const glossary = getFromStorage(GLOSSARY_KEY); glossaryListEl.innerHTML = ''; glossary.forEach((entry, index) => { const itemEl = document.createElement('div'); itemEl.className = 'flex items-center justify-between p-2 border-b dark:border-gray-700'; itemEl.innerHTML = `<span>${entry.sourceText} &rarr; ${entry.targetText}</span><button data-index="${index}" class="delete-glossary-btn text-red-500 font-bold">&times;</button>`; glossaryListEl.appendChild(itemEl); }); }
+        function renderMainTranslation(text) {
+            const words = text.split(/(\s+)/);
+            translatedOutput.innerHTML = '';
+            words.forEach(word => {
+                if (word.trim().length > 0) {
+                    const span = document.createElement('span');
+                    span.textContent = word;
+                    span.className = 'dict-word';
+                    span.onclick = () => getDefinition(word.trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,""), targetLangEl.value);
+                    translatedOutput.appendChild(span);
+                } else {
+                    translatedOutput.appendChild(document.createTextNode(word));
+                }
+            });
+        }
+        function renderAlternatives(alternatives) {
+            alternativeTranslationsEl.innerHTML = '<hr class="my-2 border-slate-200 dark:border-gray-600"><p class="font-semibold text-xs mb-1">Opsi lain:</p>';
+            alternatives.forEach(alt => {
+                const p = document.createElement('p');
+                p.textContent = alt;
+                p.className = 'alternative-translation';
+                p.onclick = () => {
+                    renderMainTranslation(alt);
+                    // Update history with the chosen alternative
+                    let history = getFromStorage(HISTORY_KEY);
+                    if (history[0] && history[0].id === currentTranslationId) {
+                        history[0].translatedText = alt;
+                        saveToStorage(HISTORY_KEY, history);
+                    }
+                };
+                alternativeTranslationsEl.appendChild(p);
+            });
+        }
+        function renderList(listContainer, items, type) {
+            listContainer.innerHTML = items.length === 0 ? `<p class="text-slate-500 dark:text-slate-400 text-center">Tidak ada item.</p>` : '';
+            items.forEach(item => {
+                const isSaved = getFromStorage(SAVED_KEY).some(s => s.id === item.id);
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-3 border-b dark:border-gray-700';
+                let buttons = '';
+                if (type === 'history') {
+                    buttons = `<button class="action-btn text-blue-500 disabled:text-gray-400" data-action="save" data-id="${item.id}" ${isSaved ? 'disabled' : ''}>${isSaved ? 'Tersimpan' : 'Simpan'}</button><button class="action-btn text-red-500" data-action="delete-history" data-id="${item.id}">Hapus</button>`;
+                } else { // type === 'saved'
+                    buttons = `<button class="action-btn text-yellow-500" data-action="unsave" data-id="${item.id}">Hapus Simpanan</button>`;
+                }
+                itemEl.innerHTML = `
+                    <div class="history-item-content cursor-pointer" data-id="${item.id}">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">${languages[item.sourceLang] || 'Auto'} &rarr; ${languages[item.targetLang]}</div>
+                        <p class="font-semibold truncate">${item.sourceText}</p>
+                        <p class="text-blue-500 dark:text-blue-400 truncate">${item.translatedText}</p>
+                    </div>
+                    <div class="flex gap-4 mt-2 text-xs">${buttons}</div>
+                `;
+                listContainer.appendChild(itemEl);
+            });
+        }
+
+        function loadHistoryItem(id) {
+            const history = getFromStorage(HISTORY_KEY);
+            const item = history.find(i => i.id === id);
+            if (item) {
+                // Pindah ke tab Teks
+                document.querySelector('.tab-btn[data-tab="text"]').click();
+                
+                // Isi kembali input
+                sourceLangEl.value = item.sourceLang;
+                targetLangEl.value = item.targetLang;
+                sourceTextEl.value = item.sourceText;
+                
+                // Lakukan terjemahan ulang untuk menampilkan hasil dan alternatif
+                handleTextTranslation();
+                
+                // Tutup modal
+                historyModal.classList.remove('flex');
+                savedModal.classList.remove('flex');
+            }
+        }
+
+        function mainListClickHandler(e) {
+            const actionBtn = e.target.closest('.action-btn');
+            if (actionBtn) {
+                const { action, id } = actionBtn.dataset;
+                let history = getFromStorage(HISTORY_KEY);
+                let saved = getFromStorage(SAVED_KEY);
+                const numericId = parseInt(id, 10);
+
+                if (action === 'save') {
+                    const itemToSave = history.find(item => item.id === numericId);
+                    if (itemToSave && !saved.some(s => s.id === numericId)) {
+                        saved.unshift(itemToSave);
+                        saveToStorage(SAVED_KEY, saved);
+                    }
+                } else if (action === 'unsave') {
+                    saved = saved.filter(item => item.id !== numericId);
+                    saveToStorage(SAVED_KEY, saved);
+                } else if (action === 'delete-history') {
+                    history = history.filter(item => item.id !== numericId);
+                    saved = saved.filter(item => item.id !== numericId); // Hapus juga dari saved jika ada
+                    saveToStorage(HISTORY_KEY, history);
+                    saveToStorage(SAVED_KEY, saved);
+                }
+                renderList(historyList, getFromStorage(HISTORY_KEY), 'history');
+                renderList(savedList, getFromStorage(SAVED_KEY), 'saved');
+                updateSaveButtonState();
+                return;
+            }
+
+            const content = e.target.closest('.history-item-content');
+            if (content) {
+                const id = parseInt(content.dataset.id, 10);
+                loadHistoryItem(id);
+            }
+        }
+
         function updateView() {
             imageTransformer.style.transform = `scale(${zoomState.level}) translate(${zoomState.pan.x}px, ${zoomState.pan.y}px)`;
             zoomLevelDisplay.textContent = `${Math.round(zoomState.level * 100)}%`;
@@ -849,7 +974,9 @@
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
         document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
-        historyList.addEventListener('click', handleListAction); savedList.addEventListener('click', handleListAction);
+        
+        historyList.addEventListener('click', mainListClickHandler);
+        savedList.addEventListener('click', mainListClickHandler);
         
         imageUpload.addEventListener('change', (e) => handleImageTranslation(e.target.files[0]));
         docUpload.addEventListener('change', (e) => handleDocumentUpload(e.target.files[0]));
