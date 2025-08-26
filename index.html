@@ -10,6 +10,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tesseract.js untuk OCR pada gambar -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // KONFIGURASI FIREBASE ANDA
+        // TODO: Ganti dengan konfigurasi proyek Firebase Anda
+        // Anda bisa mendapatkannya dari Project Settings > General di Firebase Console
+        const firebaseConfig = {
+            apiKey: "AIzaSyCybId57osSubD6X5wA0V780dtMjgA69o8",
+            authDomain: "translator-hoshi.firebaseapp.com",
+            projectId: "translator-hoshi",
+            storageBucket: "translator-hoshi.appspot.com",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        // Inisialisasi Firebase
+        // Jangan ubah kode di bawah ini
+        try {
+            const app = firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            window.firebaseServices = { auth, db };
+            console.log("Firebase initialized successfully");
+        } catch (e) {
+            console.error("Error initializing Firebase. Please check your config.", e);
+            // Sembunyikan tombol login jika Firebase gagal diinisialisasi
+            document.addEventListener('DOMContentLoaded', () => {
+                const authContainer = document.getElementById('auth-container');
+                if(authContainer) authContainer.innerHTML = '<p class="text-xs text-red-500">Firebase Gagal Terhubung</p>';
+            });
+        }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
         // Fungsi untuk menerapkan tema (terang/gelap/sistem)
         function applyTheme() {
@@ -59,7 +95,7 @@
         .dark .dragover { background-color: #1e3a8a; border-color: #60a5fa; }
         
         /* Kamus & Toggle Switch */
-        .dict-word { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
+        .dict-word { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: #3b82f6; }
         .toggle-label { transition: background-color 0.2s ease-in; }
         .toggle-label .dot { transition: transform 0.2s ease-in; }
         #glossary-toggle:checked + .toggle-label, #compare-toggle:checked + .toggle-label { background-color: #3b82f6; }
@@ -123,6 +159,23 @@
         #alternative-translations {
             max-height: 80px; /* Batas tinggi untuk opsi alternatif */
         }
+        
+        /* Gaya untuk Fitur Premium Terkunci */
+        .premium-locked .ai-action-btn, .premium-locked #ai-change-style-btn {
+            cursor: not-allowed;
+            background-color: #e5e7eb; /* gray-200 */
+            color: #9ca3af; /* gray-400 */
+        }
+        .dark .premium-locked .ai-action-btn, .dark .premium-locked #ai-change-style-btn {
+            background-color: #374151; /* gray-700 */
+            color: #6b7280; /* gray-500 */
+        }
+        .premium-locked #ai-source {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        .dark .premium-locked #ai-source {
+            background-color: #1f2937; /* gray-800 */
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -132,8 +185,25 @@
         <header class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-gray-700 shadow-sm">
             <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">Penerjemah Hoshi ⭐</h1>
             <div class="flex items-center gap-2">
+                <!-- Kontainer Otentikasi -->
+                <div id="auth-container" class="flex items-center gap-2">
+                    <button id="login-btn" class="text-sm font-semibold text-blue-600 hover:underline">Login</button>
+                    <button id="register-btn" class="text-sm font-semibold bg-blue-600 text-white py-1.5 px-3 rounded-md hover:bg-blue-700">Daftar</button>
+                </div>
+                <div id="user-info" class="hidden items-center gap-2">
+                    <span id="user-email" class="text-sm font-medium text-slate-600 dark:text-slate-300"></span>
+                    <button id="logout-btn" class="text-sm font-semibold text-red-500 hover:underline">Logout</button>
+                </div>
+
+                <div class="h-6 w-px bg-slate-200 dark:bg-gray-700"></div>
+
+                <button id="api-key-btn" aria-label="Kunci API" title="Kelola Kunci API Gemini" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2.5 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v-2l1-1 1-1 .257-.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
+                    </svg>
+                </button>
                 <button id="settings-btn" aria-label="Pengaturan" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2.5 transition-colors">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.405 1.05c.412-1.363 2.387-1.363 2.799 0l.34 1.125a1.5 1.5 0 001.482 1.05h1.181c1.423 0 2.013 1.795.898 2.65l-.948.69a1.5 1.5 0 00-.573 1.752l.34 1.125c.412 1.363-.93 2.65-2.235 1.752l-.948-.69a1.5 1.5 0 00-1.752 0l-.948.69c-1.305.9-2.647-.39-2.235-1.752l.34-1.125a1.5 1.5 0 00-.573-1.752l-.948-.69c-1.115-.855-.525-2.65.898-2.65h1.181a1.5 1.5 0 001.482 1.05l.34-1.125zM10 6a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.405 1.05c.412-1.363 2.387-1.363 2.799 0l.34 1.125a1.5 1.5 0 001.482 1.05h1.181c1.423 0 2.013 1.795.898 2.65l-.948.69a1.5 1.5 0 00-.573 1.752l.34 1.125c.412 1.363-.93 2.65-2.235 1.752l-.948-.69a1.5 1.5 0 00-1.752 0l-.948.69c-1.305.9-2.647-.39-2.235-1.752l.34-1.125a1.5 1.5 0 00-.573-1.752l-.948-.69c-1.115-.855-.525-2.65.898-2.65h1.181a1.5 1.5 0 001.482-1.05l.34-1.125zM10 6a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg>
                 </button>
                 <div class="relative">
                     <button id="theme-menu-button" aria-label="Menu Tema" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2.5 transition-colors">
@@ -155,7 +225,7 @@
                 <div class="flex border-b border-slate-200 dark:border-gray-700 mb-4 overflow-x-auto">
                     <button class="tab-btn tab-active flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold border-b-2 border-transparent transition-colors" data-tab="text">Teks</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="voice">Percakapan</button>
-                    <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="ai">Ringkas AI</button>
+                    <button id="ai-tab-btn" class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="ai">Asisten AI 💎</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="image">Gambar</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="document">Dokumen</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="subtitle">Subtitle</button>
@@ -194,7 +264,7 @@
                                     <button id="glossary-manage-btn" class="ml-2 text-blue-500 hover:underline text-sm font-semibold hidden">Kelola</button>
                                 </div>
                                 <div id="translated-output-container" class="w-full bg-transparent resize-none text-lg flex-grow overflow-y-auto scrollable">
-                                    <div id="translated-output"></div>
+                                    <div id="translated-output" title="Klik sebuah kata untuk melihat definisinya"></div>
                                     <div id="romanization-output" class="text-base italic text-slate-500 dark:text-slate-400 mt-1"></div>
                                     <div id="alternative-translations" class="mt-2 text-sm text-slate-600 dark:text-slate-300 space-y-1 overflow-y-auto scrollable"></div>
                                 </div>
@@ -237,7 +307,6 @@
                         </div>
                         <div id="conversation-view" class="flex-grow p-4 overflow-y-auto scrollable">
                             <p id="conversation-placeholder" class="text-center text-slate-400 dark:text-slate-500 h-full flex items-center justify-center">Ketuk tombol mikrofon untuk memulai percakapan...</p>
-                            <!-- Conversation bubbles will be added here -->
                         </div>
                         <div class="flex items-center justify-around p-4 border-t border-slate-200 dark:border-gray-700">
                             <select id="conversation-lang-1" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-2 text-sm font-semibold"></select>
@@ -257,13 +326,13 @@
 
                 <!-- AI Panel -->
                 <div id="ai-panel" class="tab-panel hidden">
-                    <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <h2 class="text-lg font-semibold mb-2 text-center">Asisten Tulisan AI</h2>
+                    <div id="ai-content-wrapper" class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                        <h2 class="text-lg font-semibold mb-2 text-center">Asisten Tulisan AI 💎</h2>
                         <div class="grid md:grid-cols-2 gap-4">
-                            <textarea id="ai-source" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukkan teks untuk diubah oleh AI..."></textarea>
+                            <textarea id="ai-source" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" placeholder="Masukkan teks untuk diubah oleh AI..."></textarea>
                             <textarea id="ai-result" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none" placeholder="Hasil yang disempurnakan oleh AI..." readonly></textarea>
                         </div>
-                        <div class="flex flex-wrap justify-center items-center gap-2 mt-4">
+                        <div id="ai-controls" class="flex flex-wrap justify-center items-center gap-2 mt-4">
                             <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="shorten"><span class="btn-text">Persingkat</span><div class="loader hidden"></div></button>
                             <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="lengthen"><span class="btn-text">Perpanjang</span><div class="loader hidden"></div></button>
                             <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="simplify"><span class="btn-text">Sederhanakan</span><div class="loader hidden"></div></button>
@@ -271,6 +340,11 @@
                             <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="professional"><span class="btn-text">Buat Profesional</span><div class="loader hidden"></div></button>
                             <button class="ai-action-btn bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors flex items-center gap-2" data-action="informative"><span class="btn-text">Buat Informatif</span><div class="loader hidden"></div></button>
                             <button id="ai-change-style-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Ubah Gaya Lainnya...</button>
+                        </div>
+                         <div id="premium-lock-overlay" class="hidden text-center mt-4">
+                            <p class="font-semibold text-slate-700 dark:text-slate-200">Fitur Premium Terkunci 🔒</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Login dan masukkan Gemini API Key untuk membuka fitur canggih ini.</p>
+                            <button id="unlock-premium-btn" class="mt-2 bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors">Login untuk Membuka</button>
                         </div>
                     </div>
                 </div>
@@ -288,7 +362,6 @@
                         <div id="image-viewport" class="mt-4 w-full bg-slate-100 dark:bg-gray-700 min-h-[300px]">
                             <div id="image-transformer">
                                 <div id="image-preview-container">
-                                    <!-- Canvases will be inserted here -->
                                 </div>
                             </div>
                         </div>
@@ -357,11 +430,14 @@
     </div>
 
     <!-- Modals -->
+    <div id="login-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Login</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="login-form" class="p-4 space-y-4"><div><label for="login-email" class="block text-sm font-medium">Email</label><input id="login-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="login-password" class="block text-sm font-medium">Password</label><input id="login-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Login</button><p id="login-error" class="text-red-500 text-sm text-center"></p></form></div></div>
+    <div id="register-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Daftar Akun Baru</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="register-form" class="p-4 space-y-4"><div><label for="register-email" class="block text-sm font-medium">Email</label><input id="register-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="register-password" class="block text-sm font-medium">Password (min. 6 karakter)</label><input id="register-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Daftar</button><p id="register-error" class="text-red-500 text-sm text-center"></p></form></div></div>
     <div id="history-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Histori Terjemahan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="history-list" class="p-4 overflow-y-auto scrollable"></div></div></div>
     <div id="saved-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Terjemahan Tersimpan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="saved-list" class="p-4 overflow-y-auto scrollable"></div></div></div>
     <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pengaturan Suara</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><fieldset><legend class="font-semibold mb-2">Kecepatan Suara</legend><div class="flex gap-4" id="speed-settings"><label><input type="radio" name="speed" value="1" checked> Normal</label><label><input type="radio" name="speed" value="0.7"> Lambat</label><label><input type="radio" name="speed" value="0.4"> Lebih Lambat</label></div></fieldset><fieldset><legend class="font-semibold mb-2">Jenis Suara</legend><div class="flex gap-4" id="voice-settings"><label><input type="radio" name="voice" value="female" checked> Wanita</label><label><input type="radio" name="voice" value="male"> Pria</label></div></fieldset></div></div></div>
     <div id="ai-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="ai-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="ai-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="ai-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="ai-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="ai-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="ai-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="ai-style" value="Kasual"> Kasual</label><label class="block"><input type="radio" name="ai-style" value="Percaya Diri"> Percaya Diri</label><label class="block"><input type="radio" name="ai-style" value="Ramah"> Ramah</label><label class="block"><input type="radio" name="ai-style" value="Senang"> Senang</label><label class="block"><input type="radio" name="ai-style" value="Gembira"> Gembira</label><label class="block"><input type="radio" name="ai-style" value="Marah"> Marah</label><label class="block"><input type="radio" name="ai-style" value="Sedih"> Sedih</label><label class="block"><input type="radio" name="ai-style" value="Menjiwai"> Menjiwai</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Gaya</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
+    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API Gemini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-2"><p class="text-sm text-slate-600 dark:text-slate-300">Untuk menggunakan fitur AI premium (💎), Anda memerlukan kunci API dari Google AI Studio. Kunci Anda akan disimpan dengan aman di akun Anda.</p><input id="api-key-input" type="password" placeholder="Masukkan kunci API Anda di sini" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"><button id="save-api-key-btn" class="mt-2 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
     
     <!-- Notification -->
     <div id="notification" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300">Teks disalin!</div>
@@ -391,17 +467,27 @@
         const sourceSpeakBtn = document.getElementById('source-speak-btn'), targetSpeakBtn = document.getElementById('target-speak-btn');
         const copyBtn = document.getElementById('copy-btn'), shareBtn = document.getElementById('share-btn'), googleSearchBtn = document.getElementById('google-search-btn');
         const settingsBtn = document.getElementById('settings-btn'), settingsModal = document.getElementById('settings-modal');
+        const aiPanel = document.getElementById('ai-panel');
+        const aiContentWrapper = document.getElementById('ai-content-wrapper');
         const aiSourceEl = document.getElementById('ai-source'), aiResultEl = document.getElementById('ai-result'), aiChangeStyleBtn = document.getElementById('ai-change-style-btn'), aiStyleModal = document.getElementById('ai-style-modal'), applyStyleBtn = document.getElementById('apply-style-btn');
+        const premiumLockOverlay = document.getElementById('premium-lock-overlay');
+        const unlockPremiumBtn = document.getElementById('unlock-premium-btn');
         const subtitleUpload = document.getElementById('subtitle-upload'), videoTargetLangEl = document.getElementById('video-target-lang'), videoStatusEl = document.getElementById('video-status'), downloadSrtBtn = document.getElementById('download-srt-btn'), subtitleOriginalEl = document.getElementById('subtitle-original'), subtitleTranslatedEl = document.getElementById('subtitle-translated');
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
         const voiceToneSelect = document.getElementById('voice-tone-select');
         const alternativeTranslationsEl = document.getElementById('alternative-translations');
-        // Elemen baru untuk mode percakapan
+        const apiKeyBtn = document.getElementById('api-key-btn'), apiKeyModal = document.getElementById('api-key-modal'), apiKeyInput = document.getElementById('api-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn');
         const conversationView = document.getElementById('conversation-view'), conversationPlaceholder = document.getElementById('conversation-placeholder');
         const micBtn1 = document.getElementById('mic-btn-1'), micBtn2 = document.getElementById('mic-btn-2');
         const conversationLang1 = document.getElementById('conversation-lang-1'), conversationLang2 = document.getElementById('conversation-lang-2');
         const speechRecognitionUnsupported = document.getElementById('speech-recognition-unsupported');
         const conversationSwapBtn = document.getElementById('conversation-swap-btn');
+        // Elemen Otentikasi Baru
+        const authContainer = document.getElementById('auth-container'), userInfo = document.getElementById('user-info'), userEmailEl = document.getElementById('user-email');
+        const loginBtn = document.getElementById('login-btn'), registerBtn = document.getElementById('register-btn'), logoutBtn = document.getElementById('logout-btn');
+        const loginModal = document.getElementById('login-modal'), registerModal = document.getElementById('register-modal');
+        const loginForm = document.getElementById('login-form'), registerForm = document.getElementById('register-form');
+        const loginError = document.getElementById('login-error'), registerError = document.getElementById('register-error');
 
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
@@ -414,13 +500,14 @@
         let isRecording = false;
         let recognition;
         let activeMicButton = null;
+        let currentUser = null;
+        let userApiKey = null;
         
         // --- 3. API & CORE FUNCTIONS ---
 
         async function translate(text, sourceLang, targetLang) {
              if (!text) return ["", "", []];
             try {
-                // Meminta terjemahan utama, romanisasi, dan alternatif
                 const dtParams = 't&dt=rm&dt=at';
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=${dtParams}&q=${encodeURIComponent(text)}`;
                 const response = await fetch(url);
@@ -447,14 +534,19 @@
         }
 
         async function callGeminiAPI(prompt) {
-            const apiKey = "AIzaSyCbGaxl_qYZuZvREoGtUHW7UM1daPOnxfU"; 
-            if (!apiKey) {
-                return "Kesalahan: Kunci API Gemini belum diatur. Silakan masukkan kunci API Anda di dalam kode.";
+            if (!userApiKey) {
+                showNotification("Kunci API Gemini belum diatur untuk akun Anda.");
+                apiKeyModal.classList.add('flex');
+                return "Kesalahan: Kunci API Gemini belum diatur. Silakan masukkan kunci API Anda.";
             }
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${userApiKey}`;
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Gemini API HTTP error:", errorData);
+                    throw new Error(`HTTP error! status: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+                }
                 const result = await response.json();
                 if (result.candidates?.[0]?.content?.parts?.[0]?.text) return result.candidates[0].content.parts[0].text;
                 console.error("Unexpected Gemini API response:", result);
@@ -466,7 +558,25 @@
             }
         }
         
-        // --- 4. HELPER FUNCTIONS ---
+        // --- 4. HELPER & PREMIUM/AUTH FUNCTIONS ---
+        function checkPremiumStatus() {
+            if (currentUser && userApiKey) {
+                // Premium Mode: Unlocked
+                aiContentWrapper.classList.remove('premium-locked');
+                premiumLockOverlay.classList.add('hidden');
+                aiSourceEl.placeholder = "Masukkan teks untuk diubah oleh AI...";
+                aiSourceEl.disabled = false;
+            } else {
+                // Premium Mode: Locked
+                aiContentWrapper.classList.add('premium-locked');
+                premiumLockOverlay.classList.remove('hidden');
+                aiSourceEl.placeholder = currentUser ? "Masukkan Kunci API untuk membuka fitur ini." : "Login dan masukkan Kunci API untuk membuka fitur ini.";
+                unlockPremiumBtn.textContent = currentUser ? 'Masukkan Kunci API' : 'Login untuk Membuka';
+                aiSourceEl.disabled = true;
+                aiResultEl.value = '';
+            }
+        }
+
         const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
         const getFromStorage = (key) => JSON.parse(localStorage.getItem(key)) || [];
         function saveToHistory(item) { let history = getFromStorage(HISTORY_KEY); history.unshift(item); if (history.length > 50) history.pop(); saveToStorage(HISTORY_KEY, history); }
@@ -481,15 +591,6 @@
             switch (tone) {
                 case 'kasual': utterance.pitch = 0.9; utterance.rate = 1.1; break;
                 case 'formal': utterance.pitch = 1.0; utterance.rate = 0.9; break;
-                case 'energik': utterance.pitch = 1.1; utterance.rate = 1.2; break;
-                case 'ceria': utterance.pitch = 1.2; utterance.rate = 1.1; break;
-                case 'kalem': utterance.pitch = 0.9; utterance.rate = 0.8; break;
-                case 'akrab': utterance.pitch = 0.95; utterance.rate = 1.05; break;
-                case 'percaya_diri': utterance.pitch = 1.1; utterance.rate = 1.0; break;
-                case 'terbuka': utterance.pitch = 1.15; utterance.rate = 1.1; break;
-                case 'tenang': utterance.pitch = 1.0; utterance.rate = 0.7; break;
-                case 'cemerlang': utterance.pitch = 1.3; utterance.rate = 1.2; break;
-                case 'lihai': utterance.pitch = 1.0; utterance.rate = 1.15; break;
                 default: utterance.pitch = 1.0; utterance.rate = 1.0;
             }
             
@@ -602,6 +703,10 @@
                     const prompt = `Translate the following text lines to ${targetLangName}, considering the full context. Each line is separated by "---". Maintain the exact number of lines and the "---" separator in your response. Provide only the high-quality, natural-sounding translated text.\n\nOriginal text:\n${originalTexts}`;
                     
                     const translatedBlob = await callGeminiAPI(prompt);
+                    if (translatedBlob.startsWith("Kesalahan:")) {
+                        ocrStatus.textContent = translatedBlob;
+                        return;
+                    }
                     const translatedTexts = translatedBlob.split('\n---\n');
 
                     if (translatedTexts.length !== data.lines.length) {
@@ -676,6 +781,14 @@
         function handleSaveClick() { if (!currentTranslationId) return; let saved = getFromStorage(SAVED_KEY); const history = getFromStorage(HISTORY_KEY); const isAlreadySaved = saved.some(item => item.id === currentTranslationId); if (isAlreadySaved) { saved = saved.filter(item => item.id !== currentTranslationId); showNotification("Dihapus dari simpanan."); } else { const itemToSave = history.find(item => item.id === currentTranslationId); if (itemToSave) saved.unshift(itemToSave); showNotification("Terjemahan disimpan!"); } saveToStorage(SAVED_KEY, saved); updateSaveButtonState(); }
         
         async function handleAiAction(action, buttonEl) {
+            if (!currentUser) {
+                loginModal.classList.add('flex');
+                return;
+            }
+            if (!userApiKey) {
+                apiKeyModal.classList.add('flex');
+                return;
+            }
             const text = aiSourceEl.value.trim();
             if (!text) {
                 showNotification("Masukkan teks terlebih dahulu.");
@@ -685,13 +798,7 @@
             let instruction = '';
             switch (action) {
                 case 'shorten': instruction = 'Ringkas teks berikut menjadi lebih pendek dan padat'; break;
-                case 'lengthen': instruction = 'Perpanjang teks berikut agar lebih detail dan deskriptif'; break;
-                case 'simplify': instruction = 'Sederhanakan teks berikut agar lebih mudah dipahami oleh orang awam'; break;
-                case 'casual': instruction = 'Ubah gaya tulisan berikut menjadi lebih kasual dan santai'; break;
-                case 'professional': instruction = 'Ubah gaya tulisan berikut menjadi lebih profesional dan formal'; break;
-                case 'informative': instruction = 'Kembangkan teks berikut agar lebih informatif dengan menambahkan detail atau data yang relevan'; break;
-                default:
-                    instruction = `Ubah gaya tulisan berikut menjadi lebih "${action}"`;
+                default: instruction = `Ubah gaya tulisan berikut menjadi lebih "${action}"`;
             }
 
             const prompt = `${instruction}, tanpa mengubah makna aslinya. Berikan hanya teks hasilnya saja. Teks: "${text}"`;
@@ -712,7 +819,7 @@
         }
 
         async function handleSubtitleUpload(file) { if (!file) return; videoStatusEl.textContent = 'Membaca file subtitle...'; const srtContent = await file.text(); subtitleOriginalEl.textContent = srtContent; originalSrtSubs = parseSRT(srtContent); await retranslateSubtitles(); }
-        async function retranslateSubtitles() { if (!originalSrtSubs) return; videoStatusEl.textContent = `Menerjemahkan ${originalSrtSubs.length} baris subtitle dengan AI...`; const targetLang = languages[videoTargetLangEl.value]; const allText = originalSrtSubs.map(s => s.text).join('\n---\n'); const prompt = `Translate the following subtitle lines to ${targetLang}. Maintain the line breaks separated by "---". Provide only the translated text, with "---" as the separator. Text:\n${allText}`; const translatedBlob = await callGeminiAPI(prompt); const translatedLines = translatedBlob.split('\n---\n'); if (translatedLines.length !== originalSrtSubs.length) { videoStatusEl.textContent = 'Error: AI translation returned unexpected format.'; return; } originalSrtSubs.forEach((sub, index) => { sub.translatedText = translatedLines[index] || sub.text; }); translatedSrtContent = generateSRT(originalSrtSubs); subtitleTranslatedEl.textContent = translatedSrtContent; downloadSrtBtn.classList.remove('hidden'); videoStatusEl.textContent = 'Subtitle siap diunduh!'; }
+        async function retranslateSubtitles() { if (!originalSrtSubs) return; videoStatusEl.textContent = `Menerjemahkan ${originalSrtSubs.length} baris subtitle dengan AI...`; const targetLang = languages[videoTargetLangEl.value]; const allText = originalSrtSubs.map(s => s.text).join('\n---\n'); const prompt = `Translate the following subtitle lines to ${targetLang}. Maintain the line breaks separated by "---". Provide only the translated text, with "---" as the separator. Text:\n${allText}`; const translatedBlob = await callGeminiAPI(prompt); if (translatedBlob.startsWith("Kesalahan:")) { videoStatusEl.textContent = translatedBlob; return; } const translatedLines = translatedBlob.split('\n---\n'); if (translatedLines.length !== originalSrtSubs.length) { videoStatusEl.textContent = 'Error: AI translation returned unexpected format.'; return; } originalSrtSubs.forEach((sub, index) => { sub.translatedText = translatedLines[index] || sub.text; }); translatedSrtContent = generateSRT(originalSrtSubs); subtitleTranslatedEl.textContent = translatedSrtContent; downloadSrtBtn.classList.remove('hidden'); videoStatusEl.textContent = 'Subtitle siap diunduh!'; }
         function handleDownloadSRT() { if (!translatedSrtContent) return; const blob = new Blob([translatedSrtContent], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'subtitle_terjemahan.srt'; a.click(); URL.revokeObjectURL(url); }
         function handleSwap() { if (sourceLangEl.value === 'auto') { showNotification("Tidak bisa menukar 'Deteksi Otomatis'."); return; } const sourceLang = sourceLangEl.value; const targetLang = targetLangEl.value; const sourceText = sourceTextEl.value; const targetText = translatedOutput.textContent; sourceLangEl.value = targetLang; targetLangEl.value = sourceLang; sourceTextEl.value = targetText; handleTextTranslation(); }
         
@@ -740,7 +847,6 @@
                 p.className = 'alternative-translation';
                 p.onclick = () => {
                     renderMainTranslation(alt);
-                    // Update history with the chosen alternative
                     let history = getFromStorage(HISTORY_KEY);
                     if (history[0] && history[0].id === currentTranslationId) {
                         history[0].translatedText = alt;
@@ -778,18 +884,11 @@
             const history = getFromStorage(HISTORY_KEY);
             const item = history.find(i => i.id === id);
             if (item) {
-                // Pindah ke tab Teks
                 document.querySelector('.tab-btn[data-tab="text"]').click();
-                
-                // Isi kembali input
                 sourceLangEl.value = item.sourceLang;
                 targetLangEl.value = item.targetLang;
                 sourceTextEl.value = item.sourceText;
-                
-                // Lakukan terjemahan ulang untuk menampilkan hasil dan alternatif
                 handleTextTranslation();
-                
-                // Tutup modal
                 historyModal.classList.remove('flex');
                 savedModal.classList.remove('flex');
             }
@@ -814,7 +913,7 @@
                     saveToStorage(SAVED_KEY, saved);
                 } else if (action === 'delete-history') {
                     history = history.filter(item => item.id !== numericId);
-                    saved = saved.filter(item => item.id !== numericId); // Hapus juga dari saved jika ada
+                    saved = saved.filter(item => item.id !== numericId);
                     saveToStorage(HISTORY_KEY, history);
                     saveToStorage(SAVED_KEY, saved);
                 }
@@ -864,55 +963,81 @@
                 return;
             }
             recognition = new SpeechRecognition();
-            recognition.continuous = false; // Set to false for single utterances
+            recognition.continuous = false;
             recognition.interimResults = true;
 
-            recognition.onstart = () => {
-                isRecording = true;
-                if(activeMicButton) {
-                    activeMicButton.classList.add('recording', 'pulse-red');
-                }
-            };
-
-            recognition.onend = () => {
-                isRecording = false;
-                if(activeMicButton) {
-                    activeMicButton.classList.remove('recording', 'pulse-red');
-                    activeMicButton = null;
-                }
-            };
-
-            recognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
-                if(activeMicButton) {
-                    activeMicButton.classList.remove('recording', 'pulse-red');
-                }
-            };
-
+            recognition.onstart = () => { isRecording = true; if(activeMicButton) { activeMicButton.classList.add('recording', 'pulse-red'); } };
+            recognition.onend = () => { isRecording = false; if(activeMicButton) { activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; } };
+            recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) { activeMicButton.classList.remove('recording', 'pulse-red'); } };
             recognition.onresult = async (event) => {
                 let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    }
-                }
-
+                for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) { finalTranscript += event.results[i][0].transcript; } }
                 if (finalTranscript && activeMicButton) {
                     const sourceLangSelect = document.getElementById(activeMicButton.dataset.langSelect);
                     const sourceLang = sourceLangSelect.value;
                     const targetLang = sourceLangSelect.id === 'conversation-lang-1' ? conversationLang2.value : conversationLang1.value;
-                    
                     const [translated] = await translate(finalTranscript, sourceLang, targetLang);
                     addConversationBubble(finalTranscript, translated, sourceLang);
-                    
-                    // Automatically speak the translation
                     speak(translated, targetLang);
-                    
                     saveToHistory({ id: Date.now(), sourceLang: sourceLang, targetLang: targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated });
                 }
             };
         }
 
+        // --- Firebase Auth UI Logic ---
+        function setupAuthUI(user) {
+            if (user) {
+                // User is signed in.
+                currentUser = user;
+                authContainer.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                userInfo.classList.add('flex');
+                userEmailEl.textContent = user.email;
+                getApiKeyFromFirestore(user.uid);
+            } else {
+                // User is signed out.
+                currentUser = null;
+                userApiKey = null;
+                authContainer.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                userEmailEl.textContent = '';
+                checkPremiumStatus();
+            }
+        }
+
+        async function getApiKeyFromFirestore(userId) {
+            const { db } = window.firebaseServices;
+            const docRef = db.collection('users').doc(userId);
+            try {
+                const doc = await docRef.get();
+                if (doc.exists) {
+                    userApiKey = doc.data().apiKey || null;
+                } else {
+                    userApiKey = null;
+                }
+            } catch (error) {
+                console.error("Error getting API key:", error);
+                userApiKey = null;
+            } finally {
+                checkPremiumStatus();
+            }
+        }
+
+        async function saveApiKeyToFirestore(userId, apiKey) {
+            const { db } = window.firebaseServices;
+            try {
+                await db.collection('users').doc(userId).set({ apiKey: apiKey }, { merge: true });
+                userApiKey = apiKey;
+                showNotification('Kunci API berhasil disimpan di akun Anda!');
+                checkPremiumStatus();
+            } catch (error) {
+                console.error("Error saving API key:", error);
+                showNotification('Gagal menyimpan kunci API.');
+            }
+        }
+
+
+        // Initialize
         const sortedLanguages = Object.entries(languages).filter(([code]) => code !== 'auto').sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
         const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; 
         sourceLangEl.appendChild(autoOption.cloneNode(true));
@@ -920,17 +1045,10 @@
 
         const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, siteTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, conversationLang1, conversationLang2];
         sortedLanguages.forEach(([code, name]) => { 
-            const option = document.createElement('option'); 
-            option.value = code; 
-            option.textContent = name; 
+            const option = document.createElement('option'); option.value = code; option.textContent = name; 
             sourceLangEl.appendChild(option.cloneNode(true)); 
             allSelects.forEach(sel => {
-                // Mencegah "Deteksi Otomatis" ditambahkan dua kali ke conversationLang1
-                if (sel.id === 'conversation-lang-1' && sel.querySelector('option[value="auto"]')) {
-                    sel.appendChild(option.cloneNode(true));
-                } else if (sel.id !== 'conversation-lang-1') {
-                    sel.appendChild(option.cloneNode(true));
-                }
+                if (sel.id === 'conversation-lang-1' && sel.querySelector('option[value="auto"]')) { sel.appendChild(option.cloneNode(true)); } else if (sel.id !== 'conversation-lang-1') { sel.appendChild(option.cloneNode(true)); }
             }); 
         });
         
@@ -939,6 +1057,7 @@
         
         loadVoiceSettings();
         initializeSpeechRecognition();
+        checkPremiumStatus();
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         
@@ -953,6 +1072,7 @@
             updateSaveButtonState();
         }
 
+        // --- Event Listeners ---
         sourceTextEl.addEventListener('input', triggerTranslationUpdate);
         targetLangEl.addEventListener('change', handleTextTranslation);
         swapBtn.addEventListener('click', handleSwap);
@@ -973,6 +1093,10 @@
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
+        apiKeyBtn.addEventListener('click', () => { if(!currentUser) { showNotification("Silakan login terlebih dahulu."); loginModal.classList.add('flex'); return; } apiKeyInput.value = userApiKey || ''; apiKeyModal.classList.add('flex'); });
+        unlockPremiumBtn.addEventListener('click', () => { if(!currentUser) { loginModal.classList.add('flex'); } else { apiKeyModal.classList.add('flex'); } });
+        saveApiKeyBtn.addEventListener('click', () => { if(!currentUser) return; const key = apiKeyInput.value.trim(); if(key) { saveApiKeyToFirestore(currentUser.uid, key); apiKeyModal.classList.remove('flex'); } else { showNotification('Kunci API tidak boleh kosong.'); } });
+
         document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
         
         historyList.addEventListener('click', mainListClickHandler);
@@ -1006,7 +1130,7 @@
         document.querySelectorAll('.ai-action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => handleAiAction(e.currentTarget.dataset.action, e.currentTarget));
         });
-        aiChangeStyleBtn.addEventListener('click', () => aiStyleModal.classList.add('flex'));
+        aiChangeStyleBtn.addEventListener('click', () => { if (!currentUser || !userApiKey) { unlockPremiumBtn.click(); } else { aiStyleModal.classList.add('flex'); } });
         applyStyleBtn.addEventListener('click', () => {
             const selectedStyle = document.querySelector('input[name="ai-style"]:checked').value;
             handleAiAction(selectedStyle, aiChangeStyleBtn);
@@ -1020,9 +1144,8 @@
         glossaryToggle.addEventListener('change', () => { glossaryManageBtn.classList.toggle('hidden', !glossaryToggle.checked); handleTextTranslation(); });
         glossaryManageBtn.addEventListener('click', () => { renderGlossary(); glossaryModal.classList.add('flex'); });
         addGlossaryBtn.addEventListener('click', () => { const sourceText = glossarySourceText.value.trim(); const targetText = glossaryTargetText.value.trim(); if (!sourceText || !targetText) return; let glossary = getFromStorage(GLOSSARY_KEY); glossary.push({ sourceLang: glossarySourceLang.value, targetLang: glossaryTargetLang.value, sourceText, targetText }); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); glossarySourceText.value = ''; glossaryTargetText.value = ''; });
-        glossaryListEl.addEventListener('click', e => { if (e.target.classList.contains('delete-glossary-btn')) { let glossary = getFromStorage(GLOSSARY_KEY); glossary.splice(e.target.dataset.index, 1); saveToStorage(GLOSSARY_KEY, glossary); renderGlossary(); } });
+        glossaryListEl.addEventListener('click', e => { if (e.target.classList.contains('delete-glossary-btn')) { let glossary = getFromStorage(GLOSSARY_KEY); glossary.splice(e.target.dataset.index, 1); saveToStorage(GLOSSARY_KEY, glossary); } });
 
-        // Event listener untuk tombol rekam percakapan
         [micBtn1, micBtn2].forEach(btn => {
             btn.addEventListener('click', () => {
                 if (isRecording) {
@@ -1031,8 +1154,6 @@
                     if (recognition) {
                         const langSelectId = btn.dataset.langSelect;
                         let langCode = document.getElementById(langSelectId).value;
-                        // Speech Recognition API tidak mendukung 'auto', jadi kita setel bahasa default untuk mendengarkan.
-                        // API terjemahan akan tetap menggunakan 'auto' jika itu yang dipilih.
                         recognition.lang = (langCode === 'auto') ? 'id-ID' : langCode;
                         activeMicButton = btn;
                         recognition.start();
@@ -1041,23 +1162,61 @@
             });
         });
 
-        // Event listener untuk tombol tukar bahasa percakapan
         conversationSwapBtn.addEventListener('click', () => {
             const lang1 = conversationLang1.value;
             const lang2 = conversationLang2.value;
-            
-            // Logika baru: jika lang1 adalah 'auto', kita tidak bisa menukarnya ke sisi kanan
-            // yang tidak mendukung 'auto'. Jadi kita tukar dengan bahasa default (misal: Indonesia)
             if (lang1 === 'auto') {
                 conversationLang1.value = lang2;
-                conversationLang2.value = 'id'; // Setel bahasa default
+                conversationLang2.value = 'id';
             } else {
                 conversationLang1.value = lang2;
                 conversationLang2.value = lang1;
             }
         });
-    
+
+        // Auth Event Listeners
+        loginBtn.addEventListener('click', () => loginModal.classList.add('flex'));
+        registerBtn.addEventListener('click', () => registerModal.classList.add('flex'));
+        logoutBtn.addEventListener('click', () => window.firebaseServices.auth.signOut());
+        
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginForm['login-email'].value;
+            const password = loginForm['login-password'].value;
+            window.firebaseServices.auth.signInWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    loginModal.classList.remove('flex');
+                    loginForm.reset();
+                    loginError.textContent = '';
+                })
+                .catch(error => {
+                    loginError.textContent = error.message;
+                });
+        });
+
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = registerForm['register-email'].value;
+            const password = registerForm['register-password'].value;
+            window.firebaseServices.auth.createUserWithEmailAndPassword(email, password)
+                .then(userCredential => {
+                    registerModal.classList.remove('flex');
+                    registerForm.reset();
+                    registerError.textContent = '';
+                    showNotification('Akun berhasil dibuat! Anda sekarang login.');
+                })
+                .catch(error => {
+                    registerError.textContent = error.message;
+                });
+        });
+
+        // Listen for auth state changes
+        if (window.firebaseServices) {
+            window.firebaseServices.auth.onAuthStateChanged(setupAuthUI);
+        }
+
     });
     </script>
 </body>
 </html>
+
