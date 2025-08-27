@@ -778,6 +778,7 @@
         // --- 4. HELPER & PREMIUM/AUTH FUNCTIONS ---
         function checkPremiumStatus() {
             const premiumWrappers = [
+                // DIKEMBALIKAN: Wrapper AI dikembalikan ke pemeriksaan premium
                 { wrapper: aiContentWrapper, overlay: premiumLockOverlay },
                 { wrapper: lyricsContentWrapper, overlay: lyricsPremiumLockOverlay },
                 { wrapper: codeContentWrapper, overlay: codePremiumLockOverlay },
@@ -1531,6 +1532,7 @@
         loadVoiceSettings();
         initializeSpeechRecognition();
         
+        // DIKEMBALIKAN: Penguncian awal untuk panel AI
         premiumLockOverlay.classList.remove('hidden');
         premiumLockOverlay.innerHTML = `<p class="text-sm text-slate-500 dark:text-slate-400">Memeriksa status akun...</p>`;
         aiContentWrapper.classList.add('premium-locked');
