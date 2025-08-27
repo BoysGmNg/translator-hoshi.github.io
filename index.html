@@ -778,7 +778,8 @@
         // --- 4. HELPER & PREMIUM/AUTH FUNCTIONS ---
         function checkPremiumStatus() {
             const premiumWrappers = [
-                { wrapper: aiContentWrapper, overlay: premiumLockOverlay },
+                // DIHAPUS: Wrapper AI dihapus dari pemeriksaan premium
+                // { wrapper: aiContentWrapper, overlay: premiumLockOverlay },
                 { wrapper: lyricsContentWrapper, overlay: lyricsPremiumLockOverlay },
                 { wrapper: codeContentWrapper, overlay: codePremiumLockOverlay },
                 { wrapper: audioContentWrapper, overlay: audioPremiumLockOverlay }
@@ -1531,10 +1532,11 @@
         loadVoiceSettings();
         initializeSpeechRecognition();
         
-        premiumLockOverlay.classList.remove('hidden');
-        premiumLockOverlay.innerHTML = `<p class="text-sm text-slate-500 dark:text-slate-400">Memeriksa status akun...</p>`;
-        aiContentWrapper.classList.add('premium-locked');
-        aiSourceEl.disabled = true;
+        // DIHAPUS: Penguncian awal untuk panel AI
+        // premiumLockOverlay.classList.remove('hidden');
+        // premiumLockOverlay.innerHTML = `<p class="text-sm text-slate-500 dark:text-slate-400">Memeriksa status akun...</p>`;
+        // aiContentWrapper.classList.add('premium-locked');
+        // aiSourceEl.disabled = true;
 
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
@@ -1732,3 +1734,4 @@
     </script>
 </body>
 </html>
+" in the Canv
