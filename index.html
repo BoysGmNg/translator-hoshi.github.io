@@ -108,7 +108,7 @@
             box-sizing: border-box;
             animation: rotation 1s linear infinite;
         }
-        .ai-action-btn .loader, #target-speak-btn .loader {
+        .ai-action-btn .loader, #target-speak-btn .loader, #check-grammar-btn .loader {
              border-color: #3b82f6;
              border-bottom-color: transparent;
         }
@@ -177,6 +177,22 @@
         #predictive-text {
             cursor: pointer;
             transition: color 0.2s;
+        }
+
+        /* Gaya untuk Perbandingan Teks Koreksi */
+        #correction-diff del {
+            background-color: #fecaca; /* red-200 */
+            text-decoration: line-through;
+        }
+        #correction-diff ins {
+            background-color: #bbf7d0; /* green-200 */
+            text-decoration: none;
+        }
+        .dark #correction-diff del {
+            background-color: #450a0a; /* red-900 */
+        }
+        .dark #correction-diff ins {
+            background-color: #14532d; /* green-900 */
         }
     </style>
 </head>
@@ -258,6 +274,14 @@
                                 <div class="flex justify-between items-center mt-2">
                                     <div class="flex gap-2">
                                         <button id="source-speak-btn" aria-label="Dengarkan teks sumber" title="Dengarkan teks sumber" class="p-1 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button>
+                                        <!-- BARU: Tombol Koreksi Otomatis -->
+                                        <button id="check-grammar-btn" aria-label="Periksa Teks dengan AI" title="Periksa Teks dengan AI" class="p-1 text-slate-400 hover:text-blue-500 transition-colors flex items-center gap-1 premium-btn">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span class="text-xs font-bold">AI</span>
+                                            <div class="loader hidden"></div>
+                                        </button>
                                     </div>
                                     <div class="text-right text-xs text-slate-400" id="char-count">0 / 5.000</div>
                                 </div>
@@ -526,10 +550,34 @@
     <div id="ai-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="ai-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="ai-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="ai-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="ai-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="ai-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="ai-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="ai-style" value="Kasual"> Kasual</label><label class="block"><input type="radio" name="ai-style" value="Percaya Diri"> Percaya Diri</label><label class="block"><input type="radio" name="ai-style" value="Ramah"> Ramah</label><label class="block"><input type="radio" name="ai-style" value="Senang"> Senang</label><label class="block"><input type="radio" name="ai-style" value="Gembira"> Gembira</label><label class="block"><input type="radio" name="ai-style" value="Marah"> Marah</label><label class="block"><input type="radio" name="ai-style" value="Sedih"> Sedih</label><label class="block"><input type="radio" name="ai-style" value="Menjiwai"> Menjiwai</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Gaya</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
     <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API Gemini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-2"><p class="text-sm text-slate-600 dark:text-slate-300">Untuk menggunakan fitur AI premium (💎), Anda memerlukan kunci API dari Google AI Studio. Kunci Anda akan disimpan dengan aman di akun Anda.</p><input id="api-key-input" type="password" placeholder="Masukkan kunci API Anda di sini" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"><button id="save-api-key-btn" class="mt-2 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
+    <!-- BARU: Modal Koreksi Teks -->
+    <div id="correction-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold">Saran Perbaikan Teks</h3>
+                <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto scrollable space-y-4">
+                <div>
+                    <h4 class="font-semibold mb-2">Teks Asli:</h4>
+                    <pre id="original-text-correction" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></pre>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">Teks yang Disarankan:</h4>
+                    <div id="correction-diff" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 p-4 border-t dark:border-gray-700">
+                <button id="reject-correction-btn" class="bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors">Batal</button>
+                <button id="accept-correction-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Perbaikan</button>
+            </div>
+        </div>
+    </div>
     
     <!-- Notification -->
     <div id="notification" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300">Teks disalin!</div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
     <script>
     // =================================================================================
     // JAVASCRIPT LOGIC
@@ -584,6 +632,14 @@
         const audioContentWrapper = document.getElementById('audio-content-wrapper'), audioTargetLang = document.getElementById('audio-target-lang'), audioUpload = document.getElementById('audio-upload'), audioDropZone = document.getElementById('audio-drop-zone'), audioTranscribedText = document.getElementById('audio-transcribed-text'), audioTranslatedText = document.getElementById('audio-translated-text'), audioPremiumLockOverlay = document.getElementById('audio-premium-lock-overlay'), audioFileName = document.getElementById('audio-file-name');
         // BARU: Elemen untuk Konteks AI
         const aiDomainSelect = document.getElementById('ai-domain-select');
+        // BARU: Elemen untuk Koreksi Teks
+        const checkGrammarBtn = document.getElementById('check-grammar-btn');
+        const correctionModal = document.getElementById('correction-modal');
+        const originalTextCorrectionEl = document.getElementById('original-text-correction');
+        const correctionDiffEl = document.getElementById('correction-diff');
+        const acceptCorrectionBtn = document.getElementById('accept-correction-btn');
+        const rejectCorrectionBtn = document.getElementById('reject-correction-btn');
+        let correctedText = '';
 
 
         // --- 2. STATE & CONSTANTS ---
@@ -696,6 +752,13 @@
                     }
                 }
             });
+            
+            // Atur status tombol periksa teks
+            if (currentUser && userApiKey) {
+                checkGrammarBtn.classList.remove('premium-locked');
+            } else {
+                checkGrammarBtn.classList.add('premium-locked');
+            }
 
             // Re-attach listeners for dynamically created buttons
             document.querySelectorAll('.unlock-premium-btn').forEach(btn => {
@@ -1114,6 +1177,43 @@
             reader.readAsArrayBuffer(file);
         }
 
+        // BARU: Fungsi untuk memeriksa tata bahasa
+        async function handleGrammarCheck() {
+            if (checkGrammarBtn.classList.contains('premium-locked')) {
+                document.querySelector('.unlock-premium-btn')?.click();
+                return;
+            }
+            const text = sourceTextEl.value.trim();
+            if (!text) {
+                showNotification("Masukkan teks untuk diperiksa.");
+                return;
+            }
+
+            const loader = checkGrammarBtn.querySelector('.loader');
+            loader.classList.remove('hidden');
+            checkGrammarBtn.disabled = true;
+
+            const prompt = `Periksa dan perbaiki kesalahan tata bahasa dan ejaan pada teks berikut. Berikan hanya teks yang sudah diperbaiki saja, tanpa penjelasan tambahan. Teks: "${text}"`;
+            const result = await callGeminiAPI(prompt);
+            
+            loader.classList.add('hidden');
+            checkGrammarBtn.disabled = false;
+
+            if (result.startsWith("Kesalahan:") || result.startsWith("Gagal")) {
+                showNotification(result);
+            } else {
+                correctedText = result.trim();
+                originalTextCorrectionEl.textContent = text;
+                
+                const dmp = new diff_match_patch();
+                const diff = dmp.diff_main(text, correctedText);
+                dmp.diff_cleanupSemantic(diff);
+                correctionDiffEl.innerHTML = dmp.diff_prettyHtml(diff);
+
+                correctionModal.classList.add('flex');
+            }
+        }
+
 
         // --- 6. RENDER & UI FUNCTIONS ---
         function renderMainTranslation(text) {
@@ -1357,7 +1457,8 @@
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         
-        const exampleImageUrl = '[https://placehold.co/600x400/FFFFFF/000000/png?text=Halo!%5CnApa+kabar%3F&font=inter](https://placehold.co/600x400/FFFFFF/000000/png?text=Halo!%5CnApa+kabar%3F&font=inter)';
+        // DIPERBARUI: URL gambar contoh yang valid
+        const exampleImageUrl = '[https://i.imgur.com/nCRjA6n.jpeg](https://i.imgur.com/nCRjA6n.jpeg)';
         handleImageTranslation(exampleImageUrl);
 
         function triggerTranslationUpdate() {
@@ -1443,7 +1544,7 @@
         document.querySelectorAll('.ai-action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => handleAiAction(e.currentTarget.dataset.action, e.currentTarget));
         });
-        aiChangeStyleBtn.addEventListener('click', () => { if (!currentUser || !userApiKey) { document.getElementById('unlock-premium-btn')?.click(); } else { aiStyleModal.classList.add('flex'); } });
+        aiChangeStyleBtn.addEventListener('click', () => { if (!currentUser || !userApiKey) { document.querySelector('.unlock-premium-btn')?.click(); } else { aiStyleModal.classList.add('flex'); } });
         applyStyleBtn.addEventListener('click', () => {
             const selectedStyle = document.querySelector('input[name="ai-style"]:checked').value;
             handleAiAction(selectedStyle, aiChangeStyleBtn);
@@ -1526,6 +1627,16 @@
         // New Feature Event Listeners
         translateLyricsBtn.addEventListener('click', handleLyricsTranslation);
         translateCodeBtn.addEventListener('click', handleCodeTranslation);
+        checkGrammarBtn.addEventListener('click', handleGrammarCheck);
+        acceptCorrectionBtn.addEventListener('click', () => {
+            sourceTextEl.value = correctedText;
+            correctionModal.classList.remove('flex');
+            triggerTranslationUpdate();
+        });
+        rejectCorrectionBtn.addEventListener('click', () => {
+            correctionModal.classList.remove('flex');
+        });
+
 
         // Listen for auth state changes
         if (window.firebaseServices) {
