@@ -363,6 +363,17 @@
                 <div id="ai-panel" class="tab-panel hidden">
                     <div id="ai-content-wrapper" class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
                         <h2 class="text-lg font-semibold mb-2 text-center">Asisten Tulisan AI 💎</h2>
+                        <!-- BARU: Pilihan Konteks/Domain -->
+                        <div class="flex justify-center items-center gap-2 mb-4">
+                            <label for="ai-domain-select" class="font-semibold text-sm">Konteks Terjemahan:</label>
+                            <select id="ai-domain-select" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-1 text-sm font-semibold premium-input">
+                                <option value="Umum">Umum</option>
+                                <option value="Medis">Medis</option>
+                                <option value="Hukum">Hukum</option>
+                                <option value="Teknis">Teknis</option>
+                                <option value="Akademik">Akademik</option>
+                            </select>
+                        </div>
                         <div class="grid md:grid-cols-2 gap-4">
                             <textarea id="ai-source" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors premium-input" placeholder="Masukkan teks untuk diubah oleh AI..."></textarea>
                             <textarea id="ai-result" class="w-full h-48 bg-slate-50 dark:bg-gray-700 rounded-lg p-3 focus:outline-none" placeholder="Hasil yang disempurnakan oleh AI..." readonly></textarea>
@@ -420,9 +431,12 @@
                 <!-- Document Translation Panel -->
                 <div id="document-panel" class="tab-panel hidden">
                      <div id="doc-drop-zone" class="drop-zone w-full bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                        <h2 class="text-lg font-semibold mb-2">Terjemahkan Dokumen (.txt)</h2>
+                        <h2 class="text-lg font-semibold mb-2">Terjemahkan Dokumen</h2>
+                        <!-- BARU: Deskripsi yang diperbarui -->
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Unggah file berbasis teks (.txt, .md, .csv, .json, .xml) untuk diterjemahkan.<br><span class="text-xs">Catatan: Format kompleks seperti .pdf dan .docx belum didukung.</span></p>
                         <div class="flex justify-center items-center gap-2 mb-4"><span>Terjemahkan ke:</span><select id="doc-target-lang" class="bg-slate-100 dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-md p-1 text-sm"></select></div>
-                        <input type="file" id="doc-upload" accept=".txt" class="hidden"/><button onclick="document.getElementById('doc-upload').click()" class="bg-blue-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-blue-700 transition-colors">Pilih Dokumen</button>
+                        <!-- BARU: Menerima lebih banyak format file -->
+                        <input type="file" id="doc-upload" accept=".txt,.md,.csv,.json,.xml" class="hidden"/><button onclick="document.getElementById('doc-upload').click()" class="bg-blue-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-blue-700 transition-colors">Pilih Dokumen</button>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">atau seret & lepas file di sini</p>
                         <div id="doc-status" class="mt-4 text-sm"></div>
                         <pre id="doc-text-result" class="scrollable w-full h-64 mt-4 bg-slate-100 dark:bg-gray-700 rounded-lg p-2 text-left overflow-auto whitespace-pre-wrap"><span class="text-slate-400">Hasil terjemahan dokumen akan muncul di sini...</span></pre>
@@ -568,6 +582,8 @@
         const lyricsContentWrapper = document.getElementById('lyrics-content-wrapper'), lyricsTargetLang = document.getElementById('lyrics-target-lang'), lyricsSource = document.getElementById('lyrics-source'), lyricsResult = document.getElementById('lyrics-result'), translateLyricsBtn = document.getElementById('translate-lyrics-btn'), lyricsPremiumLockOverlay = document.getElementById('lyrics-premium-lock-overlay');
         const codeContentWrapper = document.getElementById('code-content-wrapper'), codeTargetLang = document.getElementById('code-target-lang'), codeSource = document.getElementById('code-source'), codeResult = document.getElementById('code-result'), translateCodeBtn = document.getElementById('translate-code-btn'), codePremiumLockOverlay = document.getElementById('code-premium-lock-overlay');
         const audioContentWrapper = document.getElementById('audio-content-wrapper'), audioTargetLang = document.getElementById('audio-target-lang'), audioUpload = document.getElementById('audio-upload'), audioDropZone = document.getElementById('audio-drop-zone'), audioTranscribedText = document.getElementById('audio-transcribed-text'), audioTranslatedText = document.getElementById('audio-translated-text'), audioPremiumLockOverlay = document.getElementById('audio-premium-lock-overlay'), audioFileName = document.getElementById('audio-file-name');
+        // BARU: Elemen untuk Konteks AI
+        const aiDomainSelect = document.getElementById('ai-domain-select');
 
 
         // --- 2. STATE & CONSTANTS ---
@@ -965,13 +981,18 @@
                 return;
             }
 
+            // BARU: Dapatkan domain/konteks yang dipilih
+            const domain = aiDomainSelect.value;
+            let contextInstruction = `Dengan mempertimbangkan konteks ${domain}, `;
+
             let instruction = '';
             switch (action) {
-                case 'shorten': instruction = 'Ringkas teks berikut menjadi lebih pendek dan padat'; break;
-                default: instruction = `Ubah gaya tulisan berikut menjadi lebih "${action}"`;
+                case 'shorten': instruction = 'ringkas teks berikut menjadi lebih pendek dan padat'; break;
+                default: instruction = `ubah gaya tulisan berikut menjadi lebih "${action}"`;
             }
 
-            const prompt = `${instruction}, tanpa mengubah makna aslinya. Berikan hanya teks hasilnya saja. Teks: "${text}"`;
+            // BARU: Gabungkan instruksi konteks dengan instruksi aksi
+            const prompt = `${contextInstruction}${instruction}, tanpa mengubah makna aslinya. Berikan hanya teks hasilnya saja. Teks: "${text}"`;
             
             buttonEl.disabled = true;
             const loader = buttonEl.querySelector('.loader');
