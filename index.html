@@ -11,23 +11,30 @@
     <!-- Tesseract.js untuk OCR pada gambar -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK - Diperbarui ke versi modular terbaru -->
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
         // KONFIGURASI FIREBASE ANDA
         const firebaseConfig = {
             apiKey: "AIzaSyCybId57osSubD6X5wA0V780dtMjgA69o8", // Kunci API Firebase yang benar
-            authDomain: "translator-hoshi.firebaseapp.com",
+            authDomain: "translator-hosh.firebaseapp.com",
             projectId: "translator-hoshi",
             storageBucket: "translator-hoshi.appspot.com",
-            messagingSenderId: "...", // Anda bisa melengkapi ini dari Firebase Console jika perlu
-            appId: "..." // Anda bisa melengkapi ini dari Firebase Console jika perlu
+            messagingSenderId: "...", 
+            appId: "..." 
         };
 
         // Inisialisasi Firebase
+        let app;
+        let auth;
+        let db;
         try {
-            const app = firebase.initializeApp(firebaseConfig);
-            const auth = firebase.auth();
-            const db = firebase.firestore();
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
             window.firebaseServices = { auth, db };
             console.log("Firebase initialized successfully");
         } catch (e) {
@@ -37,10 +44,21 @@
                 if(authContainer) authContainer.innerHTML = '<p class="text-xs text-red-500">Firebase Gagal Terhubung</p>';
             });
         }
+        
+        // Memastikan auth state berubah
+        if (auth) {
+            onAuthStateChanged(auth, (user) => {
+                window.setupAuthUI(user);
+            });
+        }
+        
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signOut = signOut;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.doc = doc;
     </script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
         // Fungsi untuk menerapkan tema (terang/gelap/sistem)
@@ -279,7 +297,7 @@
 
         <!-- Main Content -->
         <main class="flex-grow flex flex-col items-center p-4 md:p-6 lg:p-8">
-            <!-- PERBAIKAN: Kontainer utama untuk mengunci fitur -->
+            <!-- Kontainer utama untuk mengunci fitur -->
             <div id="login-prompt" class="w-full max-w-5xl text-center">
                 <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
                     <h2 class="text-2xl font-bold mb-4">Selamat Datang di Penerjemah Hoshi</h2>
@@ -292,7 +310,7 @@
             </div>
 
             <div id="main-content-wrapper" class="w-full max-w-5xl hidden">
-                <!-- Tabs -->
+                <!-- Tabs - Menambahkan overflow-x-auto agar bisa digulir di mobile -->
                 <div class="flex border-b border-slate-200 dark:border-gray-700 mb-4 overflow-x-auto">
                     <button class="tab-btn tab-active flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold border-b-2 border-transparent transition-colors" data-tab="text">Teks</button>
                     <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-2 px-4 text-sm font-semibold text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="voice">Percakapan</button>
@@ -1543,7 +1561,7 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
         }
 
         // --- Firebase Auth UI Logic ---
-        function setupAuthUI(user) {
+        window.setupAuthUI = async (user) => {
             if (user) {
                 currentUser = user;
                 authContainer.classList.add('hidden');
@@ -1556,8 +1574,8 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
                 bottomButtons.classList.remove('hidden');
                 bottomButtons.classList.add('flex');
 
-                getApiKeyFromFirestore(user.uid);
-                getUserProfile(user.uid);
+                await getApiKeyFromFirestore(user.uid);
+                await getUserProfile(user.uid);
             } else {
                 currentUser = null;
                 userApiKey = null; 
@@ -1574,11 +1592,11 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
 
         async function getApiKeyFromFirestore(userId) {
             const { db } = window.firebaseServices;
-            const docRef = db.collection('users').doc(userId);
+            const docRef = doc(db, 'users', userId);
             try {
-                const doc = await docRef.get();
-                if (doc.exists && doc.data().apiKey) {
-                    userApiKey = doc.data().apiKey;
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists() && docSnap.data().apiKey) {
+                    userApiKey = docSnap.data().apiKey;
                 }
             } catch (error) {
                 console.error("Error getting API key:", error);
@@ -1587,8 +1605,9 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
 
         async function saveApiKeyToFirestore(userId, apiKey) {
             const { db } = window.firebaseServices;
+            const docRef = doc(db, 'users', userId);
             try {
-                await db.collection('users').doc(userId).set({ apiKey: apiKey }, { merge: true });
+                await setDoc(docRef, { apiKey: apiKey }, { merge: true });
                 userApiKey = apiKey;
                 showNotification('Kunci API berhasil disimpan di akun Anda!');
             } catch (error) {
@@ -1599,17 +1618,17 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
         
         async function getUserProfile(userId) {
             const { db } = window.firebaseServices;
-            const docRef = db.collection('users').doc(userId);
+            const docRef = doc(db, 'users', userId);
             try {
-                const doc = await docRef.get();
-                if (doc.exists) {
-                    const data = doc.data();
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
                     const points = data.points || 0;
                     userPointsEl.textContent = points;
                     profilePointsEl.textContent = `${points} Poin`;
                     profileEmailEl.textContent = currentUser.email;
                 } else {
-                    await docRef.set({ email: currentUser.email, points: 0, badges: [] });
+                    await setDoc(docRef, { email: currentUser.email, points: 0, badges: [] });
                 }
             } catch (error) {
                 console.error("Error getting user profile:", error);
@@ -1785,15 +1804,16 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
             apiKeyModal.classList.add('flex');
         });
         
-        saveApiKeyBtn.addEventListener('click', () => { 
+        saveApiKeyBtn.addEventListener('click', async () => { 
             const key = apiKeyInput.value.trim();
             if(key) {
-                userApiKey = key; 
-                if(currentUser) {
-                    saveApiKeyToFirestore(currentUser.uid, key); 
+                if (currentUser) {
+                    await saveApiKeyToFirestore(currentUser.uid, key); 
+                } else {
+                    userApiKey = key;
+                    showNotification('Kunci API disimpan untuk sesi ini!');
                 }
                 apiKeyModal.classList.remove('flex');
-                showNotification('Kunci API berhasil diperbarui!');
             } else { 
                 showNotification('Kunci API tidak boleh kosong.'); 
             } 
@@ -1807,13 +1827,12 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
         imageUpload.addEventListener('change', (e) => handleImageTranslation(e.target.files[0]));
         docUpload.addEventListener('change', (e) => handleDocumentUpload(e.target.files[0]));
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { [imageDropZone, docDropZone, audioDropZone].forEach(zone => zone.addEventListener(eventName, e => e.preventDefault())); });
-        ['dragenter', 'dragover'].forEach(eventName => { [imageDropZone, docDropZone, audioDropZone].forEach(zone => zone.addEventListener(eventName, () => zone.classList.add('dragover'))); });
-        ['dragleave', 'drop'].forEach(eventName => { [imageDropZone, docDropZone, audioDropZone].forEach(zone => zone.addEventListener(eventName, () => zone.classList.remove('dragover'))); });
+        ['dragenter', 'dragover'].forEach(eventName => { [imageDropZone, docDropZone, audioDropZone].forEach(zone => zone.classList.add('dragover')); });
+        ['dragleave', 'drop'].forEach(eventName => { [imageDropZone, docDropZone, audioDropZone].forEach(zone => zone.classList.remove('dragover')); });
         imageDropZone.addEventListener('drop', e => handleImageTranslation(e.dataTransfer.files[0]));
         docDropZone.addEventListener('drop', e => handleDocumentUpload(e.dataTransfer.files[0]));
         audioDropZone.addEventListener('drop', e => handleAudioTranslation(e.dataTransfer.files[0]));
-        audioUpload.addEventListener('change', (e) => handleAudioTranslation(e.target.files[0]));
-        audioUploadBtn.addEventListener('click', () => audioUpload.click()); // PERBAIKAN: Event listener untuk tombol audio
+        audioUploadBtn.addEventListener('click', () => audioUpload.click());
         
         zoomInBtn.addEventListener('click', () => { zoomState.level = Math.min(4, zoomState.level + 0.25); updateView(); });
         zoomOutBtn.addEventListener('click', () => { zoomState.level = Math.max(1, zoomState.level - 0.25); updateView(); });
@@ -1884,37 +1903,35 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
         registerBtn.addEventListener('click', () => registerModal.classList.add('flex'));
         loginPromptBtn.addEventListener('click', () => loginModal.classList.add('flex'));
         registerPromptBtn.addEventListener('click', () => registerModal.classList.add('flex'));
-        logoutBtn.addEventListener('click', () => window.firebaseServices.auth.signOut());
+        logoutBtn.addEventListener('click', () => window.signOut(window.firebaseServices.auth));
         
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = loginForm['login-email'].value;
             const password = loginForm['login-password'].value;
-            window.firebaseServices.auth.signInWithEmailAndPassword(email, password)
-                .then(userCredential => {
-                    loginModal.classList.remove('flex');
-                    loginForm.reset();
-                    loginError.textContent = '';
-                })
-                .catch(error => {
-                    loginError.textContent = error.message;
-                });
+            try {
+                await window.signInWithEmailAndPassword(window.firebaseServices.auth, email, password);
+                loginModal.classList.remove('flex');
+                loginForm.reset();
+                loginError.textContent = '';
+            } catch (error) {
+                loginError.textContent = error.message;
+            }
         });
 
-        registerForm.addEventListener('submit', (e) => {
+        registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = registerForm['register-email'].value;
             const password = registerForm['register-password'].value;
-            window.firebaseServices.auth.createUserWithEmailAndPassword(email, password)
-                .then(userCredential => {
-                    registerModal.classList.remove('flex');
-                    registerForm.reset();
-                    registerError.textContent = '';
-                    showNotification('Akun berhasil dibuat! Anda sekarang login.');
-                })
-                .catch(error => {
-                    registerError.textContent = error.message;
-                });
+            try {
+                await window.createUserWithEmailAndPassword(window.firebaseServices.auth, email, password);
+                registerModal.classList.remove('flex');
+                registerForm.reset();
+                registerError.textContent = '';
+                showNotification('Akun berhasil dibuat! Anda sekarang login.');
+            } catch (error) {
+                registerError.textContent = error.message;
+            }
         });
 
         // Event Listeners Fitur Baru
@@ -1959,12 +1976,6 @@ console.log(data.translated_text); // "Halo Dunia!"</code></pre>
         profileBtn.addEventListener('click', () => {
             profileModal.classList.add('flex');
         });
-
-
-        // Listen for auth state changes
-        if (window.firebaseServices) {
-            window.firebaseServices.auth.onAuthStateChanged(setupAuthUI);
-        }
 
     });
     </script>
