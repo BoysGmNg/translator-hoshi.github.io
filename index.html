@@ -583,7 +583,7 @@
     <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pengaturan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><fieldset><legend class="font-semibold mb-2">Kecepatan Suara</legend><div class="flex gap-4" id="speed-settings"><label><input type="radio" name="speed" value="1" checked> Normal</label><label><input type="radio" name="speed" value="0.7"> Lambat</label><label><input type="radio" name="speed" value="0.4"> Lebih Lambat</label></div></fieldset><fieldset><legend class="font-semibold mb-2">Ukuran Font</legend><div class="flex items-center gap-2"><span class="text-sm">A</span><input id="font-size-slider" type="range" min="12" max="24" value="16" class="w-full"><span class="text-xl">A</span></div></fieldset></div></div></div>
     <div id="ai-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="ai-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="ai-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="ai-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="ai-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="ai-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="ai-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="ai-style" value="Kasual"> Kasual</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Gaya</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
-    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><p class="text-sm text-slate-600 dark:text-slate-300">Untuk menggunakan fitur AI premium (💎), Anda dapat menggunakan kunci API dari layanan pilihan Anda. Kunci Anda akan disimpan dengan aman di akun Anda.</p><div><label for="api-provider-select" class="block text-sm font-medium mb-1">Pilih Penyedia AI:</label><select id="api-provider-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="gemini">Gemini (Google AI Studio)</option><option value="deepseek">DeepSeek</option><option value="chatgpt">ChatGPT (OpenAI)</option></select></div><div><label for="api-key-input" class="block text-sm font-medium mb-1">Kunci API:</label><input id="api-key-input" type="password" placeholder="Masukkan kunci API Gemini Anda" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="save-api-key-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
+    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><p class="text-sm text-slate-600 dark:text-slate-300">Gunakan kunci API dari OpenRouter atau Google AI Studio. <span class="font-semibold">Catatan:</span> Fitur terjemahan Audio 🎵 memerlukan kunci API Gemini asli dari Google AI Studio.</p><div><label for="api-provider-select" class="block text-sm font-medium mb-1">Pilih Penyedia AI:</label><select id="api-provider-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="gemini">Gemini (via OpenRouter / Google)</option><option value="deepseek">DeepSeek (via OpenRouter)</option><option value="chatgpt">ChatGPT (via OpenRouter)</option></select></div><div><label for="api-key-input" class="block text-sm font-medium mb-1">Kunci API:</label><input id="api-key-input" type="password" placeholder="Masukkan kunci API Gemini Anda" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="save-api-key-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
     <div id="correction-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Saran Perbaikan Teks</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 overflow-y-auto scrollable space-y-4"><div><h4 class="font-semibold mb-2">Teks Asli:</h4><pre id="original-text-correction" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></pre></div><div><h4 class="font-semibold mb-2">Teks yang Disarankan:</h4><div id="correction-diff" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></div></div></div><div class="flex justify-end gap-4 p-4 border-t dark:border-gray-700"><button id="reject-correction-btn" class="bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors">Batal</button><button id="accept-correction-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Perbaikan</button></div></div></div>
     <div id="profile-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Profil & Lencana</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-6 overflow-y-auto scrollable text-center"><p class="font-semibold" id="profile-email"></p><p class="text-2xl font-bold text-amber-500 my-2" id="profile-points">0 Poin</p><hr class="dark:border-gray-700 my-4"><h4 class="font-semibold mb-4">Lencana Saya</h4><div id="badges-container" class="grid grid-cols-3 sm:grid-cols-4 gap-4"><div class="badge earned text-center" title="Penerjemah Pemula: Selesaikan 10 terjemahan."><div class="text-4xl">🔰</div><p class="text-xs mt-1">Pemula</p></div><div class="badge text-center" title="Penerjemah Ahli: Selesaikan 100 terjemahan."><div class="text-4xl">⭐</div><p class="text-xs mt-1">Ahli</p></div><div class="badge text-center" title="Korektor Andal: Koreksi 5 teks dengan AI."><div class="text-4xl">✍️</div><p class="text-xs mt-1">Korektor</p></div><div class="badge text-center" title="Polyglot: Terjemahkan ke 5 bahasa berbeda."><div class="text-4xl">🌐</div><p class="text-xs mt-1">Polyglot</p></div></div></div></div></div>
     <div id="word-of-the-day-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kata Hari Ini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="word-of-the-day-content" class="p-6 text-center"></div><div class="p-4 border-t dark:border-gray-700 text-center"><button id="change-word-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Ubah Kata</button><p id="change-word-counter" class="text-xs text-slate-500 mt-2"></p></div></div></div>
@@ -646,7 +646,7 @@
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
         const voiceToneSelect = document.getElementById('voice-tone-select');
         const alternativeTranslationsEl = document.getElementById('alternative-translations');
-        const apiKeyBtn = document.getElementById('api-key-btn'), apiKeyModal = document.getElementById('api-key-modal'), apiKeyInput = document.getElementById('api-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn'),      apiProviderSelect = document.getElementById('api-provider-select'); // New;
+        const apiKeyBtn = document.getElementById('api-key-btn'), apiKeyModal = document.getElementById('api-key-modal'), apiKeyInput = document.getElementById('api-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn'),      apiProviderSelect = document.getElementById('api-provider-select');
         const conversationView = document.getElementById('conversation-view'), conversationPlaceholder = document.getElementById('conversation-placeholder');
         const micBtn1 = document.getElementById('mic-btn-1'), micBtn2 = document.getElementById('mic-btn-2');
         const conversationLang1 = document.getElementById('conversation-lang-1'), conversationLang2 = document.getElementById('conversation-lang-2');
@@ -723,12 +723,13 @@
         let recognition;
         let activeMicButton = null;
         let currentUser = null;
-        let userApiKeys = {}; // Changed from userApiKey = null;
-        let currentAiProvider = 'gemini'; // New global variable
+        let userApiKeys = {};
+        let currentAiProvider = 'gemini';
         let correctedText = '';
         let wordChangeCounter = 0;
         const MAX_WORD_CHANGES = 10;
         let currentQuiz = null;
+        let quizHistory = [];
         let cameraStream = null;
         let unsubscribeFromPartners = null;
         
@@ -751,103 +752,116 @@
         }
 
         async function callAiAPI(prompt, filePayload = null) {
-            const provider = currentAiProvider;
+            // Pengecualian: Unggahan file (audio) HARUS menggunakan API Google Gemini asli
+            // karena format `inlineData` tidak kompatibel dengan endpoint penyedia lain.
+            if (filePayload) {
+                const geminiApiKey = userApiKeys['gemini'];
+                if (!geminiApiKey) {
+                    return { error: "Fitur audio memerlukan kunci API Gemini langsung dari Google AI Studio." };
+                }
+                
+                console.log("Using native Google Gemini API for file upload.");
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
+                const headers = { 'Content-Type': 'application/json' };
+                const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }, filePayload] }] });
 
-            if (filePayload && provider !== 'gemini') {
-                return { error: `Fitur ini (file/gambar/audio) saat ini hanya didukung oleh model Gemini.` };
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers, body });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        const errorMessage = errorData.error?.message || 'Unknown error';
+                        if (errorMessage.includes('API key not valid')) {
+                            return { error: 'Kunci API Gemini tidak valid. Fitur audio memerlukan kunci API dari Google AI Studio, bukan dari penyedia lain.' };
+                        }
+                        return { error: `Error dari Google API: ${errorMessage}`};
+                    }
+                    const result = await response.json();
+                    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        return { text: result.candidates[0].content.parts[0].text };
+                    }
+                    return { error: `Permintaan diblokir oleh Google API karena: ${result.promptFeedback?.blockReason || 'alasan tidak diketahui'}.` };
+                } catch (error) {
+                    return { error: `Gagal menghubungi Google API. Periksa koneksi internet atau kunci API Gemini Anda.` };
+                }
             }
 
+            // Untuk semua permintaan berbasis teks, gunakan penyedia yang dipilih
+            const provider = currentAiProvider;
             const apiKey = userApiKeys[provider];
             if (!apiKey) {
-                return { error: `Kunci API untuk ${provider} belum diatur. Silakan atur di tombol kunci.` };
+                return { error: `Kunci API untuk ${provider} belum diatur.` };
             }
 
-            let apiUrl, headers, body;
+            let apiUrl, headers, body, sourceName, model;
             const siteUrl = window.location.href;
             const siteTitle = document.title;
 
+            switch (provider) {
+                case 'deepseek':
+                    sourceName = 'OpenRouter';
+                    apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                    headers = { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': siteUrl,
+                        'X-Title': siteTitle
+                    };
+                    model = "deepseek/deepseek-chat";
+                    body = JSON.stringify({
+                        model: model,
+                        messages: [{ role: "user", content: prompt }]
+                    });
+                    break;
+                case 'chatgpt':
+                case 'gemini':
+                    sourceName = 'OpenRouter';
+                    apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                    headers = { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': siteUrl,
+                        'X-Title': siteTitle
+                    };
+                    model = provider === 'chatgpt' ? "openai/gpt-3.5-turbo" : "google/gemini-pro-1.5";
+                    body = JSON.stringify({
+                        model: model,
+                        messages: [{ role: "user", content: prompt }]
+                    });
+                    break;
+                default:
+                    return { error: "Penyedia AI tidak dikenal." };
+            }
+
             try {
-                switch (provider) {
-                    case 'deepseek':
-                        apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-                        headers = { 
-                            'Content-Type': 'application/json', 
-                            'Authorization': `Bearer ${apiKey}`,
-                            'HTTP-Referer': siteUrl,
-                            'X-Title': siteTitle
-                        };
-                        body = JSON.stringify({
-                            model: "deepseek/deepseek-chat", // Model standar yang andal
-                            messages: [{ role: "user", content: prompt }]
-                        });
-                        break;
-
-                    case 'chatgpt':
-                        apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-                        headers = { 
-                            'Content-Type': 'application/json', 
-                            'Authorization': `Bearer ${apiKey}`,
-                            'HTTP-Referer': siteUrl,
-                            'X-Title': siteTitle
-                        };
-                        body = JSON.stringify({
-                            model: "openai/gpt-3.5-turbo", // Model standar yang andal
-                            messages: [{ role: "user", content: prompt }]
-                        });
-                        break;
-
-                    case 'gemini':
-                    default:
-                        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-                        headers = { 'Content-Type': 'application/json' };
-                        const parts = [{ text: prompt }];
-                        if (filePayload) parts.push(filePayload);
-                        body = JSON.stringify({ contents: [{ parts }] });
-                        break;
-                }
-                
                 const response = await fetch(apiUrl, { method: 'POST', headers, body });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error(`API Error for ${provider}:`, errorData);
-                    const message = errorData.error?.message || errorData.message || JSON.stringify(errorData);
+                    console.error(`API Error for ${provider} via ${sourceName}:`, errorData);
+                    const message = errorData.error?.message || JSON.stringify(errorData);
                     let friendlyMessage = message;
-                    if (typeof message === 'string') {
+                     if (typeof message === 'string') {
                         if (message.includes('insufficient funds') || message.includes('Insufficient Balance')) {
-                            friendlyMessage = `Saldo akun ${provider} (via OpenRouter) Anda tidak mencukupi. Silakan isi ulang di situs web OpenRouter.`;
+                            friendlyMessage = `Saldo akun ${sourceName} Anda tidak mencukupi. Silakan isi ulang di situs web ${sourceName}.`;
                         } else if (message.includes('exceeded your current quota')) {
-                            friendlyMessage = `Kuota API ${provider} Anda telah habis. Silakan periksa paket dan detail tagihan Anda.`;
+                            friendlyMessage = `Kuota API Anda di ${sourceName} telah habis.`;
                         }
                     }
-                    return { error: `Error dari ${provider}: ${friendlyMessage}` };
+                    return { error: `Error dari ${provider} (${sourceName}): ${friendlyMessage}` };
                 }
 
                 const result = await response.json();
-
-                // Parse response based on provider
-                let textResult = null;
-                switch (provider) {
-                    case 'deepseek':
-                    case 'chatgpt':
-                        textResult = result.choices?.[0]?.message?.content;
-                        break;
-                    case 'gemini':
-                    default:
-                        textResult = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                        break;
-                }
+                const textResult = result.choices?.[0]?.message?.content;
 
                 if (textResult) {
                     return { text: textResult };
                 }
                 
-                const reason = result.promptFeedback?.blockReason || 'format respons tidak dikenal';
-                return { error: `Permintaan diblokir oleh ${provider} karena: ${reason}.` };
+                return { error: `Tidak ada respons teks dari ${provider} via ${sourceName}.` };
 
             } catch (error) {
-                console.error(`API call error for ${provider}:`, error);
-                return { error: `Gagal menghubungi ${provider}. Periksa koneksi internet atau kunci API Anda.` };
+                console.error(`API call error for ${provider} via ${sourceName}:`, error);
+                return { error: `Gagal menghubungi ${sourceName}. Periksa koneksi internet atau kunci API Anda.` };
             }
         }
         
@@ -1054,9 +1068,10 @@
         }
         async function handleAudioTranslation(file) { 
             if (!file) return;
-            if (!userApiKeys.gemini) { // Audio transcription is Gemini-only for now
-                showNotification("Fitur ini memerlukan kunci API Gemini.");
-                audioTranscribedText.textContent = 'Fitur ini memerlukan kunci API Gemini.';
+            const geminiApiKey = userApiKeys.gemini;
+            if (!geminiApiKey) {
+                showNotification("Fitur audio memerlukan kunci API Gemini dari Google AI Studio.");
+                audioTranscribedText.textContent = 'Kunci API Gemini belum diatur. Silakan atur di modal API.';
                 return;
             }
             logUserActivity('translate_audio'); 
@@ -1297,7 +1312,7 @@
 
 
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
-        window.setupAuthUI = async (user) => { if (user) { currentUser = user; authContainer.classList.add('hidden'); userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); userEmailEl.textContent = user.email; loginPrompt.classList.add('hidden'); mainContentWrapper.classList.remove('hidden'); bottomButtons.classList.remove('hidden'); bottomButtons.classList.add('flex'); await getApiKeyFromFirestore(user.uid); await getUserProfile(user.uid); } else { currentUser = null; userApiKeys = {}; authContainer.classList.remove('hidden'); userInfo.classList.add('hidden'); userEmailEl.textContent = ''; loginPrompt.classList.remove('hidden'); mainContentWrapper.classList.add('hidden'); bottomButtons.classList.add('hidden'); bottomButtons.classList.remove('flex'); goOfflineAsPartner(); } }
+        window.setupAuthUI = async (user) => { if (user) { currentUser = user; authContainer.classList.add('hidden'); userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); userEmailEl.textContent = user.email; loginPrompt.classList.add('hidden'); mainContentWrapper.classList.remove('hidden'); bottomButtons.classList.remove('hidden'); bottomButtons.classList.add('flex'); await getApiKeyFromFirestore(user.uid); await getUserProfile(user.uid); } else { currentUser = null; userApiKeys = {}; quizHistory = []; authContainer.classList.remove('hidden'); userInfo.classList.add('hidden'); userEmailEl.textContent = ''; loginPrompt.classList.remove('hidden'); mainContentWrapper.classList.add('hidden'); bottomButtons.classList.add('hidden'); bottomButtons.classList.remove('flex'); goOfflineAsPartner(); } }
         async function getApiKeyFromFirestore(userId) { const { db, doc, getDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists() && docSnap.data().apiKeys) { userApiKeys = docSnap.data().apiKeys; } else { userApiKeys = {}; } } catch (error) { console.error("Error getting API key:", error); userApiKeys = {}; } }
         async function saveApiKeyToFirestore(userId, provider, apiKey) { const { db, doc, setDoc } = window.firebaseServices; try { if (!userApiKeys) userApiKeys = {}; userApiKeys[provider] = apiKey; await setDoc(doc(db, 'users', userId), { apiKeys: userApiKeys }, { merge: true }); showNotification('Kunci API berhasil disimpan!'); } catch (error) { showNotification('Gagal menyimpan kunci API.'); } }
         async function getUserProfile(userId) { const { db, doc, getDoc, setDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists()) { const data = docSnap.data(); const points = data.points || 0; userPointsEl.textContent = points; profilePointsEl.textContent = `${points} Poin`; profileEmailEl.textContent = currentUser.email; } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, badges: [] }); } } catch (error) { console.error("Error getting user profile:", error); } }
@@ -1319,32 +1334,52 @@
                 wordOfTheDayContent.textContent = result.error || "Gagal mengambil kutipan."; 
             } 
         }
-        async function generateQuiz() { 
-            logUserActivity('start_quiz'); 
-            quizQuestion.innerHTML = '<div class="loader"></div>'; 
-            quizOptions.innerHTML = ''; 
-            quizFeedback.textContent = ''; 
-            nextQuizBtn.classList.add('hidden'); 
-            const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string)."; 
-            const result = await callAiAPI(prompt); 
-            if (result.text) { 
-                try { 
-                    const jsonMatch = result.text.match(/{[\s\S]*}/); 
-                    currentQuiz = JSON.parse(jsonMatch[0]); 
-                    quizQuestion.textContent = currentQuiz.question; 
-                    currentQuiz.options.forEach(optionText => { 
-                        const button = document.createElement('button'); 
-                        button.textContent = optionText; 
-                        button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700'; 
-                        button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer); 
-                        quizOptions.appendChild(button); 
-                    }); 
-                } catch (e) { 
-                    quizQuestion.textContent = "Gagal memformat kuis dari AI."; 
-                } 
-            } else { 
-                quizQuestion.textContent = result.error || "Gagal membuat kuis."; 
-            } 
+        async function generateQuiz(retryCount = 0) {
+            logUserActivity('start_quiz');
+            quizQuestion.innerHTML = '<div class="loader"></div>';
+            quizOptions.innerHTML = '';
+            quizFeedback.textContent = '';
+            nextQuizBtn.classList.add('hidden');
+
+            if (retryCount > 5) { // Batas percobaan untuk menghindari loop tak terbatas
+                quizQuestion.textContent = "Gagal mendapatkan pertanyaan baru dari AI. Coba lagi nanti.";
+                return;
+            }
+
+            const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string). Pastikan pertanyaannya unik.";
+            const result = await callAiAPI(prompt);
+
+            if (result.text) {
+                try {
+                    const jsonMatch = result.text.match(/{[\s\S]*}/);
+                    const newQuiz = JSON.parse(jsonMatch[0]);
+
+                    // Periksa apakah pertanyaan sudah pernah muncul
+                    if (quizHistory.includes(newQuiz.question)) {
+                        console.log("Pertanyaan duplikat ditemukan, mencoba lagi...");
+                        generateQuiz(retryCount + 1); // Panggil lagi untuk pertanyaan baru
+                        return;
+                    }
+
+                    // Jika pertanyaan unik, lanjutkan
+                    currentQuiz = newQuiz;
+                    quizHistory.push(currentQuiz.question); // Simpan pertanyaan ke histori sesi
+
+                    quizQuestion.textContent = currentQuiz.question;
+                    currentQuiz.options.forEach(optionText => {
+                        const button = document.createElement('button');
+                        button.textContent = optionText;
+                        button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700';
+                        button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer);
+                        quizOptions.appendChild(button);
+                    });
+                } catch (e) {
+                    console.error("Gagal memformat JSON kuis, mencoba lagi...", e);
+                    setTimeout(() => generateQuiz(retryCount + 1), 1000); // Coba lagi jika format JSON salah
+                }
+            } else {
+                quizQuestion.textContent = result.error || "Gagal membuat kuis.";
+            }
         }
         function checkQuizAnswer(button, selected, correct) { document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); if (selected === correct) { button.classList.add('correct'); quizFeedback.textContent = 'Jawaban Benar! 🎉'; quizFeedback.className = 'mt-4 text-center font-semibold text-green-600'; } else { button.classList.add('incorrect'); quizFeedback.textContent = `Salah. Jawaban yang benar adalah "${correct}".`; quizFeedback.className = 'mt-4 text-center font-semibold text-red-600'; } nextQuizBtn.classList.remove('hidden'); }
         
@@ -1390,9 +1425,9 @@
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
         
         const apiPlaceholders = {
-            gemini: "Masukkan kunci API Gemini Anda",
-            deepseek: "Masukkan kunci API DeepSeek Anda",
-            chatgpt: "Masukkan kunci API ChatGPT Anda"
+            gemini: "Kunci dari OpenRouter / Google AI Studio",
+            deepseek: "Kunci dari OpenRouter",
+            chatgpt: "Kunci dari OpenRouter"
         };
 
         apiProviderSelect.addEventListener('change', () => {
@@ -1501,7 +1536,4 @@
     </script>
 </body>
 </html>
-
-
-
 
