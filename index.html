@@ -763,25 +763,35 @@
             }
 
             let apiUrl, headers, body;
+            const siteUrl = window.location.href;
+            const siteTitle = document.title;
 
             try {
                 switch (provider) {
                     case 'deepseek':
-                        // NOTE: Panggilan API dari sisi klien ke DeepSeek/OpenAI mungkin memerlukan proxy untuk menghindari masalah CORS.
-                        apiUrl = 'https://api.deepseek.com/chat/completions';
-                        headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+                        apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                        headers = { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Bearer ${apiKey}`,
+                            'HTTP-Referer': siteUrl,
+                            'X-Title': siteTitle
+                        };
                         body = JSON.stringify({
-                            model: "deepseek-chat",
-                            messages: [{ role: "user", content: prompt }],
-                            stream: false
+                            model: "deepseek/deepseek-chat", // Model standar yang andal
+                            messages: [{ role: "user", content: prompt }]
                         });
                         break;
 
                     case 'chatgpt':
-                        apiUrl = 'https://api.openai.com/v1/chat/completions';
-                        headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+                        apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                        headers = { 
+                            'Content-Type': 'application/json', 
+                            'Authorization': `Bearer ${apiKey}`,
+                            'HTTP-Referer': siteUrl,
+                            'X-Title': siteTitle
+                        };
                         body = JSON.stringify({
-                            model: "gpt-3.5-turbo",
+                            model: "openai/gpt-3.5-turbo", // Model standar yang andal
                             messages: [{ role: "user", content: prompt }]
                         });
                         break;
@@ -802,7 +812,15 @@
                     const errorData = await response.json();
                     console.error(`API Error for ${provider}:`, errorData);
                     const message = errorData.error?.message || errorData.message || JSON.stringify(errorData);
-                    return { error: `Error dari ${provider}: ${message}` };
+                    let friendlyMessage = message;
+                    if (typeof message === 'string') {
+                        if (message.includes('insufficient funds') || message.includes('Insufficient Balance')) {
+                            friendlyMessage = `Saldo akun ${provider} (via OpenRouter) Anda tidak mencukupi. Silakan isi ulang di situs web OpenRouter.`;
+                        } else if (message.includes('exceeded your current quota')) {
+                            friendlyMessage = `Kuota API ${provider} Anda telah habis. Silakan periksa paket dan detail tagihan Anda.`;
+                        }
+                    }
+                    return { error: `Error dari ${provider}: ${friendlyMessage}` };
                 }
 
                 const result = await response.json();
@@ -1483,5 +1501,7 @@
     </script>
 </body>
 </html>
+
+
 
 
