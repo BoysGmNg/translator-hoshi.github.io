@@ -583,7 +583,7 @@
     <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pengaturan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><fieldset><legend class="font-semibold mb-2">Kecepatan Suara</legend><div class="flex gap-4" id="speed-settings"><label><input type="radio" name="speed" value="1" checked> Normal</label><label><input type="radio" name="speed" value="0.7"> Lambat</label><label><input type="radio" name="speed" value="0.4"> Lebih Lambat</label></div></fieldset><fieldset><legend class="font-semibold mb-2">Ukuran Font</legend><div class="flex items-center gap-2"><span class="text-sm">A</span><input id="font-size-slider" type="range" min="12" max="24" value="16" class="w-full"><span class="text-xl">A</span></div></fieldset></div></div></div>
     <div id="ai-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="ai-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="ai-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="ai-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="ai-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="ai-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="ai-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="ai-style" value="Kasual"> Kasual</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Gaya</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
-    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API Gemini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-2"><p class="text-sm text-slate-600 dark:text-slate-300">Untuk menggunakan fitur AI premium (💎), Anda memerlukan kunci API dari Google AI Studio. Kunci Anda akan disimpan dengan aman di akun Anda.</p><input id="api-key-input" type="password" placeholder="Masukkan kunci API Anda di sini" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"><button id="save-api-key-btn" class="mt-2 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
+    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><p class="text-sm text-slate-600 dark:text-slate-300">Untuk menggunakan fitur AI premium (💎), Anda dapat menggunakan kunci API dari layanan pilihan Anda. Kunci Anda akan disimpan dengan aman di akun Anda.</p><div><label for="api-provider-select" class="block text-sm font-medium mb-1">Pilih Penyedia AI:</label><select id="api-provider-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="gemini">Gemini (Google AI Studio)</option><option value="deepseek">DeepSeek</option><option value="chatgpt">ChatGPT (OpenAI)</option></select></div><div><label for="api-key-input" class="block text-sm font-medium mb-1">Kunci API:</label><input id="api-key-input" type="password" placeholder="Masukkan kunci API Gemini Anda" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="save-api-key-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
     <div id="correction-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Saran Perbaikan Teks</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 overflow-y-auto scrollable space-y-4"><div><h4 class="font-semibold mb-2">Teks Asli:</h4><pre id="original-text-correction" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></pre></div><div><h4 class="font-semibold mb-2">Teks yang Disarankan:</h4><div id="correction-diff" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></div></div></div><div class="flex justify-end gap-4 p-4 border-t dark:border-gray-700"><button id="reject-correction-btn" class="bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors">Batal</button><button id="accept-correction-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Perbaikan</button></div></div></div>
     <div id="profile-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Profil & Lencana</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-6 overflow-y-auto scrollable text-center"><p class="font-semibold" id="profile-email"></p><p class="text-2xl font-bold text-amber-500 my-2" id="profile-points">0 Poin</p><hr class="dark:border-gray-700 my-4"><h4 class="font-semibold mb-4">Lencana Saya</h4><div id="badges-container" class="grid grid-cols-3 sm:grid-cols-4 gap-4"><div class="badge earned text-center" title="Penerjemah Pemula: Selesaikan 10 terjemahan."><div class="text-4xl">🔰</div><p class="text-xs mt-1">Pemula</p></div><div class="badge text-center" title="Penerjemah Ahli: Selesaikan 100 terjemahan."><div class="text-4xl">⭐</div><p class="text-xs mt-1">Ahli</p></div><div class="badge text-center" title="Korektor Andal: Koreksi 5 teks dengan AI."><div class="text-4xl">✍️</div><p class="text-xs mt-1">Korektor</p></div><div class="badge text-center" title="Polyglot: Terjemahkan ke 5 bahasa berbeda."><div class="text-4xl">🌐</div><p class="text-xs mt-1">Polyglot</p></div></div></div></div></div>
     <div id="word-of-the-day-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kata Hari Ini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="word-of-the-day-content" class="p-6 text-center"></div><div class="p-4 border-t dark:border-gray-700 text-center"><button id="change-word-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Ubah Kata</button><p id="change-word-counter" class="text-xs text-slate-500 mt-2"></p></div></div></div>
@@ -646,7 +646,7 @@
         const glossaryToggle = document.getElementById('glossary-toggle'), glossaryManageBtn = document.getElementById('glossary-manage-btn'), glossaryModal = document.getElementById('glossary-modal'), glossarySourceLang = document.getElementById('glossary-source-lang'), glossaryTargetLang = document.getElementById('glossary-target-lang'), glossarySourceText = document.getElementById('glossary-source-text'), glossaryTargetText = document.getElementById('glossary-target-text'), addGlossaryBtn = document.getElementById('add-glossary-btn'), glossaryListEl = document.getElementById('glossary-list');
         const voiceToneSelect = document.getElementById('voice-tone-select');
         const alternativeTranslationsEl = document.getElementById('alternative-translations');
-        const apiKeyBtn = document.getElementById('api-key-btn'), apiKeyModal = document.getElementById('api-key-modal'), apiKeyInput = document.getElementById('api-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const apiKeyBtn = document.getElementById('api-key-btn'), apiKeyModal = document.getElementById('api-key-modal'), apiKeyInput = document.getElementById('api-key-input'), saveApiKeyBtn = document.getElementById('save-api-key-btn'),      apiProviderSelect = document.getElementById('api-provider-select'); // New;
         const conversationView = document.getElementById('conversation-view'), conversationPlaceholder = document.getElementById('conversation-placeholder');
         const micBtn1 = document.getElementById('mic-btn-1'), micBtn2 = document.getElementById('mic-btn-2');
         const conversationLang1 = document.getElementById('conversation-lang-1'), conversationLang2 = document.getElementById('conversation-lang-2');
@@ -723,7 +723,8 @@
         let recognition;
         let activeMicButton = null;
         let currentUser = null;
-        let userApiKey = null; 
+        let userApiKeys = {}; // Changed from userApiKey = null;
+        let currentAiProvider = 'gemini'; // New global variable
         let correctedText = '';
         let wordChangeCounter = 0;
         const MAX_WORD_CHANGES = 10;
@@ -749,29 +750,86 @@
             }
         }
 
-        async function callGeminiAPI(prompt, filePayload = null) {
-            if (!userApiKey) {
-                showNotification("Kunci API Gemini belum diatur. Silakan atur di tombol kunci.");
-                return { error: "Kesalahan: Kunci API Gemini belum diatur." };
+        async function callAiAPI(prompt, filePayload = null) {
+            const provider = currentAiProvider;
+
+            if (filePayload && provider !== 'gemini') {
+                return { error: `Fitur ini (file/gambar/audio) saat ini hanya didukung oleh model Gemini.` };
             }
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${userApiKey}`;
-            const parts = [{ text: prompt }];
-            if (filePayload) parts.push(filePayload);
+
+            const apiKey = userApiKeys[provider];
+            if (!apiKey) {
+                return { error: `Kunci API untuk ${provider} belum diatur. Silakan atur di tombol kunci.` };
+            }
+
+            let apiUrl, headers, body;
 
             try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }] }) });
+                switch (provider) {
+                    case 'deepseek':
+                        // NOTE: Panggilan API dari sisi klien ke DeepSeek/OpenAI mungkin memerlukan proxy untuk menghindari masalah CORS.
+                        apiUrl = 'https://api.deepseek.com/chat/completions';
+                        headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+                        body = JSON.stringify({
+                            model: "deepseek-chat",
+                            messages: [{ role: "user", content: prompt }],
+                            stream: false
+                        });
+                        break;
+
+                    case 'chatgpt':
+                        apiUrl = 'https://api.openai.com/v1/chat/completions';
+                        headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+                        body = JSON.stringify({
+                            model: "gpt-3.5-turbo",
+                            messages: [{ role: "user", content: prompt }]
+                        });
+                        break;
+
+                    case 'gemini':
+                    default:
+                        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                        headers = { 'Content-Type': 'application/json' };
+                        const parts = [{ text: prompt }];
+                        if (filePayload) parts.push(filePayload);
+                        body = JSON.stringify({ contents: [{ parts }] });
+                        break;
+                }
+                
+                const response = await fetch(apiUrl, { method: 'POST', headers, body });
+
                 if (!response.ok) {
                     const errorData = await response.json();
-                    return { error: `HTTP error! status: ${response.status} - ${errorData.error?.message || 'Unknown error'}`};
+                    console.error(`API Error for ${provider}:`, errorData);
+                    const message = errorData.error?.message || errorData.message || JSON.stringify(errorData);
+                    return { error: `Error dari ${provider}: ${message}` };
                 }
+
                 const result = await response.json();
-                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                    return { text: result.candidates[0].content.parts[0].text };
+
+                // Parse response based on provider
+                let textResult = null;
+                switch (provider) {
+                    case 'deepseek':
+                    case 'chatgpt':
+                        textResult = result.choices?.[0]?.message?.content;
+                        break;
+                    case 'gemini':
+                    default:
+                        textResult = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        break;
                 }
-                const reason = result.promptFeedback?.blockReason || 'alasan keamanan';
-                return { error: `Permintaan diblokir oleh AI karena: ${reason}. Coba dengan teks yang berbeda.` };
+
+                if (textResult) {
+                    return { text: textResult };
+                }
+                
+                const reason = result.promptFeedback?.blockReason || 'format respons tidak dikenal';
+                return { error: `Permintaan diblokir oleh ${provider} karena: ${reason}.` };
+
             } catch (error) {
-                return { error: "Gagal menghubungi AI. Periksa koneksi internet atau kunci API Anda." };
+                console.error(`API call error for ${provider}:`, error);
+                return { error: `Gagal menghubungi ${provider}. Periksa koneksi internet atau kunci API Anda.` };
             }
         }
         
@@ -828,9 +886,9 @@
         
         async function fetchPredictiveText() {
             const text = sourceTextEl.value;
-            if (!userApiKey || text.split(' ').length < 3) { predictiveTextSuggestion.textContent = ''; return; }
+            if (!userApiKeys[currentAiProvider] || text.split(' ').length < 3) { predictiveTextSuggestion.textContent = ''; return; }
             const prompt = `Lanjutkan kalimat ini dalam bahasa yang sama dengan beberapa kata saja: "${text}"`;
-            const result = await callGeminiAPI(prompt);
+            const result = await callAiAPI(prompt);
             if (result.text) { predictiveTextSuggestion.textContent = result.text.trim().split('\n')[0]; } else { predictiveTextSuggestion.textContent = ''; }
         }
 
@@ -863,7 +921,7 @@
                     const originalTexts = data.lines.map(line => line.text.trim()).join('\n---\n');
                     const targetLangName = languages[imageTargetLangEl.value] || 'English';
                     const prompt = `Translate the following text lines to ${targetLangName}, considering the full context. Each line is separated by "---". Maintain the exact number of lines and the "---" separator in your response. Provide only the high-quality, natural-sounding translated text.\n\nOriginal text:\n${originalTexts}`;
-                    const result = await callGeminiAPI(prompt);
+                    const result = await callAiAPI(prompt);
                     if (result.error) { statusElement.textContent = result.error; return; }
                     const translatedTexts = result.text.split('\n---\n');
                     const translatedCtx = translatedCanvas.getContext('2d');
@@ -887,15 +945,156 @@
 
         async function handleDocumentUpload(file) { if (!file) return; logUserActivity('translate_document', { type: file.type, size: file.size }); docStatus.textContent = `Membaca file: ${file.name}...`; originalDocText = null; const reader = new FileReader(); reader.onload = async (e) => { const text = e.target.result; originalDocText = text; docStatus.textContent = 'Menerjemahkan konten...'; const [translated] = await translate(text, 'auto', docTargetLangEl.value); docTextResult.textContent = translated; docStatus.textContent = 'Terjemahan dokumen selesai.'; saveToHistory({ id: Date.now(), sourceLang: 'auto', targetLang: docTargetLangEl.value, sourceText: `[Dokumen: ${file.name}]`, translatedText: translated }); }; reader.onerror = () => { docStatus.textContent = 'Gagal membaca file.'; }; reader.readAsText(file); }
         function handleSaveClick() { if (!currentTranslationData.id) return; logUserActivity('save_translation'); let saved = getFromStorage(SAVED_KEY); const isAlreadySaved = saved.some(item => item.id === currentTranslationData.id); if (isAlreadySaved) { saved = saved.filter(item => item.id !== currentTranslationData.id); showNotification("Dihapus dari simpanan."); } else { saved.unshift(currentTranslationData); showNotification("Terjemahan disimpan!"); } saveToStorage(SAVED_KEY, saved); updateSaveButtonState(); }
-        async function handleAiAction(action, buttonEl) { if (!userApiKey) return; const text = aiSourceEl.value.trim(); if (!text) { showNotification("Masukkan teks terlebih dahulu."); return; } logUserActivity('ai_assist', { action: action }); const domain = aiDomainSelect.value; let instruction = action === 'shorten' ? 'ringkas teks berikut' : `ubah gaya tulisan berikut menjadi lebih "${action}"`; const prompt = `Dengan konteks ${domain}, ${instruction}, tanpa mengubah makna aslinya. Berikan hanya hasilnya saja. Teks: "${text}"`; buttonEl.disabled = true; const loader = buttonEl.querySelector('.loader'); loader.classList.remove('hidden'); aiResultEl.value = 'AI sedang berpikir...'; const result = await callGeminiAPI(prompt); aiResultEl.value = result.text || result.error; buttonEl.disabled = false; loader.classList.add('hidden'); }
+        async function handleAiAction(action, buttonEl) { 
+            const text = aiSourceEl.value.trim(); 
+            if (!text) { 
+                showNotification("Masukkan teks terlebih dahulu."); 
+                return; 
+            } 
+            if (!userApiKeys[currentAiProvider]) {
+                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                return;
+            }
+            logUserActivity('ai_assist', { action: action }); 
+            const domain = aiDomainSelect.value; 
+            let instruction = action === 'shorten' ? 'ringkas teks berikut' : `ubah gaya tulisan berikut menjadi lebih "${action}"`; 
+            const prompt = `Dengan konteks ${domain}, ${instruction}, tanpa mengubah makna aslinya. Berikan hanya hasilnya saja. Teks: "${text}"`; 
+            buttonEl.disabled = true; 
+            const loader = buttonEl.querySelector('.loader'); 
+            loader.classList.remove('hidden'); 
+            aiResultEl.value = 'AI sedang berpikir...'; 
+            const result = await callAiAPI(prompt); 
+            aiResultEl.value = result.text || result.error; 
+            buttonEl.disabled = false; 
+            loader.classList.add('hidden'); 
+        }
         async function handleSubtitleUpload(file) { if (!file) return; logUserActivity('translate_subtitle'); videoStatusEl.textContent = 'Membaca file...'; const srtContent = await file.text(); subtitleOriginalEl.textContent = srtContent; originalSrtSubs = parseSRT(srtContent); await retranslateSubtitles(); }
-        async function retranslateSubtitles() { if (!originalSrtSubs) return; videoStatusEl.textContent = `Menerjemahkan ${originalSrtSubs.length} baris...`; const allText = originalSrtSubs.map(s => s.text).join('\n---\n'); const prompt = `Translate the following subtitle lines to ${languages[videoTargetLangEl.value]}. Maintain the line breaks separated by "---". Provide only the translated text. Text:\n${allText}`; const result = await callGeminiAPI(prompt); if (result.error) { videoStatusEl.textContent = result.error; return; } let translatedLines = result.text.split('\n---\n'); if (translatedLines.length !== originalSrtSubs.length) { videoStatusEl.textContent = 'Error: AI translation returned unexpected format.'; return; } originalSrtSubs.forEach((sub, index) => { sub.translatedText = translatedLines[index] || sub.text; }); translatedSrtContent = generateSRT(originalSrtSubs); subtitleTranslatedEl.textContent = translatedSrtContent; downloadSrtBtn.classList.remove('hidden'); videoStatusEl.textContent = 'Subtitle siap diunduh!'; }
+        async function retranslateSubtitles() { 
+            if (!originalSrtSubs) return; 
+            if (!userApiKeys[currentAiProvider]) {
+                videoStatusEl.textContent = `Error: Kunci API untuk ${currentAiProvider} belum diatur.`;
+                return;
+            }
+            videoStatusEl.textContent = `Menerjemahkan ${originalSrtSubs.length} baris...`; 
+            const allText = originalSrtSubs.map(s => s.text).join('\n---\n'); 
+            const prompt = `Translate the following subtitle lines to ${languages[videoTargetLangEl.value]}. Maintain the line breaks separated by "---". Provide only the translated text. Text:\n${allText}`; 
+            const result = await callAiAPI(prompt); 
+            if (result.error) { 
+                videoStatusEl.textContent = result.error; 
+                return; 
+            } 
+            let translatedLines = result.text.split('\n---\n'); 
+            if (translatedLines.length !== originalSrtSubs.length) { 
+                videoStatusEl.textContent = 'Error: AI translation returned unexpected format.'; 
+                return; 
+            } 
+            originalSrtSubs.forEach((sub, index) => { 
+                sub.translatedText = translatedLines[index] || sub.text; 
+            }); 
+            translatedSrtContent = generateSRT(originalSrtSubs); 
+            subtitleTranslatedEl.textContent = translatedSrtContent; 
+            downloadSrtBtn.classList.remove('hidden'); 
+            videoStatusEl.textContent = 'Subtitle siap diunduh!'; 
+        }
         function handleDownloadSRT() { if (!translatedSrtContent) return; logUserActivity('download_subtitle'); const blob = new Blob([translatedSrtContent], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'subtitle_terjemahan.srt'; a.click(); URL.revokeObjectURL(url); }
         function handleSwap() { if (sourceLangEl.value === 'auto') { showNotification("Tidak bisa menukar 'Deteksi Otomatis'."); return; } logUserActivity('swap_languages'); const sourceLang = sourceLangEl.value, targetLang = targetLangEl.value, sourceText = sourceTextEl.value, targetText = translatedOutput.textContent; sourceLangEl.value = targetLang; targetLangEl.value = sourceLang; sourceTextEl.value = targetText; handleTextTranslation(); }
-        async function handleLyricsTranslation() { if (!userApiKey) return; const text = lyricsSource.value.trim(); if (!text) { showNotification("Masukkan lirik."); return; } logUserActivity('translate_lyrics'); const prompt = `Translate the following song lyrics to ${languages[lyricsTargetLang.value]}. Maintain the original structure. The translation should be poetic. Lyrics:\n\n${text}`; translateLyricsBtn.disabled = true; lyricsResult.textContent = 'AI sedang menerjemahkan...'; const result = await callGeminiAPI(prompt); lyricsResult.textContent = result.text || result.error; translateLyricsBtn.disabled = false; }
-        async function handleCodeTranslation() { if (!userApiKey) return; const text = codeSource.value.trim(); if (!text) { showNotification("Masukkan kode."); return; } logUserActivity('translate_code'); const prompt = `Translate only the comments in the following code block to ${languages[codeTargetLang.value]}. Do not change the code itself.\n\nCode:\n\`\`\`\n${text}\n\`\`\``; translateCodeBtn.disabled = true; codeResult.textContent = '// AI sedang menerjemahkan...'; const result = await callGeminiAPI(prompt); codeResult.textContent = (result.text || result.error).replace(/```/g, ''); translateCodeBtn.disabled = false; }
-        async function handleAudioTranslation(file) { if (!file || !userApiKey) return; logUserActivity('translate_audio'); audioFileName.textContent = file.name; audioTranscribedText.textContent = 'Membaca file audio...'; audioTranslatedText.textContent = ''; const reader = new FileReader(); reader.onload = async (e) => { const base64Audio = arrayBufferToBase64(e.target.result); const filePayload = { inlineData: { mimeType: file.type, data: base64Audio } }; audioTranscribedText.textContent = 'Mengirim ke AI untuk transkripsi...'; const result = await callGeminiAPI("Transcribe this audio file accurately.", filePayload); if (result.error) { audioTranscribedText.textContent = result.error; return; } audioTranscribedText.textContent = result.text; audioTranslatedText.textContent = 'Menerjemahkan transkripsi...'; const [translatedText] = await translate(result.text, 'auto', audioTargetLang.value); audioTranslatedText.textContent = translatedText; }; reader.onerror = () => { audioTranscribedText.textContent = 'Gagal membaca file audio.'; }; reader.readAsArrayBuffer(file); }
-        async function handleGrammarCheck() { if (!userApiKey) return; const text = sourceTextEl.value.trim(); if (!text) { showNotification("Masukkan teks."); return; } logUserActivity('check_grammar'); const loader = checkGrammarBtn.querySelector('.loader'); loader.classList.remove('hidden'); checkGrammarBtn.disabled = true; const prompt = `Periksa dan perbaiki kesalahan tata bahasa dan ejaan pada teks berikut. Berikan hanya teks yang sudah diperbaiki saja. Teks: "${text}"`; const result = await callGeminiAPI(prompt); loader.classList.add('hidden'); checkGrammarBtn.disabled = false; if (result.error) { showNotification(result.error); } else { correctedText = result.text.trim(); originalTextCorrectionEl.textContent = text; const dmp = new diff_match_patch(); const diff = dmp.diff_main(text, correctedText); dmp.diff_cleanupSemantic(diff); correctionDiffEl.innerHTML = dmp.diff_prettyHtml(diff); correctionModal.classList.add('flex'); } }
+        async function handleLyricsTranslation() { 
+            if (!userApiKeys[currentAiProvider]) {
+                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                return;
+            }
+            const text = lyricsSource.value.trim(); 
+            if (!text) { 
+                showNotification("Masukkan lirik."); 
+                return; 
+            } 
+            logUserActivity('translate_lyrics'); 
+            const prompt = `Translate the following song lyrics to ${languages[lyricsTargetLang.value]}. Maintain the original structure. The translation should be poetic. Lyrics:\n\n${text}`; 
+            translateLyricsBtn.disabled = true; 
+            lyricsResult.textContent = 'AI sedang menerjemahkan...'; 
+            const result = await callAiAPI(prompt); 
+            lyricsResult.textContent = result.text || result.error; 
+            translateLyricsBtn.disabled = false; 
+        }
+        async function handleCodeTranslation() { 
+             if (!userApiKeys[currentAiProvider]) {
+                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                return;
+            }
+            const text = codeSource.value.trim(); 
+            if (!text) { 
+                showNotification("Masukkan kode."); 
+                return; 
+            } 
+            logUserActivity('translate_code'); 
+            const prompt = `Translate only the comments in the following code block to ${languages[codeTargetLang.value]}. Do not change the code itself.\n\nCode:\n\`\`\`\n${text}\n\`\`\``; 
+            translateCodeBtn.disabled = true; 
+            codeResult.textContent = '// AI sedang menerjemahkan...'; 
+            const result = await callAiAPI(prompt); 
+            codeResult.textContent = (result.text || result.error).replace(/```/g, ''); 
+            translateCodeBtn.disabled = false; 
+        }
+        async function handleAudioTranslation(file) { 
+            if (!file) return;
+            if (!userApiKeys.gemini) { // Audio transcription is Gemini-only for now
+                showNotification("Fitur ini memerlukan kunci API Gemini.");
+                audioTranscribedText.textContent = 'Fitur ini memerlukan kunci API Gemini.';
+                return;
+            }
+            logUserActivity('translate_audio'); 
+            audioFileName.textContent = file.name; 
+            audioTranscribedText.textContent = 'Membaca file audio...'; 
+            audioTranslatedText.textContent = ''; 
+            const reader = new FileReader(); 
+            reader.onload = async (e) => { 
+                const base64Audio = arrayBufferToBase64(e.target.result); 
+                const filePayload = { inlineData: { mimeType: file.type, data: base64Audio } }; 
+                audioTranscribedText.textContent = 'Mengirim ke AI untuk transkripsi...'; 
+                const result = await callAiAPI("Transcribe this audio file accurately.", filePayload); 
+                if (result.error) { 
+                    audioTranscribedText.textContent = result.error; 
+                    return; 
+                } 
+                audioTranscribedText.textContent = result.text; 
+                audioTranslatedText.textContent = 'Menerjemahkan transkripsi...'; 
+                const [translatedText] = await translate(result.text, 'auto', audioTargetLang.value); 
+                audioTranslatedText.textContent = translatedText; 
+            }; 
+            reader.onerror = () => { 
+                audioTranscribedText.textContent = 'Gagal membaca file audio.'; 
+            }; 
+            reader.readAsArrayBuffer(file); 
+        }
+        async function handleGrammarCheck() { 
+            if (!userApiKeys[currentAiProvider]) {
+                 showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                return;
+            }
+            const text = sourceTextEl.value.trim(); 
+            if (!text) { 
+                showNotification("Masukkan teks."); 
+                return; 
+            } 
+            logUserActivity('check_grammar'); 
+            const loader = checkGrammarBtn.querySelector('.loader'); 
+            loader.classList.remove('hidden'); 
+            checkGrammarBtn.disabled = true; 
+            const prompt = `Periksa dan perbaiki kesalahan tata bahasa dan ejaan pada teks berikut. Berikan hanya teks yang sudah diperbaiki saja. Teks: "${text}"`; 
+            const result = await callAiAPI(prompt); 
+            loader.classList.add('hidden'); 
+            checkGrammarBtn.disabled = false; 
+            if (result.error) { 
+                showNotification(result.error); 
+            } else { 
+                correctedText = result.text.trim(); 
+                originalTextCorrectionEl.textContent = text; 
+                const dmp = new diff_match_patch(); 
+                const diff = dmp.diff_main(text, correctedText); 
+                dmp.diff_cleanup_semantic(diff); 
+                correctionDiffEl.innerHTML = dmp.diff_prettyHtml(diff); 
+                correctionModal.classList.add('flex'); 
+            } 
+        }
         async function handleFeedback(rating) {
             if (!currentTranslationData.id || !currentUser) { showNotification("Silakan login untuk memberi feedback."); return; }
             const { db, collection, addDoc, serverTimestamp } = window.firebaseServices;
@@ -1080,14 +1279,65 @@
 
 
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
-        window.setupAuthUI = async (user) => { if (user) { currentUser = user; authContainer.classList.add('hidden'); userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); userEmailEl.textContent = user.email; loginPrompt.classList.add('hidden'); mainContentWrapper.classList.remove('hidden'); bottomButtons.classList.remove('hidden'); bottomButtons.classList.add('flex'); await getApiKeyFromFirestore(user.uid); await getUserProfile(user.uid); } else { currentUser = null; userApiKey = null; authContainer.classList.remove('hidden'); userInfo.classList.add('hidden'); userEmailEl.textContent = ''; loginPrompt.classList.remove('hidden'); mainContentWrapper.classList.add('hidden'); bottomButtons.classList.add('hidden'); bottomButtons.classList.remove('flex'); goOfflineAsPartner(); } }
-        async function getApiKeyFromFirestore(userId) { const { db, doc, getDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists() && docSnap.data().apiKey) userApiKey = docSnap.data().apiKey; } catch (error) { console.error("Error getting API key:", error); } }
-        async function saveApiKeyToFirestore(userId, apiKey) { const { db, doc, setDoc } = window.firebaseServices; try { await setDoc(doc(db, 'users', userId), { apiKey: apiKey }, { merge: true }); userApiKey = apiKey; showNotification('Kunci API berhasil disimpan!'); } catch (error) { showNotification('Gagal menyimpan kunci API.'); } }
+        window.setupAuthUI = async (user) => { if (user) { currentUser = user; authContainer.classList.add('hidden'); userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); userEmailEl.textContent = user.email; loginPrompt.classList.add('hidden'); mainContentWrapper.classList.remove('hidden'); bottomButtons.classList.remove('hidden'); bottomButtons.classList.add('flex'); await getApiKeyFromFirestore(user.uid); await getUserProfile(user.uid); } else { currentUser = null; userApiKeys = {}; authContainer.classList.remove('hidden'); userInfo.classList.add('hidden'); userEmailEl.textContent = ''; loginPrompt.classList.remove('hidden'); mainContentWrapper.classList.add('hidden'); bottomButtons.classList.add('hidden'); bottomButtons.classList.remove('flex'); goOfflineAsPartner(); } }
+        async function getApiKeyFromFirestore(userId) { const { db, doc, getDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists() && docSnap.data().apiKeys) { userApiKeys = docSnap.data().apiKeys; } else { userApiKeys = {}; } } catch (error) { console.error("Error getting API key:", error); userApiKeys = {}; } }
+        async function saveApiKeyToFirestore(userId, provider, apiKey) { const { db, doc, setDoc } = window.firebaseServices; try { if (!userApiKeys) userApiKeys = {}; userApiKeys[provider] = apiKey; await setDoc(doc(db, 'users', userId), { apiKeys: userApiKeys }, { merge: true }); showNotification('Kunci API berhasil disimpan!'); } catch (error) { showNotification('Gagal menyimpan kunci API.'); } }
         async function getUserProfile(userId) { const { db, doc, getDoc, setDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists()) { const data = docSnap.data(); const points = data.points || 0; userPointsEl.textContent = points; profilePointsEl.textContent = `${points} Poin`; profileEmailEl.textContent = currentUser.email; } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, badges: [] }); } } catch (error) { console.error("Error getting user profile:", error); } }
-        async function showWordOfTheDay() { wordOfTheDayContent.innerHTML = '<div class="loader"></div>'; changeWordBtn.disabled = true; const prompt = "Berikan satu kutipan inspiratif singkat dari seorang tokoh terkenal. Format respons sebagai JSON dengan kunci 'quote' dan 'author'."; const result = await callGeminiAPI(prompt); changeWordBtn.disabled = false; if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); const data = JSON.parse(jsonMatch[0]); wordOfTheDayContent.innerHTML = `<p class="text-lg italic text-slate-600 dark:text-slate-300">"${data.quote}"</p><p class="text-md font-semibold mt-4">- ${data.author}</p>`; } catch (e) { wordOfTheDayContent.textContent = "Gagal memformat kutipan dari AI."; } } else { wordOfTheDayContent.textContent = result.error || "Gagal mengambil kutipan."; } }
-        async function generateQuiz() { logUserActivity('start_quiz'); quizQuestion.innerHTML = '<div class="loader"></div>'; quizOptions.innerHTML = ''; quizFeedback.textContent = ''; nextQuizBtn.classList.add('hidden'); const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string)."; const result = await callGeminiAPI(prompt); if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); currentQuiz = JSON.parse(jsonMatch[0]); quizQuestion.textContent = currentQuiz.question; currentQuiz.options.forEach(optionText => { const button = document.createElement('button'); button.textContent = optionText; button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700'; button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer); quizOptions.appendChild(button); }); } catch (e) { quizQuestion.textContent = "Gagal memformat kuis dari AI."; } } else { quizQuestion.textContent = result.error || "Gagal membuat kuis."; } }
+        async function showWordOfTheDay() { 
+            wordOfTheDayContent.innerHTML = '<div class="loader"></div>'; 
+            changeWordBtn.disabled = true; 
+            const prompt = "Berikan satu kutipan inspiratif singkat dari seorang tokoh terkenal. Format respons sebagai JSON dengan kunci 'quote' dan 'author'."; 
+            const result = await callAiAPI(prompt); 
+            changeWordBtn.disabled = false; 
+            if (result.text) { 
+                try { 
+                    const jsonMatch = result.text.match(/{[\s\S]*}/); 
+                    const data = JSON.parse(jsonMatch[0]); 
+                    wordOfTheDayContent.innerHTML = `<p class="text-lg italic text-slate-600 dark:text-slate-300">"${data.quote}"</p><p class="text-md font-semibold mt-4">- ${data.author}</p>`; 
+                } catch (e) { 
+                    wordOfTheDayContent.textContent = "Gagal memformat kutipan dari AI."; 
+                } 
+            } else { 
+                wordOfTheDayContent.textContent = result.error || "Gagal mengambil kutipan."; 
+            } 
+        }
+        async function generateQuiz() { 
+            logUserActivity('start_quiz'); 
+            quizQuestion.innerHTML = '<div class="loader"></div>'; 
+            quizOptions.innerHTML = ''; 
+            quizFeedback.textContent = ''; 
+            nextQuizBtn.classList.add('hidden'); 
+            const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string)."; 
+            const result = await callAiAPI(prompt); 
+            if (result.text) { 
+                try { 
+                    const jsonMatch = result.text.match(/{[\s\S]*}/); 
+                    currentQuiz = JSON.parse(jsonMatch[0]); 
+                    quizQuestion.textContent = currentQuiz.question; 
+                    currentQuiz.options.forEach(optionText => { 
+                        const button = document.createElement('button'); 
+                        button.textContent = optionText; 
+                        button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700'; 
+                        button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer); 
+                        quizOptions.appendChild(button); 
+                    }); 
+                } catch (e) { 
+                    quizQuestion.textContent = "Gagal memformat kuis dari AI."; 
+                } 
+            } else { 
+                quizQuestion.textContent = result.error || "Gagal membuat kuis."; 
+            } 
+        }
         function checkQuizAnswer(button, selected, correct) { document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); if (selected === correct) { button.classList.add('correct'); quizFeedback.textContent = 'Jawaban Benar! 🎉'; quizFeedback.className = 'mt-4 text-center font-semibold text-green-600'; } else { button.classList.add('incorrect'); quizFeedback.textContent = `Salah. Jawaban yang benar adalah "${correct}".`; quizFeedback.className = 'mt-4 text-center font-semibold text-red-600'; } nextQuizBtn.classList.remove('hidden'); }
         
+        function loadAiProviderPreference() {
+            const savedProvider = localStorage.getItem('ai_provider');
+            if (savedProvider && ['gemini', 'deepseek', 'chatgpt'].includes(savedProvider)) {
+                currentAiProvider = savedProvider;
+            }
+            apiProviderSelect.value = currentAiProvider;
+        }
+
         // Initialize
         const sortedLanguages = Object.entries(languages).filter(([code]) => code !== 'auto').sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
         const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; 
@@ -1095,7 +1345,10 @@
         const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, conversationLang1, conversationLang2, lyricsTargetLang, codeTargetLang, audioTargetLang, partnerNativeLang, partnerPracticeLang];
         sortedLanguages.forEach(([code, name]) => { const option = document.createElement('option'); option.value = code; option.textContent = name; sourceLangEl.appendChild(option.cloneNode(true)); allSelects.forEach(sel => { if (sel.id === 'conversation-lang-1' && sel.querySelector('option[value="auto"]')) sel.appendChild(option.cloneNode(true)); else if (sel.id !== 'conversation-lang-1') sel.appendChild(option.cloneNode(true)); }); });
         sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en'; conversationLang1.value = 'auto'; conversationLang2.value = 'ja'; lyricsTargetLang.value = 'id'; codeTargetLang.value = 'en'; audioTargetLang.value = 'id'; partnerNativeLang.value = 'id'; partnerPracticeLang.value = 'en';
-        loadVoiceSettings(); initializeSpeechRecognition(); initializeABTesting();
+        loadVoiceSettings(); 
+        initializeSpeechRecognition(); 
+        initializeABTesting();
+        loadAiProviderPreference();
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         handleImageTranslation('[https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda](https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda)');
@@ -1117,8 +1370,51 @@
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
-        apiKeyBtn.addEventListener('click', () => { apiKeyInput.value = userApiKey || ''; apiKeyModal.classList.add('flex'); });
-        saveApiKeyBtn.addEventListener('click', async () => { const key = apiKeyInput.value.trim(); if(key) { if (currentUser) { await saveApiKeyToFirestore(currentUser.uid, key); } else { userApiKey = key; showNotification('Kunci API disimpan untuk sesi ini!'); } apiKeyModal.classList.remove('flex'); } else { showNotification('Kunci API tidak boleh kosong.'); } });
+        
+        const apiPlaceholders = {
+            gemini: "Masukkan kunci API Gemini Anda",
+            deepseek: "Masukkan kunci API DeepSeek Anda",
+            chatgpt: "Masukkan kunci API ChatGPT Anda"
+        };
+
+        apiProviderSelect.addEventListener('change', () => {
+            const provider = apiProviderSelect.value;
+            currentAiProvider = provider;
+            localStorage.setItem('ai_provider', provider);
+            apiKeyInput.value = userApiKeys[provider] || '';
+            apiKeyInput.placeholder = apiPlaceholders[provider] || 'Masukkan kunci API Anda';
+        });
+
+        apiKeyBtn.addEventListener('click', () => {
+            const provider = apiProviderSelect.value;
+            apiKeyInput.value = userApiKeys[provider] || '';
+            apiKeyInput.placeholder = apiPlaceholders[provider] || 'Masukkan kunci API Anda';
+            apiKeyModal.classList.add('flex');
+        });
+
+        saveApiKeyBtn.addEventListener('click', async () => {
+            const key = apiKeyInput.value.trim();
+            const provider = apiProviderSelect.value;
+            if (key) {
+                if (currentUser) {
+                    await saveApiKeyToFirestore(currentUser.uid, provider, key);
+                } else {
+                    userApiKeys[provider] = key;
+                    showNotification(`Kunci API ${provider} disimpan untuk sesi ini!`);
+                }
+                apiKeyModal.classList.remove('flex');
+            } else {
+                if (currentUser) {
+                    await saveApiKeyToFirestore(currentUser.uid, provider, '');
+                } else {
+                    delete userApiKeys[provider];
+                }
+                showNotification(`Kunci API ${provider} dihapus.`);
+                apiKeyInput.value = '';
+                apiKeyModal.classList.remove('flex');
+            }
+        });
+
         document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
         historyList.addEventListener('click', mainListClickHandler);
         savedList.addEventListener('click', mainListClickHandler);
@@ -1187,3 +1483,5 @@
     </script>
 </body>
 </html>
+
+
