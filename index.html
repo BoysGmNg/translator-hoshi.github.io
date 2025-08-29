@@ -10,8 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Tesseract.js untuk OCR pada gambar -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-    <!-- SDK Baru untuk Grok AI -->
-    <script src="https://js.puter.com/v2/"></script>
     
     <!-- Firebase SDK - Diperbarui ke versi modular terbaru -->
     <script type="module">
@@ -515,7 +513,7 @@
                 <!-- Quiz Panel -->
                 <div id="quiz-panel" class="tab-panel hidden">
                     <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <h2 class="text-lg font-semibold mb-2 text-center">Kuis Bahasa Cerdas 💎 (didukung oleh Grok)</h2>
+                        <h2 class="text-lg font-semibold mb-2 text-center">Kuis Bahasa Cerdas 💎</h2>
                         <div id="quiz-container" class="max-w-md mx-auto">
                             <div id="quiz-question" class="font-semibold text-lg mb-4 text-center min-h-[56px] flex items-center justify-center"></div>
                             <div id="quiz-options" class="space-y-2"></div>
@@ -774,31 +772,6 @@
                 return { error: `Permintaan diblokir oleh AI karena: ${reason}. Coba dengan teks yang berbeda.` };
             } catch (error) {
                 return { error: "Gagal menghubungi AI. Periksa koneksi internet atau kunci API Anda." };
-            }
-        }
-        
-        // FUNGSI BARU: Memanggil Grok AI via PuterJS
-        async function callGrokAPI(prompt) {
-            if (typeof puter === 'undefined') {
-                showNotification("PuterJS SDK tidak dapat dimuat.");
-                return { error: "PuterJS SDK tidak dapat dimuat." };
-            }
-            try {
-                // Memanggil Grok AI tanpa streaming untuk mendapatkan seluruh respons
-                const response = await puter.ai.chat(prompt, {
-                    model: 'x-ai/grok-4',
-                    stream: false 
-                });
-
-                if (response.text) {
-                    return { text: response.text };
-                } else {
-                    console.error("Unexpected Grok API response:", response);
-                    return { error: "Grok tidak memberikan respons yang valid." };
-                }
-            } catch (error) {
-                console.error("Grok API Error:", error);
-                return { error: "Gagal menghubungi AI Grok. Periksa koneksi internet Anda." };
             }
         }
         
@@ -1112,44 +1085,7 @@
         async function saveApiKeyToFirestore(userId, apiKey) { const { db, doc, setDoc } = window.firebaseServices; try { await setDoc(doc(db, 'users', userId), { apiKey: apiKey }, { merge: true }); userApiKey = apiKey; showNotification('Kunci API berhasil disimpan!'); } catch (error) { showNotification('Gagal menyimpan kunci API.'); } }
         async function getUserProfile(userId) { const { db, doc, getDoc, setDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists()) { const data = docSnap.data(); const points = data.points || 0; userPointsEl.textContent = points; profilePointsEl.textContent = `${points} Poin`; profileEmailEl.textContent = currentUser.email; } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, badges: [] }); } } catch (error) { console.error("Error getting user profile:", error); } }
         async function showWordOfTheDay() { wordOfTheDayContent.innerHTML = '<div class="loader"></div>'; changeWordBtn.disabled = true; const prompt = "Berikan satu kutipan inspiratif singkat dari seorang tokoh terkenal. Format respons sebagai JSON dengan kunci 'quote' dan 'author'."; const result = await callGeminiAPI(prompt); changeWordBtn.disabled = false; if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); const data = JSON.parse(jsonMatch[0]); wordOfTheDayContent.innerHTML = `<p class="text-lg italic text-slate-600 dark:text-slate-300">"${data.quote}"</p><p class="text-md font-semibold mt-4">- ${data.author}</p>`; } catch (e) { wordOfTheDayContent.textContent = "Gagal memformat kutipan dari AI."; } } else { wordOfTheDayContent.textContent = result.error || "Gagal mengambil kutipan."; } }
-        
-        // FUNGSI YANG DIMODIFIKASI: Menggunakan callGrokAPI
-        async function generateQuiz() {
-            logUserActivity('start_quiz');
-            quizQuestion.innerHTML = '<div class="loader"></div>';
-            quizOptions.innerHTML = '';
-            quizFeedback.textContent = '';
-            nextQuizBtn.classList.add('hidden');
-            
-            const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Penting: Respons HARUS HANYA berupa JSON yang valid dengan kunci: 'question' (string), 'options' (array string), dan 'answer' (string, teks jawaban yang benar). Jangan tambahkan teks atau format lain.";
-            
-            // Menggunakan Grok API, bukan Gemini API
-            const result = await callGrokAPI(prompt);
-
-            if (result.text) {
-                try {
-                    // Mencari blok JSON di dalam teks, karena model mungkin menambahkan teks tambahan
-                    const jsonMatch = result.text.match(/{[\s\S]*}/);
-                    if (!jsonMatch) throw new Error("Tidak ada JSON yang valid dalam respons AI.");
-
-                    currentQuiz = JSON.parse(jsonMatch[0]);
-                    quizQuestion.textContent = currentQuiz.question;
-                    currentQuiz.options.forEach(optionText => {
-                        const button = document.createElement('button');
-                        button.textContent = optionText;
-                        button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700';
-                        button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer);
-                        quizOptions.appendChild(button);
-                    });
-                } catch (e) {
-                    console.error("Error parsing Quiz JSON from Grok:", e, "Original response:", result.text);
-                    quizQuestion.textContent = "Gagal memformat kuis dari AI. Coba lagi.";
-                }
-            } else {
-                quizQuestion.textContent = result.error || "Gagal membuat kuis.";
-            }
-        }
-        
+        async function generateQuiz() { logUserActivity('start_quiz'); quizQuestion.innerHTML = '<div class="loader"></div>'; quizOptions.innerHTML = ''; quizFeedback.textContent = ''; nextQuizBtn.classList.add('hidden'); const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string)."; const result = await callGeminiAPI(prompt); if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); currentQuiz = JSON.parse(jsonMatch[0]); quizQuestion.textContent = currentQuiz.question; currentQuiz.options.forEach(optionText => { const button = document.createElement('button'); button.textContent = optionText; button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700'; button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer); quizOptions.appendChild(button); }); } catch (e) { quizQuestion.textContent = "Gagal memformat kuis dari AI."; } } else { quizQuestion.textContent = result.error || "Gagal membuat kuis."; } }
         function checkQuizAnswer(button, selected, correct) { document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); if (selected === correct) { button.classList.add('correct'); quizFeedback.textContent = 'Jawaban Benar! 🎉'; quizFeedback.className = 'mt-4 text-center font-semibold text-green-600'; } else { button.classList.add('incorrect'); quizFeedback.textContent = `Salah. Jawaban yang benar adalah "${correct}".`; quizFeedback.className = 'mt-4 text-center font-semibold text-red-600'; } nextQuizBtn.classList.remove('hidden'); }
         
         // Initialize
@@ -1177,7 +1113,7 @@
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
-        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-slate-500', 'dark:text-slate-400'); }); btn.classList.add('tab-active'); btn.classList.remove('text-slate-500', 'dark:text-slate-400'); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); }));
+        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); }));
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
@@ -1251,4 +1187,3 @@
     </script>
 </body>
 </html>
-
