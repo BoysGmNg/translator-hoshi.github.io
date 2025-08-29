@@ -16,7 +16,7 @@
         // Mengimpor fungsi yang diperlukan dari SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
         const firebaseConfig = {
@@ -37,7 +37,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             // Membuat layanan Firebase dapat diakses secara global untuk kemudahan
-            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc };
+            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc };
             console.log("Firebase initialized successfully");
         } catch (e) {
             console.error("Error initializing Firebase. Please check your config.", e);
@@ -166,6 +166,11 @@
         .feedback-btn:hover svg { transform: scale(1.2); }
         .feedback-btn.selected { color: #3b82f6; }
         .dark .feedback-btn.selected { color: #60a5fa; }
+
+        /* Gaya untuk Kamera */
+        #camera-feed {
+            transform: scaleX(-1); /* Cerminkan video agar seperti cermin */
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -241,9 +246,9 @@
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="lyrics">Lirik Lagu 💎</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="code">Kode 💎</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="quiz">Kuis Bahasa 💎</button>
-                        <!-- FITUR MASA DEPAN (PLACEHOLDER) -->
-                        <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm" disabled title="Fitur mendatang: Terjemahkan teks dari kamera Anda secara langsung. Memerlukan aplikasi seluler.">Kamera 📸</button>
-                        <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm" disabled title="Fitur mendatang: Terhubung dengan penutur asli untuk latihan percakapan.">Language Partner 🤝</button>
+                        <!-- FITUR BARU: Diaktifkan -->
+                        <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="camera">Kamera 📸</button>
+                        <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="partner">Language Partner 🤝</button>
                     </div>
                 </div>
 
@@ -518,6 +523,48 @@
                     </div>
                 </div>
 
+                <!-- Camera Panel -->
+                <div id="camera-panel" class="tab-panel hidden">
+                    <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm text-center">
+                        <h2 class="text-lg font-semibold mb-2">Terjemahan Kamera Real-World</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Arahkan kamera Anda ke teks untuk menerjemahkannya secara langsung. <br>Fitur ini masih dalam tahap simulasi.</p>
+                        <div id="camera-container" class="relative w-full max-w-lg mx-auto bg-gray-900 rounded-lg overflow-hidden aspect-video">
+                            <video id="camera-feed" class="w-full h-full object-cover" autoplay playsinline></video>
+                            <div id="camera-overlay" class="absolute inset-0 flex items-center justify-center">
+                                <div class="w-3/4 h-1/2 border-2 border-dashed border-white opacity-50"></div>
+                            </div>
+                            <p id="camera-permission-prompt" class="hidden absolute inset-0 bg-black bg-opacity-75 text-white flex items-center justify-center p-4">Izinkan akses kamera di browser Anda untuk menggunakan fitur ini.</p>
+                        </div>
+                        <button id="capture-btn" class="mt-4 bg-blue-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-blue-700 transition-colors">Ambil Gambar & Terjemahkan</button>
+                        <canvas id="camera-canvas" class="hidden"></canvas>
+                        <div id="camera-ocr-status" class="mt-4 text-sm font-medium"></div>
+                    </div>
+                </div>
+
+                <!-- Language Partner Panel -->
+                <div id="partner-panel" class="tab-panel hidden">
+                     <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                        <h2 class="text-lg font-semibold mb-4 text-center">Language Partner 🤝</h2>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="md:col-span-1 p-4 bg-slate-50 dark:bg-gray-700 rounded-lg">
+                                <h3 class="font-semibold mb-2">Status Anda</h3>
+                                <p class="text-sm mb-1">Bahasa Ibu:</p>
+                                <select id="partner-native-lang" class="w-full p-2 mb-3 border rounded text-sm dark:bg-gray-600 dark:border-gray-500"></select>
+                                <p class="text-sm mb-1">Ingin Latihan Bahasa:</p>
+                                <select id="partner-practice-lang" class="w-full p-2 mb-4 border rounded text-sm dark:bg-gray-600 dark:border-gray-500"></select>
+                                <button id="go-online-btn" class="w-full bg-green-500 text-white font-semibold py-2 rounded-lg hover:bg-green-600">Go Online</button>
+                                <button id="go-offline-btn" class="w-full bg-red-500 text-white font-semibold py-2 rounded-lg hover:bg-red-600 hidden mt-2">Go Offline</button>
+                            </div>
+                            <div class="md:col-span-2">
+                                <h3 class="font-semibold mb-2">Partner Tersedia</h3>
+                                <div id="partner-list" class="h-64 overflow-y-auto scrollable space-y-2 p-2 bg-slate-50 dark:bg-gray-700 rounded-lg">
+                                    <p class="text-slate-400 text-center p-4">Mencari partner...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- History and Saved Buttons -->
@@ -565,17 +612,6 @@
             <div class="flex justify-end gap-4 p-4 border-t dark:border-gray-700">
                 <button id="cancel-suggestion-btn" class="bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors">Batal</button>
                 <button id="submit-suggestion-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Kirim Saran</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL BARU: Feedback Otomatis -->
-    <div id="auto-feedback-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-end justify-center p-4 sm:justify-end z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
-            <p class="font-semibold mb-4">Apakah hasil terjemahan ini membantu Anda?</p>
-            <div class="flex justify-center gap-4">
-                <button id="auto-feedback-yes" class="bg-green-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-600 w-full">Ya</button>
-                <button id="auto-feedback-no" class="bg-red-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-red-600 w-full">Tidak</button>
             </div>
         </div>
     </div>
@@ -662,9 +698,18 @@
         const suggestionTextarea = document.getElementById('suggestion-textarea');
         const submitSuggestionBtn = document.getElementById('submit-suggestion-btn');
         const cancelSuggestionBtn = document.getElementById('cancel-suggestion-btn');
-        const autoFeedbackModal = document.getElementById('auto-feedback-modal');
-        const autoFeedbackYesBtn = document.getElementById('auto-feedback-yes');
-        const autoFeedbackNoBtn = document.getElementById('auto-feedback-no');
+        // Elemen Fitur Baru: Kamera
+        const cameraFeed = document.getElementById('camera-feed');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const cameraOcrStatus = document.getElementById('camera-ocr-status');
+        const cameraPermissionPrompt = document.getElementById('camera-permission-prompt');
+        // Elemen Fitur Baru: Language Partner
+        const partnerNativeLang = document.getElementById('partner-native-lang');
+        const partnerPracticeLang = document.getElementById('partner-practice-lang');
+        const goOnlineBtn = document.getElementById('go-online-btn');
+        const goOfflineBtn = document.getElementById('go-offline-btn');
+        const partnerList = document.getElementById('partner-list');
 
 
         // --- 2. STATE & CONSTANTS ---
@@ -683,6 +728,8 @@
         let wordChangeCounter = 0;
         const MAX_WORD_CHANGES = 10;
         let currentQuiz = null;
+        let cameraStream = null;
+        let unsubscribeFromPartners = null;
         
         // --- 3. API & CORE FUNCTIONS ---
         async function translate(text, sourceLang, targetLang) {
@@ -777,7 +824,6 @@
             updateSaveButtonState();
             renderFeedbackUI();
             logUserActivity('translate_text', { from: sourceLangEl.value, to: targetLangEl.value, length: sourceText.length });
-            triggerAutomatedFeedback();
         }
         
         async function fetchPredictiveText() {
@@ -788,14 +834,14 @@
             if (result.text) { predictiveTextSuggestion.textContent = result.text.trim().split('\n')[0]; } else { predictiveTextSuggestion.textContent = ''; }
         }
 
-        async function handleImageTranslation(imageSource) {
+        async function handleImageTranslation(imageSource, statusElement = ocrStatus) {
             if (!imageSource) return;
             logUserActivity('translate_image');
             resetZoom();
-            ocrStatus.textContent = 'Memuat gambar...';
-            ocrProgress.classList.remove('hidden');
-            ocrProgressBar.style.width = '0%';
-            imagePreviewContainer.innerHTML = '';
+            statusElement.textContent = 'Memuat gambar...';
+            if (ocrProgress) ocrProgress.classList.remove('hidden');
+            if (ocrProgressBar) ocrProgressBar.style.width = '0%';
+            if (imagePreviewContainer) imagePreviewContainer.innerHTML = '';
 
             const img = new Image();
             img.crossOrigin = "Anonymous";
@@ -803,18 +849,22 @@
                 const originalCanvas = document.createElement('canvas'); originalCanvas.id = 'original-canvas';
                 const translatedCanvas = document.createElement('canvas'); translatedCanvas.id = 'translated-canvas';
                 [originalCanvas, translatedCanvas].forEach(canvas => { canvas.width = img.width; canvas.height = img.height; canvas.getContext('2d').drawImage(img, 0, 0); });
-                imagePreviewContainer.append(originalCanvas, translatedCanvas);
-                compareToggle.checked = false; translatedCanvas.style.visibility = 'visible';
+                if (imagePreviewContainer) {
+                    imagePreviewContainer.innerHTML = ''; // Clear previous
+                    imagePreviewContainer.append(originalCanvas, translatedCanvas);
+                }
+                if (compareToggle) compareToggle.checked = false; 
+                translatedCanvas.style.visibility = 'visible';
                 try {
-                    ocrStatus.textContent = 'Mempersiapkan pendeteksian teks...';
-                    const { data } = await Tesseract.recognize(img, 'ind+eng', { logger: m => { if (m.status === 'recognizing text') { ocrStatus.textContent = `Mendeteksi teks... (${Math.round(m.progress * 100)}%)`; ocrProgressBar.style.width = `${m.progress * 100}%`; } } });
-                    if (data.lines.length === 0) { ocrStatus.textContent = 'Tidak ada teks yang terdeteksi.'; ocrProgress.classList.add('hidden'); return; }
-                    ocrStatus.textContent = `Terdeteksi ${data.lines.length} baris. Menerjemahkan dengan AI...`;
+                    statusElement.textContent = 'Mendeteksi teks...';
+                    const { data } = await Tesseract.recognize(img, 'ind+eng', { logger: m => { if (m.status === 'recognizing text' && ocrProgressBar) { statusElement.textContent = `Mendeteksi teks... (${Math.round(m.progress * 100)}%)`; ocrProgressBar.style.width = `${m.progress * 100}%`; } } });
+                    if (data.lines.length === 0) { statusElement.textContent = 'Tidak ada teks yang terdeteksi.'; if (ocrProgress) ocrProgress.classList.add('hidden'); return; }
+                    statusElement.textContent = `Terdeteksi ${data.lines.length} baris. Menerjemahkan...`;
                     const originalTexts = data.lines.map(line => line.text.trim()).join('\n---\n');
                     const targetLangName = languages[imageTargetLangEl.value] || 'English';
                     const prompt = `Translate the following text lines to ${targetLangName}, considering the full context. Each line is separated by "---". Maintain the exact number of lines and the "---" separator in your response. Provide only the high-quality, natural-sounding translated text.\n\nOriginal text:\n${originalTexts}`;
                     const result = await callGeminiAPI(prompt);
-                    if (result.error) { ocrStatus.textContent = result.error; return; }
+                    if (result.error) { statusElement.textContent = result.error; return; }
                     const translatedTexts = result.text.split('\n---\n');
                     const translatedCtx = translatedCanvas.getContext('2d');
                     data.lines.forEach((line, index) => {
@@ -828,10 +878,10 @@
                         translatedCtx.textBaseline = 'middle';
                         translatedCtx.fillText(translatedText, bbox.x0, bbox.y0 + (bbox.y1 - bbox.y0) / 2);
                     });
-                    ocrStatus.textContent = 'Terjemahan gambar AI selesai!';
-                } catch (error) { ocrStatus.textContent = 'Gagal memproses gambar.'; } finally { ocrProgress.classList.add('hidden'); }
+                    statusElement.textContent = 'Terjemahan gambar selesai!';
+                } catch (error) { statusElement.textContent = 'Gagal memproses gambar.'; } finally { if (ocrProgress) ocrProgress.classList.add('hidden'); }
             };
-            img.onerror = () => { ocrStatus.textContent = 'Gagal memuat gambar.'; };
+            img.onerror = () => { statusElement.textContent = 'Gagal memuat gambar.'; };
             if (typeof imageSource === 'string') { img.src = imageSource; currentImageSrc = imageSource; } else { const url = URL.createObjectURL(imageSource); img.src = url; currentImageSrc = url; }
         }
 
@@ -911,22 +961,6 @@
             }
         }
 
-        function triggerAutomatedFeedback() {
-            // Munculkan feedback pop-up secara acak (misal, 25% kemungkinan) untuk tidak mengganggu pengguna
-            if (Math.random() < 0.25) {
-                setTimeout(() => {
-                    autoFeedbackModal.classList.add('flex');
-                }, 2000); // Tampilkan setelah 2 detik
-            }
-        }
-
-        function handleAutoFeedback(wasHelpful) {
-            autoFeedbackModal.classList.remove('flex');
-            showNotification("Terima kasih atas masukan Anda!");
-            logUserActivity('auto_feedback', { helpful: wasHelpful });
-            // Anda juga bisa menyimpan ini ke koleksi feedback jika diperlukan
-        }
-
         function initializeABTesting() {
             let group = localStorage.getItem('ab_test_group');
             if (!group) {
@@ -941,22 +975,126 @@
             console.log(`User is in A/B Test Group: ${group}`);
         }
 
+        async function startCamera() {
+            if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                cameraFeed.srcObject = cameraStream;
+                cameraPermissionPrompt.classList.add('hidden');
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                cameraPermissionPrompt.classList.remove('hidden');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
+        function handleCapture() {
+            if (!cameraStream) { showNotification("Kamera tidak aktif."); return; }
+            const context = cameraCanvas.getContext('2d');
+            cameraCanvas.width = cameraFeed.videoWidth;
+            cameraCanvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+            cameraCanvas.toBlob(blob => {
+                handleImageTranslation(blob, cameraOcrStatus);
+            });
+        }
+
+        async function goOnlineAsPartner() {
+            if (!currentUser) { showNotification("Login untuk menjadi partner."); return; }
+            const { db, doc, setDoc } = window.firebaseServices;
+            const nativeLang = partnerNativeLang.value;
+            const practiceLang = partnerPracticeLang.value;
+            goOnlineBtn.disabled = true;
+            try {
+                await setDoc(doc(db, "language_partners", currentUser.uid), {
+                    email: currentUser.email,
+                    native: nativeLang,
+                    practicing: practiceLang,
+                    online: true
+                });
+                goOnlineBtn.classList.add('hidden');
+                goOfflineBtn.classList.remove('hidden');
+                showNotification("Anda sekarang online sebagai partner!");
+                listenForPartners();
+            } catch (e) { console.error(e); showNotification("Gagal untuk online."); goOnlineBtn.disabled = false; }
+        }
+
+        async function goOfflineAsPartner() {
+            if (!currentUser) return;
+            const { db, doc, deleteDoc } = window.firebaseServices;
+            goOfflineBtn.disabled = true;
+            try {
+                await deleteDoc(doc(db, "language_partners", currentUser.uid));
+                goOfflineBtn.classList.add('hidden');
+                goOnlineBtn.classList.remove('hidden');
+                showNotification("Anda sekarang offline.");
+                if (unsubscribeFromPartners) unsubscribeFromPartners();
+            } catch (e) { console.error(e); showNotification("Gagal untuk offline."); goOfflineBtn.disabled = false; }
+        }
+
+        function listenForPartners() {
+            if (unsubscribeFromPartners) unsubscribeFromPartners(); // Hentikan listener sebelumnya
+            const { db, collection, onSnapshot } = window.firebaseServices;
+            const q = collection(db, "language_partners");
+            unsubscribeFromPartners = onSnapshot(q, (querySnapshot) => {
+                const partners = [];
+                querySnapshot.forEach((doc) => {
+                    // Jangan tampilkan diri sendiri
+                    if (doc.id !== currentUser?.uid) {
+                        partners.push({ id: doc.id, ...doc.data() });
+                    }
+                });
+                renderPartnerList(partners);
+            });
+        }
+
+        function renderPartnerList(partners) {
+            partnerList.innerHTML = '';
+            if (partners.length === 0) {
+                partnerList.innerHTML = '<p class="text-slate-400 text-center p-4">Tidak ada partner yang online saat ini.</p>';
+                return;
+            }
+            partners.forEach(p => {
+                const partnerEl = document.createElement('div');
+                partnerEl.className = 'p-2 border-b dark:border-gray-600 flex justify-between items-center';
+                partnerEl.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-sm">${p.email.split('@')[0]}</p>
+                        <p class="text-xs text-slate-500">Native: ${languages[p.native] || p.native}, Latihan: ${languages[p.practicing] || p.practicing}</p>
+                    </div>
+                    <button class="bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded-full hover:bg-blue-600">Hubungi</button>
+                `;
+                partnerEl.querySelector('button').onclick = () => {
+                    logUserActivity('connect_language_partner');
+                    alert(`Simulasi menghubungkan dengan ${p.email}... Fitur chat/video call akan diimplementasikan di sini.`);
+                };
+                partnerList.appendChild(partnerEl);
+            });
+        }
+
+
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
-        window.setupAuthUI = async (user) => { if (user) { currentUser = user; authContainer.classList.add('hidden'); userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); userEmailEl.textContent = user.email; loginPrompt.classList.add('hidden'); mainContentWrapper.classList.remove('hidden'); bottomButtons.classList.remove('hidden'); bottomButtons.classList.add('flex'); await getApiKeyFromFirestore(user.uid); await getUserProfile(user.uid); } else { currentUser = null; userApiKey = null; authContainer.classList.remove('hidden'); userInfo.classList.add('hidden'); userEmailEl.textContent = ''; loginPrompt.classList.remove('hidden'); mainContentWrapper.classList.add('hidden'); bottomButtons.classList.add('hidden'); bottomButtons.classList.remove('flex'); } }
+        window.setupAuthUI = async (user) => { if (user) { currentUser = user; authContainer.classList.add('hidden'); userInfo.classList.remove('hidden'); userInfo.classList.add('flex'); userEmailEl.textContent = user.email; loginPrompt.classList.add('hidden'); mainContentWrapper.classList.remove('hidden'); bottomButtons.classList.remove('hidden'); bottomButtons.classList.add('flex'); await getApiKeyFromFirestore(user.uid); await getUserProfile(user.uid); } else { currentUser = null; userApiKey = null; authContainer.classList.remove('hidden'); userInfo.classList.add('hidden'); userEmailEl.textContent = ''; loginPrompt.classList.remove('hidden'); mainContentWrapper.classList.add('hidden'); bottomButtons.classList.add('hidden'); bottomButtons.classList.remove('flex'); goOfflineAsPartner(); } }
         async function getApiKeyFromFirestore(userId) { const { db, doc, getDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists() && docSnap.data().apiKey) userApiKey = docSnap.data().apiKey; } catch (error) { console.error("Error getting API key:", error); } }
         async function saveApiKeyToFirestore(userId, apiKey) { const { db, doc, setDoc } = window.firebaseServices; try { await setDoc(doc(db, 'users', userId), { apiKey: apiKey }, { merge: true }); userApiKey = apiKey; showNotification('Kunci API berhasil disimpan!'); } catch (error) { showNotification('Gagal menyimpan kunci API.'); } }
         async function getUserProfile(userId) { const { db, doc, getDoc, setDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists()) { const data = docSnap.data(); const points = data.points || 0; userPointsEl.textContent = points; profilePointsEl.textContent = `${points} Poin`; profileEmailEl.textContent = currentUser.email; } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, badges: [] }); } } catch (error) { console.error("Error getting user profile:", error); } }
         async function showWordOfTheDay() { wordOfTheDayContent.innerHTML = '<div class="loader"></div>'; changeWordBtn.disabled = true; const prompt = "Berikan satu kutipan inspiratif singkat dari seorang tokoh terkenal. Format respons sebagai JSON dengan kunci 'quote' dan 'author'."; const result = await callGeminiAPI(prompt); changeWordBtn.disabled = false; if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); const data = JSON.parse(jsonMatch[0]); wordOfTheDayContent.innerHTML = `<p class="text-lg italic text-slate-600 dark:text-slate-300">"${data.quote}"</p><p class="text-md font-semibold mt-4">- ${data.author}</p>`; } catch (e) { wordOfTheDayContent.textContent = "Gagal memformat kutipan dari AI."; } } else { wordOfTheDayContent.textContent = result.error || "Gagal mengambil kutipan."; } }
-        async function generateQuiz() { quizQuestion.innerHTML = '<div class="loader"></div>'; quizOptions.innerHTML = ''; quizFeedback.textContent = ''; nextQuizBtn.classList.add('hidden'); const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string)."; const result = await callGeminiAPI(prompt); if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); currentQuiz = JSON.parse(jsonMatch[0]); quizQuestion.textContent = currentQuiz.question; currentQuiz.options.forEach(optionText => { const button = document.createElement('button'); button.textContent = optionText; button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700'; button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer); quizOptions.appendChild(button); }); } catch (e) { quizQuestion.textContent = "Gagal memformat kuis dari AI."; } } else { quizQuestion.textContent = result.error || "Gagal membuat kuis."; } }
+        async function generateQuiz() { logUserActivity('start_quiz'); quizQuestion.innerHTML = '<div class="loader"></div>'; quizOptions.innerHTML = ''; quizFeedback.textContent = ''; nextQuizBtn.classList.add('hidden'); const prompt = "Buat satu pertanyaan kuis pilihan ganda tentang bahasa atau terjemahan. Berikan 4 pilihan jawaban. Format respons sebagai JSON dengan kunci: 'question', 'options' (array), dan 'answer' (string)."; const result = await callGeminiAPI(prompt); if (result.text) { try { const jsonMatch = result.text.match(/{[\s\S]*}/); currentQuiz = JSON.parse(jsonMatch[0]); quizQuestion.textContent = currentQuiz.question; currentQuiz.options.forEach(optionText => { const button = document.createElement('button'); button.textContent = optionText; button.className = 'quiz-option w-full p-2 border rounded-lg dark:border-gray-600 hover:bg-slate-100 dark:hover:bg-gray-700'; button.onclick = () => checkQuizAnswer(button, optionText, currentQuiz.answer); quizOptions.appendChild(button); }); } catch (e) { quizQuestion.textContent = "Gagal memformat kuis dari AI."; } } else { quizQuestion.textContent = result.error || "Gagal membuat kuis."; } }
         function checkQuizAnswer(button, selected, correct) { document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); if (selected === correct) { button.classList.add('correct'); quizFeedback.textContent = 'Jawaban Benar! 🎉'; quizFeedback.className = 'mt-4 text-center font-semibold text-green-600'; } else { button.classList.add('incorrect'); quizFeedback.textContent = `Salah. Jawaban yang benar adalah "${correct}".`; quizFeedback.className = 'mt-4 text-center font-semibold text-red-600'; } nextQuizBtn.classList.remove('hidden'); }
         
         // Initialize
         const sortedLanguages = Object.entries(languages).filter(([code]) => code !== 'auto').sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB));
         const autoOption = document.createElement('option'); autoOption.value = 'auto'; autoOption.textContent = 'Deteksi Otomatis'; 
         sourceLangEl.appendChild(autoOption.cloneNode(true)); conversationLang1.appendChild(autoOption.cloneNode(true));
-        const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, conversationLang1, conversationLang2, lyricsTargetLang, codeTargetLang, audioTargetLang];
+        const allSelects = [targetLangEl, docTargetLangEl, imageTargetLangEl, videoTargetLangEl, glossarySourceLang, glossaryTargetLang, conversationLang1, conversationLang2, lyricsTargetLang, codeTargetLang, audioTargetLang, partnerNativeLang, partnerPracticeLang];
         sortedLanguages.forEach(([code, name]) => { const option = document.createElement('option'); option.value = code; option.textContent = name; sourceLangEl.appendChild(option.cloneNode(true)); allSelects.forEach(sel => { if (sel.id === 'conversation-lang-1' && sel.querySelector('option[value="auto"]')) sel.appendChild(option.cloneNode(true)); else if (sel.id !== 'conversation-lang-1') sel.appendChild(option.cloneNode(true)); }); });
-        sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en'; conversationLang1.value = 'auto'; conversationLang2.value = 'ja'; lyricsTargetLang.value = 'id'; codeTargetLang.value = 'en'; audioTargetLang.value = 'id';
+        sourceLangEl.value = 'auto'; targetLangEl.value = 'id'; docTargetLangEl.value = 'id'; imageTargetLangEl.value = 'en'; videoTargetLangEl.value = 'id'; glossarySourceLang.value = 'id'; glossaryTargetLang.value = 'en'; conversationLang1.value = 'auto'; conversationLang2.value = 'ja'; lyricsTargetLang.value = 'id'; codeTargetLang.value = 'en'; audioTargetLang.value = 'id'; partnerNativeLang.value = 'id'; partnerPracticeLang.value = 'en';
         loadVoiceSettings(); initializeSpeechRecognition(); initializeABTesting();
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
@@ -975,7 +1113,7 @@
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
-        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); }));
+        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); }));
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
@@ -1041,8 +1179,10 @@
         suggestEditBtn.addEventListener('click', () => { suggestionOriginalText.textContent = currentTranslationData.sourceText; suggestionCurrentTranslation.textContent = currentTranslationData.translatedText; suggestionTextarea.value = currentTranslationData.translatedText; correctionSuggestionModal.classList.add('flex'); });
         submitSuggestionBtn.addEventListener('click', handleSuggestionSubmit);
         cancelSuggestionBtn.addEventListener('click', () => correctionSuggestionModal.classList.remove('flex'));
-        autoFeedbackYesBtn.addEventListener('click', () => handleAutoFeedback(true));
-        autoFeedbackNoBtn.addEventListener('click', () => handleAutoFeedback(false));
+        // Event Listeners untuk Fitur Baru
+        captureBtn.addEventListener('click', handleCapture);
+        goOnlineBtn.addEventListener('click', goOnlineAsPartner);
+        goOfflineBtn.addEventListener('click', goOfflineAsPartner);
     });
     </script>
 </body>
