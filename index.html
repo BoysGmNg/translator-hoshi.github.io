@@ -16,7 +16,7 @@
         // Mengimpor fungsi yang diperlukan dari SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
         const firebaseConfig = {
@@ -37,7 +37,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             // Membuat layanan Firebase dapat diakses secara global untuk kemudahan
-            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc };
+            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc };
             console.log("Firebase initialized successfully");
         } catch (e) {
             console.error("Error initializing Firebase. Please check your config.", e);
@@ -249,6 +249,7 @@
                         <!-- FITUR BARU: Diaktifkan -->
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="camera">Kamera 📸</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="partner">Language Partner 🤝</button>
+                        <button id="admin-tab-btn" class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-red-500 border-b-2 border-transparent transition-colors hidden" data-tab="admin">Admin ⚙️</button>
                     </div>
                 </div>
 
@@ -564,6 +565,24 @@
                         </div>
                     </div>
                 </div>
+                 <!-- Admin Panel -->
+                <div id="admin-panel" class="tab-panel hidden">
+                    <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
+                        <h2 class="text-lg font-semibold mb-4 text-center">Panel Admin</h2>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-slate-100 dark:bg-gray-700 rounded-lg">
+                                <h3 class="font-semibold mb-2">Kelola Pembaruan Aplikasi</h3>
+                                <button id="admin-manage-updates-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Kelola Pembaruan</button>
+                            </div>
+                            <div class="p-4 bg-slate-100 dark:bg-gray-700 rounded-lg">
+                                <h3 class="font-semibold mb-2">Kelola Pengguna</h3>
+                                <div id="user-list-container" class="h-64 overflow-y-auto scrollable space-y-2 p-2 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-600">
+                                    <p class="text-center text-slate-400">Memuat daftar pengguna...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
 
@@ -747,6 +766,11 @@
         const updateVersionInput = document.getElementById('update-version');
         const updateTextInput = document.getElementById('update-text');
         const saveUpdatesBtn = document.getElementById('save-updates-btn');
+        // Elemen Admin
+        const adminTabBtn = document.getElementById('admin-tab-btn');
+        const adminPanel = document.getElementById('admin-panel');
+        const adminManageUpdatesBtn = document.getElementById('admin-manage-updates-btn');
+        const userListContainer = document.getElementById('user-list-container');
 
 
         // --- 2. STATE & CONSTANTS ---
@@ -1406,6 +1430,105 @@
              });
              manageUpdatesModal.classList.add('flex');
         }
+        
+        // --- FUNGSI ADMIN BARU ---
+        function renderAdminPanel() {
+            // Memuat daftar pengguna saat panel admin dibuka
+            fetchUsers();
+            adminManageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
+        }
+
+        async function fetchUsers() {
+            const { db, collection, onSnapshot } = window.firebaseServices;
+            const userRef = collection(db, "users");
+            userListContainer.innerHTML = `<p class="text-center text-slate-400">Memuat daftar pengguna...</p>`;
+            
+            onSnapshot(userRef, (querySnapshot) => {
+                const users = [];
+                querySnapshot.forEach((doc) => {
+                    users.push({ id: doc.id, ...doc.data() });
+                });
+                renderUserList(users);
+            });
+        }
+        
+        function renderUserList(users) {
+            userListContainer.innerHTML = '';
+            if (users.length === 0) {
+                userListContainer.innerHTML = `<p class="text-center text-slate-400">Tidak ada pengguna yang terdaftar.</p>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = `p-3 rounded-lg border dark:border-gray-600 flex items-center justify-between ${user.isBanned ? 'bg-red-100 dark:bg-red-900' : 'bg-white dark:bg-gray-800'}`;
+                userItem.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-sm">${user.email}</p>
+                        <p class="text-xs text-slate-500">${user.id}</p>
+                        <p class="text-xs ${user.isBanned ? 'text-red-600' : 'text-slate-500'}">Status: ${user.isBanned ? 'Diblokir' : 'Aktif'}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${user.isBanned ? 
+                            `<button class="unban-btn bg-green-500 text-white text-xs font-semibold py-1 px-3 rounded-full hover:bg-green-600" data-user-id="${user.id}">Buka Blokir</button>` :
+                            `<button class="ban-btn bg-red-500 text-white text-xs font-semibold py-1 px-3 rounded-full hover:bg-red-600" data-user-id="${user.id}">Blokir</button>`
+                        }
+                    </div>
+                `;
+                userListContainer.appendChild(userItem);
+            });
+            
+            userListContainer.addEventListener('click', (e) => {
+                const targetBtn = e.target;
+                if (targetBtn.classList.contains('ban-btn')) {
+                    banUser(targetBtn.dataset.userId);
+                } else if (targetBtn.classList.contains('unban-btn')) {
+                    unbanUser(targetBtn.dataset.userId);
+                }
+            });
+        }
+        
+        async function banUser(userId) {
+            const { db, doc, updateDoc } = window.firebaseServices;
+            try {
+                await updateDoc(doc(db, "users", userId), {
+                    isBanned: true
+                });
+                showNotification("Pengguna berhasil diblokir.");
+            } catch (error) {
+                console.error("Gagal memblokir pengguna:", error);
+                showNotification("Gagal memblokir pengguna.");
+            }
+        }
+        
+        async function unbanUser(userId) {
+            const { db, doc, updateDoc } = window.firebaseServices;
+            try {
+                await updateDoc(doc(db, "users", userId), {
+                    isBanned: false
+                });
+                showNotification("Pengguna berhasil dibuka blokirnya.");
+            } catch (error) {
+                console.error("Gagal membuka blokir pengguna:", error);
+                showNotification("Gagal membuka blokir pengguna.");
+            }
+        }
+        
+        async function checkUserStatus(user) {
+            const { db, doc, getDoc } = window.firebaseServices;
+            try {
+                const docSnap = await getDoc(doc(db, "users", user.uid));
+                if (docSnap.exists() && docSnap.data().isBanned) {
+                    showNotification("Akun Anda telah diblokir.");
+                    await window.signOut(window.firebaseServices.auth);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error("Gagal memeriksa status pengguna:", error);
+                return false;
+            }
+        }
 
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
         window.setupAuthUI = async (user) => { 
@@ -1413,6 +1536,9 @@
             const isAdmin = user && user.email === ADMIN_EMAIL;
             
             if (user) { 
+                const userIsActive = await checkUserStatus(user);
+                if (!userIsActive) return; // Keluar jika pengguna diblokir
+                
                 authContainer.classList.add('hidden'); 
                 userInfo.classList.remove('hidden'); 
                 userInfo.classList.add('flex'); 
@@ -1423,8 +1549,10 @@
                 bottomButtons.classList.add('flex'); 
                 if (isAdmin) {
                     manageUpdatesBtn.classList.remove('hidden');
+                    adminTabBtn.classList.remove('hidden');
                 } else {
                     manageUpdatesBtn.classList.add('hidden');
+                    adminTabBtn.classList.add('hidden');
                 }
                 await getApiKeyFromFirestore(user.uid); 
                 await getUserProfile(user.uid); 
@@ -1440,12 +1568,13 @@
                 bottomButtons.classList.add('hidden'); 
                 bottomButtons.classList.remove('flex'); 
                 manageUpdatesBtn.classList.add('hidden'); 
+                adminTabBtn.classList.add('hidden');
                 goOfflineAsPartner(); 
             } 
         }
         async function getApiKeyFromFirestore(userId) { const { db, doc, getDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists() && docSnap.data().apiKeys) { userApiKeys = docSnap.data().apiKeys; } else { userApiKeys = {}; } } catch (error) { console.error("Error getting API key:", error); userApiKeys = {}; } }
         async function saveApiKeyToFirestore(userId, provider, apiKey) { const { db, doc, setDoc } = window.firebaseServices; try { if (!userApiKeys) userApiKeys = {}; userApiKeys[provider] = apiKey; await setDoc(doc(db, 'users', userId), { apiKeys: userApiKeys }, { merge: true }); showNotification('Kunci API berhasil disimpan!'); } catch (error) { showNotification('Gagal menyimpan kunci API.'); } }
-        async function getUserProfile(userId) { const { db, doc, getDoc, setDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists()) { const data = docSnap.data(); const points = data.points || 0; userPointsEl.textContent = points; profilePointsEl.textContent = `${points} Poin`; profileEmailEl.textContent = currentUser.email; } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, badges: [] }); } } catch (error) { console.error("Error getting user profile:", error); } }
+        async function getUserProfile(userId) { const { db, doc, getDoc, setDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists()) { const data = docSnap.data(); const points = data.points || 0; userPointsEl.textContent = points; profilePointsEl.textContent = `${points} Poin`; profileEmailEl.textContent = currentUser.email; } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, isBanned: false, badges: [] }); } } catch (error) { console.error("Error getting user profile:", error); } }
         async function showWordOfTheDay() { 
             wordOfTheDayContent.innerHTML = '<div class="loader"></div>'; 
             changeWordBtn.disabled = true; 
@@ -1550,7 +1679,7 @@
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
-        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); }));
+        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400', 'text-red-500'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); if (btn.dataset.tab === 'admin' && currentUser.email === ADMIN_EMAIL) renderAdminPanel();}));
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
@@ -1665,6 +1794,7 @@
         goOfflineBtn.addEventListener('click', goOfflineAsPartner);
         // Event Listeners untuk Kelola Pembaruan
         manageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
+        adminManageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
         saveUpdatesBtn.addEventListener('click', saveUpdateSummary);
     });
     </script>
