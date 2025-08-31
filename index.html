@@ -16,7 +16,7 @@
         // Mengimpor fungsi yang diperlukan dari SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
         const firebaseConfig = {
@@ -37,7 +37,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             // Membuat layanan Firebase dapat diakses secara global untuk kemudahan
-            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, getDocs, updateDoc };
+            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc };
             console.log("Firebase initialized successfully");
         } catch (e) {
             console.error("Error initializing Firebase. Please check your config.", e);
@@ -564,40 +564,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Halaman Admin -->
-                <div id="admin-panel" class="tab-panel hidden w-full max-w-6xl">
-                    <div class="w-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <h2 class="text-lg font-bold mb-4 text-center">Dashboard Admin</h2>
-                        
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <!-- Bagian Kelola Pembaruan -->
-                            <div class="p-4 border rounded-lg dark:border-gray-700">
-                                <h3 class="font-semibold mb-2">Kelola Pembaruan Aplikasi</h3>
-                                <div>
-                                    <label for="admin-update-version" class="block text-sm font-medium">Versi</label>
-                                    <input id="admin-update-version" type="text" placeholder="Contoh: 1.50 Alpha" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600">
-                                </div>
-                                <div class="mt-2">
-                                    <label for="admin-update-text" class="block text-sm font-medium">Ringkasan Pembaruan (pisahkan dengan baris baru)</label>
-                                    <textarea id="admin-update-text" rows="8" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Contoh:&#10;Penambahan fitur A&#10;Perbaikan bug B"></textarea>
-                                </div>
-                                <button id="admin-save-updates-btn" class="w-full mt-4 bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Pembaruan</button>
-                            </div>
-                            
-                            <!-- Bagian Kelola Pengguna -->
-                            <div class="p-4 border rounded-lg dark:border-gray-700 flex flex-col">
-                                <h3 class="font-semibold mb-2">Kelola Pengguna</h3>
-                                <div class="flex-grow overflow-y-auto scrollable h-64 border rounded dark:border-gray-700 p-2 space-y-2">
-                                    <p id="user-list-status" class="text-center text-slate-400">Memuat daftar pengguna...</p>
-                                    <div id="user-list-container">
-                                        <!-- Daftar pengguna akan dimuat di sini -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
             </div>
 
@@ -626,7 +592,7 @@
     <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pengaturan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><fieldset><legend class="font-semibold mb-2">Kecepatan Suara</legend><div class="flex gap-4" id="speed-settings"><label><input type="radio" name="speed" value="1" checked> Normal</label><label><input type="radio" name="speed" value="0.7"> Lambat</label><label><input type="radio" name="speed" value="0.4"> Lebih Lambat</label></div></fieldset><fieldset><legend class="font-semibold mb-2">Ukuran Font</legend><div class="flex items-center gap-2"><span class="text-sm">A</span><input id="font-size-slider" type="range" min="12" max="24" value="16" class="w-full"><span class="text-xl">A</span></div></fieldset></div></div></div>
     <div id="ai-style-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Pilih Gaya Penulisan</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4" id="ai-style-options"><div class="grid grid-cols-2 gap-2"><label class="block"><input type="radio" name="ai-style" value="Standar" checked> Standar</label><label class="block"><input type="radio" name="ai-style" value="Sederhana"> Sederhana</label><label class="block"><input type="radio" name="ai-style" value="Profesional"> Profesional</label><label class="block"><input type="radio" name="ai-style" value="Formal"> Formal</label><label class="block"><input type="radio" name="ai-style" value="Akademik"> Akademik</label><label class="block"><input type="radio" name="ai-style" value="Kasual"> Kasual</label></div><button id="apply-style-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Gaya</button></div></div></div>
     <div id="glossary-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Glosarium</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><div class="flex gap-2"><select id="glossary-source-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-source-text" type="text" placeholder="Teks sumber" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div class="flex gap-2"><select id="glossary-target-lang" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></select><input id="glossary-target-text" type="text" placeholder="Teks sasaran" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="add-glossary-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Tambah Entri</button></div><div id="glossary-list" class="p-4 overflow-y-auto scrollable border-t dark:border-gray-700"></div></div></div>
-    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><p class="text-sm text-slate-600 dark:text-slate-300">Gunakan kunci API dari OpenRouter atau Google AI Studio. <span class="font-semibold">Catatan:</span> Fitur terjemahan Audio 🎵 memerlukan kunci API Gemini asli dari Google AI Studio.</p><div><label for="api-provider-select" class="block text-sm font-medium mb-1">Pilih Penyedia AI:</label><select id="api-provider-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="gemini">Gemini (via OpenRouter / Google)</option><option value="deepseek">DeepSeek (via OpenRouter)</option><option value="chatgpt">ChatGPT (via OpenRouter)</option></select></div><div><label for="api-key-input" class="block text-sm font-medium mb-1">Kunci API:</label><input id="api-key-input" type="password" placeholder="Masukkan kunci API Gemini Anda" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="save-api-key-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
+    <div id="api-key-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kelola Kunci API</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 space-y-4"><p class="text-sm text-slate-600 dark:text-slate-300">Gunakan kunci API dari OpenRouter atau Google AI Studio. <span class="font-semibold">Catatan:</span> Fitur terjemahan Audio 🎵 memerlukan kunci API Gemini asli dari Google AI Studio.</p><div><label for="api-provider-select" class="block text-sm font-medium mb-1">Pilih Penyedia AI:</label><select id="api-provider-select" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="gemini">Gemini (via OpenRouter / Google)</option><option value="deepseek">DeepSeek (via OpenRouter)</option><option value="chatgpt">ChatGPT (via OpenRouter)</option></select></div><div><label for="api-key-input" class="block text-sm font-medium mb-1">Kunci API:</label><input id="api-key-input" type="password" placeholder="Masukkan kunci API Gemini Anda" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button id="save-api-key-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Kunci</button></div></div></div>
     <div id="correction-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Saran Perbaikan Teks</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-4 overflow-y-auto scrollable space-y-4"><div><h4 class="font-semibold mb-2">Teks Asli:</h4><pre id="original-text-correction" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></pre></div><div><h4 class="font-semibold mb-2">Teks yang Disarankan:</h4><div id="correction-diff" class="w-full bg-slate-100 dark:bg-gray-700 rounded-lg p-3 whitespace-pre-wrap font-sans"></div></div></div><div class="flex justify-end gap-4 p-4 border-t dark:border-gray-700"><button id="reject-correction-btn" class="bg-slate-200 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors">Batal</button><button id="accept-correction-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Terapkan Perbaikan</button></div></div></div>
     <div id="profile-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Profil & Lencana</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div class="p-6 overflow-y-auto scrollable text-center"><p class="font-semibold" id="profile-email"></p><p class="text-2xl font-bold text-amber-500 my-2" id="profile-points">0 Poin</p><hr class="dark:border-gray-700 my-4"><h4 class="font-semibold mb-4">Lencana Saya</h4><div id="badges-container" class="grid grid-cols-3 sm:grid-cols-4 gap-4"><div class="badge earned text-center" title="Penerjemah Pemula: Selesaikan 10 terjemahan."><div class="text-4xl">🔰</div><p class="text-xs mt-1">Pemula</p></div><div class="badge text-center" title="Penerjemah Ahli: Selesaikan 100 terjemahan."><div class="text-4xl">⭐</div><p class="text-xs mt-1">Ahli</p></div><div class="badge text-center" title="Korektor Andal: Koreksi 5 teks dengan AI."><div class="text-4xl">✍️</div><p class="text-xs mt-1">Korektor</p></div><div class="badge text-center" title="Polyglot: Terjemahkan ke 5 bahasa berbeda."><div class="text-4xl">🌐</div><p class="text-xs mt-1">Polyglot</p></div></div></div></div></div>
     <div id="word-of-the-day-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kata Hari Ini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="word-of-the-day-content" class="p-6 text-center"></div><div class="p-4 border-t dark:border-gray-700 text-center"><button id="change-word-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Ubah Kata</button><p id="change-word-counter" class="text-xs text-slate-500 mt-2"></p></div></div></div>
@@ -781,13 +747,6 @@
         const updateVersionInput = document.getElementById('update-version');
         const updateTextInput = document.getElementById('update-text');
         const saveUpdatesBtn = document.getElementById('save-updates-btn');
-        // Elemen Admin Panel Baru
-        const adminPanel = document.getElementById('admin-panel');
-        const userListContainer = document.getElementById('user-list-container');
-        const userListStatus = document.getElementById('user-list-status');
-        const adminUpdateVersion = document.getElementById('admin-update-version');
-        const adminUpdateText = document.getElementById('admin-update-text');
-        const adminSaveUpdatesBtn = document.getElementById('admin-save-updates-btn');
 
 
         // --- 2. STATE & CONSTANTS ---
@@ -1410,8 +1369,8 @@
 
         async function saveUpdateSummary() {
             const { db, doc, setDoc } = window.firebaseServices;
-            const version = adminUpdateVersion.value.trim();
-            const updates = adminUpdateText.value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const version = updateVersionInput.value.trim();
+            const updates = updateTextInput.value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
             if (!version || updates.length === 0) {
                 showNotification("Versi dan ringkasan pembaruan tidak boleh kosong.");
@@ -1425,106 +1384,35 @@
                     timestamp: new Date()
                 });
                 showNotification("Pembaruan berhasil disimpan!");
+                manageUpdatesModal.classList.remove('flex');
             } catch (error) {
                 console.error("Error saving updates:", error);
                 showNotification("Gagal menyimpan pembaruan.");
             }
         }
 
-        // --- FUNGSI ADMIN PANEL BARU ---
-        async function fetchAllUsers() {
-            const { db, collection, getDocs, doc, setDoc } = window.firebaseServices;
-            userListStatus.textContent = 'Memuat daftar pengguna...';
-            userListContainer.innerHTML = '';
-            try {
-                const usersCollection = collection(db, "users");
-                const userSnapshot = await getDocs(usersCollection);
-                
-                if (userSnapshot.empty) {
-                    userListStatus.textContent = 'Tidak ada pengguna terdaftar.';
-                    return;
+        function openManageUpdatesModal() {
+             const { db, doc, getDoc } = window.firebaseServices;
+             const updateDocRef = doc(db, "app_updates", "latest");
+             getDoc(updateDocRef).then((docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    updateVersionInput.value = data.version;
+                    updateTextInput.value = data.updates.join('\n');
+                } else {
+                    updateVersionInput.value = '';
+                    updateTextInput.value = '';
                 }
-                
-                userListStatus.textContent = '';
-                userSnapshot.forEach(userDoc => {
-                    const userData = userDoc.data();
-                    const userId = userDoc.id;
-                    
-                    // Jangan tampilkan akun admin di daftar
-                    if (userData.email === ADMIN_EMAIL) return;
-
-                    const userEl = document.createElement('div');
-                    userEl.className = 'p-2 border-b dark:border-gray-600 flex justify-between items-center';
-                    
-                    const isBanned = userData.isBanned || false;
-                    const banStatusClass = isBanned ? 'text-red-500' : 'text-green-500';
-                    const banStatusText = isBanned ? 'Diblokir' : 'Aktif';
-                    const buttonText = isBanned ? 'Unban' : 'Ban';
-                    const buttonColorClass = isBanned ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600';
-                    
-                    userEl.innerHTML = `
-                        <div>
-                            <p class="font-semibold text-sm">${userData.email}</p>
-                            <p class="text-xs text-slate-500">ID: ${userId}</p>
-                            <p class="text-xs font-semibold ${banStatusClass}">${banStatusText}</p>
-                        </div>
-                        <button class="ban-toggle-btn ${buttonColorClass} text-white text-xs font-bold py-1 px-3 rounded-full" data-user-id="${userId}" data-is-banned="${isBanned}">${buttonText}</button>
-                    `;
-                    userListContainer.appendChild(userEl);
-                });
-                
-            } catch (e) {
-                console.error("Error fetching users:", e);
-                userListStatus.textContent = "Gagal memuat daftar pengguna.";
-            }
+             });
+             manageUpdatesModal.classList.add('flex');
         }
 
-        async function toggleBanUser(userId, isBanned) {
-            const { db, doc, updateDoc } = window.firebaseServices;
-            const userDocRef = doc(db, "users", userId);
-            try {
-                await updateDoc(userDocRef, {
-                    isBanned: !isBanned
-                });
-                showNotification(isBanned ? `Pengguna ${userId} berhasil di-unban.` : `Pengguna ${userId} berhasil di-ban.`);
-                // Refresh list
-                fetchAllUsers();
-            } catch (e) {
-                console.error("Error toggling ban status:", e);
-                showNotification("Gagal mengubah status ban.");
-            }
-        }
-        
-        function checkUserBanStatus() {
-            if (!currentUser) return;
-            const { db, doc, getDoc } = window.firebaseServices;
-            const userDocRef = doc(db, "users", currentUser.uid);
-            getDoc(userDocRef).then((docSnap) => {
-                if (docSnap.exists() && docSnap.data().isBanned) {
-                    alert("Akun Anda telah diblokir.");
-                    window.signOut(window.firebaseServices.auth);
-                }
-            }).catch(e => console.error("Error checking ban status:", e));
-        }
-
-        // --- Event Listeners Baru/Diperbarui ---
-        adminSaveUpdatesBtn.addEventListener('click', saveUpdateSummary);
-        userListContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.ban-toggle-btn');
-            if (btn) {
-                const userId = btn.dataset.userId;
-                const isBanned = btn.dataset.isBanned === 'true';
-                toggleBanUser(userId, isBanned);
-            }
-        });
-        
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
         window.setupAuthUI = async (user) => { 
             currentUser = user; 
             const isAdmin = user && user.email === ADMIN_EMAIL;
             
             if (user) { 
-                checkUserBanStatus();
                 authContainer.classList.add('hidden'); 
                 userInfo.classList.remove('hidden'); 
                 userInfo.classList.add('flex'); 
@@ -1535,12 +1423,6 @@
                 bottomButtons.classList.add('flex'); 
                 if (isAdmin) {
                     manageUpdatesBtn.classList.remove('hidden');
-                    // Ganti tab default ke admin panel jika admin login
-                    document.querySelector('.tab-btn[data-tab="text"]').classList.remove('tab-active');
-                    document.getElementById('text-panel').classList.add('hidden');
-                    document.querySelector('.tab-btn[data-tab="admin-panel"]').classList.add('tab-active');
-                    document.getElementById('admin-panel').classList.remove('hidden');
-                    fetchAllUsers();
                 } else {
                     manageUpdatesBtn.classList.add('hidden');
                 }
@@ -1668,26 +1550,7 @@
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
-        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { 
-            if(btn.disabled) return; 
-            logUserActivity('change_tab', { tab: btn.dataset.tab }); 
-            tabBtns.forEach(b => { 
-                b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400'); 
-                if(b === btn) b.classList.add('tab-active'); 
-                else b.classList.add('text-slate-500', 'dark:text-slate-400'); 
-            }); 
-            tabPanels.forEach(p => p.classList.add('hidden')); 
-            const targetTab = document.getElementById(`${btn.dataset.tab}-panel`);
-            if (targetTab) {
-                targetTab.classList.remove('hidden');
-                if (btn.dataset.tab === 'admin-panel') fetchAllUsers();
-                if (btn.dataset.tab === 'quiz') generateQuiz(); 
-                if (btn.dataset.tab === 'camera') startCamera(); 
-                else stopCamera(); 
-                if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); 
-                else if (unsubscribeFromPartners) unsubscribeFromPartners(); 
-            }
-        }));
+        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); }));
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
@@ -1797,8 +1660,7 @@
         submitSuggestionBtn.addEventListener('click', handleSuggestionSubmit);
         cancelSuggestionBtn.addEventListener('click', () => correctionSuggestionModal.classList.remove('flex'));
         // Event Listeners untuk Fitur Baru
-        captureBtn.addEventListener('click', handle
-Capture);
+        captureBtn.addEventListener('click', handleCapture);
         goOnlineBtn.addEventListener('click', goOnlineAsPartner);
         goOfflineBtn.addEventListener('click', goOfflineAsPartner);
         // Event Listeners untuk Kelola Pembaruan
