@@ -171,6 +171,54 @@
         #camera-feed {
             transform: scaleX(-1); /* Cerminkan video agar seperti cermin */
         }
+
+        /* Gaya untuk Panduan Interaktif */
+        #tour-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        #tour-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .tour-highlight {
+            position: relative;
+            z-index: 9999;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.7);
+            border-radius: 6px;
+        }
+        #tour-tooltip {
+            position: absolute;
+            z-index: 10000;
+            background-color: white;
+            color: #1f2937;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 300px;
+            max-width: 90vw;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        .dark #tour-tooltip {
+            background-color: #374151;
+            color: #e5e7eb;
+        }
+        #tour-tooltip.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -197,6 +245,11 @@
 
                 <div class="h-6 w-px bg-slate-200 dark:bg-gray-700"></div>
                 
+                <button id="tour-start-btn" aria-label="Panduan" title="Mulai Panduan Interaktif" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                </button>
                 <button id="word-of-the-day-btn" aria-label="Kata Hari Ini" title="Kata Hari Ini" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
                 </button>
@@ -603,6 +656,20 @@
         </footer>
     </div>
 
+    <!-- Panduan Interaktif -->
+    <div id="tour-overlay"></div>
+    <div id="tour-tooltip">
+        <h4 id="tour-title" class="font-bold mb-2"></h4>
+        <p id="tour-text" class="text-sm mb-4"></p>
+        <div class="flex justify-between items-center">
+            <button id="tour-finish-btn" class="text-sm text-slate-500 hover:underline">Lewati</button>
+            <div>
+                <button id="tour-prev-btn" class="text-sm font-semibold py-1 px-3 rounded-md hover:bg-slate-200 dark:hover:bg-gray-600">Sebelumnya</button>
+                <button id="tour-next-btn" class="text-sm font-semibold bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700">Lanjut</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modals -->
     <div id="login-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Login</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="login-form" class="p-4 space-y-4"><div><label for="login-email" class="block text-sm font-medium">Email</label><input id="login-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="login-password" class="block text-sm font-medium">Password</label><input id="login-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Login</button><p id="login-error" class="text-red-500 text-sm text-center"></p></form></div></div>
     <div id="register-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Daftar Akun Baru</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="register-form" class="p-4 space-y-4"><div><label for="register-email" class="block text-sm font-medium">Email</label><input id="register-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="register-password" class="block text-sm font-medium">Password (min. 6 karakter)</label><input id="register-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Daftar</button><p id="register-error" class="text-red-500 text-sm text-center"></p></form></div></div>
@@ -771,6 +838,15 @@
         const adminPanel = document.getElementById('admin-panel');
         const adminManageUpdatesBtn = document.getElementById('admin-manage-updates-btn');
         const userListContainer = document.getElementById('user-list-container');
+        // Elemen Panduan Interaktif
+        const tourStartBtn = document.getElementById('tour-start-btn');
+        const tourOverlay = document.getElementById('tour-overlay');
+        const tourTooltip = document.getElementById('tour-tooltip');
+        const tourTitle = document.getElementById('tour-title');
+        const tourText = document.getElementById('tour-text');
+        const tourPrevBtn = document.getElementById('tour-prev-btn');
+        const tourNextBtn = document.getElementById('tour-next-btn');
+        const tourFinishBtn = document.getElementById('tour-finish-btn');
 
 
         // --- 2. STATE & CONSTANTS ---
@@ -794,6 +870,8 @@
         let quizHistory = [];
         let cameraStream = null;
         let unsubscribeFromPartners = null;
+        let currentTourStep = 0;
+        let highlightedElement = null;
         
         // --- 3. API & CORE FUNCTIONS ---
         async function translate(text, sourceLang, targetLang) {
@@ -813,110 +891,166 @@
             }
         }
 
-        async function callAiAPI(prompt, filePayload = null) {
-            // Pengecualian: Unggahan file (audio) HARUS menggunakan API Google Gemini asli
-            // karena format `inlineData` tidak kompatibel dengan endpoint penyedia lain.
-            if (filePayload) {
-                const geminiApiKey = userApiKeys['gemini'];
-                if (!geminiApiKey) {
-                    return { error: "Fitur audio memerlukan kunci API Gemini langsung dari Google AI Studio." };
-                }
-                
-                console.log("Using native Google Gemini API for file upload.");
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`;
-                const headers = { 'Content-Type': 'application/json' };
-                const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }, filePayload] }] });
-
-                try {
-                    const response = await fetch(apiUrl, { method: 'POST', headers, body });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        const errorMessage = errorData.error?.message || 'Unknown error';
-                        if (errorMessage.includes('API key not valid')) {
-                            return { error: 'Kunci API Gemini tidak valid. Fitur audio memerlukan kunci API dari Google AI Studio, bukan dari penyedia lain.' };
-                        }
-                        return { error: `Error dari Google API: ${errorMessage}`};
-                    }
-                    const result = await response.json();
-                    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                        return { text: result.candidates[0].content.parts[0].text };
-                    }
-                    return { error: `Permintaan diblokir oleh Google API karena: ${result.promptFeedback?.blockReason || 'alasan tidak diketahui'}.` };
-                } catch (error) {
-                    return { error: `Gagal menghubungi Google API. Periksa koneksi internet atau kunci API Gemini Anda.` };
-                }
+        // --- PANDUAN INTERAKTIF ---
+        const tourSteps = [
+            {
+                element: 'header > h1',
+                title: 'Selamat Datang di Penerjemah Hoshi!',
+                text: 'Ini adalah panduan singkat untuk membantu Anda mengenal semua fitur yang tersedia. Klik "Lanjut" untuk memulai.',
+            },
+            {
+                element: '#auth-container',
+                title: 'Login & Sinkronisasi',
+                text: 'Login atau daftar untuk menyimpan histori terjemahan Anda, mendapatkan poin, dan mengumpulkan lencana pencapaian.',
+            },
+            {
+                element: '#settings-btn',
+                title: 'Pengaturan & Kustomisasi',
+                text: 'Di sini Anda dapat memulai tur ini, mengatur kunci API pribadi untuk fitur AI, menyesuaikan pengaturan, dan mengubah tema tampilan.',
+            },
+            {
+                element: '#source-text',
+                title: 'Area Input Teks',
+                text: 'Ketik atau tempel teks yang ingin Anda terjemahkan di sini. Terjemahan akan muncul secara otomatis saat Anda mengetik.',
+            },
+            {
+                element: '#source-lang',
+                title: 'Pilih Bahasa',
+                text: 'Pilih bahasa sumber dan bahasa target Anda di sini. Anda juga bisa membiarkannya mendeteksi bahasa secara otomatis.',
+            },
+             {
+                element: '#swap-btn',
+                title: 'Tukar Bahasa',
+                text: 'Klik tombol ini untuk menukar posisi bahasa sumber dan bahasa target dengan cepat.',
+            },
+            {
+                element: '#translated-output-container',
+                title: 'Hasil Terjemahan',
+                text: 'Hasil terjemahan Anda akan muncul di sini. Gunakan tombol di bawah untuk mendengarkan, menyalin, atau menyimpan terjemahan.',
+            },
+            {
+                element: '#check-grammar-btn',
+                title: 'Koreksi dengan AI',
+                text: 'Gunakan fitur ini untuk memeriksa dan memperbaiki tata bahasa pada teks sumber Anda menggunakan kecerdasan buatan (AI).',
+            },
+            {
+                element: '.flex.overflow-x-auto.scrollable',
+                title: 'Berbagai Mode Terjemahan',
+                text: 'Selain teks, Anda juga bisa menerjemahkan dalam berbagai mode lain seperti Percakapan, Gambar, Dokumen, dan lainnya.',
+            },
+            {
+                element: '.tab-btn[data-tab="voice"]',
+                title: 'Mode Percakapan',
+                text: 'Klik tab ini, lalu gunakan tombol mikrofon untuk memulai percakapan dan mendapatkan terjemahan suara secara langsung.',
+                action: () => document.querySelector('.tab-btn[data-tab="voice"]').click()
+            },
+            {
+                element: '.tab-btn[data-tab="image"]',
+                title: 'Mode Gambar',
+                text: 'Pindah ke tab ini untuk mengunggah gambar. AI akan mendeteksi teks pada gambar dan menerjemahkannya untuk Anda.',
+                action: () => document.querySelector('.tab-btn[data-tab="image"]').click()
+            },
+             {
+                element: '#ai-tab-btn',
+                title: 'Asisten AI',
+                text: 'Butuh bantuan lebih? Asisten AI dapat membantu Anda mempersingkat, menyederhanakan, atau mengubah gaya tulisan Anda.',
+                action: () => document.getElementById('ai-tab-btn').click()
+            },
+            {
+                element: '#bottom-buttons',
+                title: 'Histori & Tersimpan',
+                text: 'Akses kembali semua riwayat terjemahan Anda atau lihat daftar terjemahan yang sudah Anda tandai sebagai favorit di sini.',
+                action: () => document.querySelector('.tab-btn[data-tab="text"]').click()
+            },
+            {
+                element: '#profile-btn',
+                title: 'Profil & Lencana',
+                text: 'Jika Anda sudah login, klik di sini untuk melihat total poin yang Anda kumpulkan dan lencana yang berhasil Anda dapatkan.',
             }
+        ];
 
-            // Untuk semua permintaan berbasis teks, gunakan penyedia yang dipilih
-            const provider = currentAiProvider;
-            const apiKey = userApiKeys[provider];
-            if (!apiKey) {
-                return { error: `Kunci API untuk ${provider} belum diatur.` };
+        function startTour() {
+            // Pastikan pengguna dalam keadaan login untuk beberapa langkah
+            if (!currentUser && (currentTourStep >= tourSteps.length - 2)) {
+                 showNotification("Silakan login untuk melihat fitur profil.");
             }
+            // Mulai dari tab teks
+            document.querySelector('.tab-btn[data-tab="text"]').click();
+            currentTourStep = 0;
+            tourOverlay.classList.add('active');
+            tourTooltip.classList.add('active');
+            showTourStep(currentTourStep);
+        }
 
-            const sourceName = 'OpenRouter';
-            const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-            const siteUrl = window.location.href;
-            const siteTitle = document.title;
-            const headers = { 
-                'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${apiKey}`,
-                'HTTP-Referer': siteUrl,
-                'X-Title': siteTitle
-            };
-            
-            let model;
-            switch (provider) {
-                case 'deepseek':
-                    model = "deepseek/deepseek-chat";
-                    break;
-                case 'chatgpt':
-                    model = "openai/gpt-3.5-turbo";
-                    break;
-                case 'gemini':
-                    model = "google/gemini-pro-1.5";
-                    break;
-                default:
-                    return { error: "Penyedia AI tidak dikenal." };
-            }
-
-            const body = JSON.stringify({
-                model: model,
-                messages: [{ role: "user", content: prompt }]
-            });
-
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers, body });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error(`API Error for ${provider} via ${sourceName}:`, errorData);
-                    const message = errorData.error?.message || JSON.stringify(errorData);
-                    let friendlyMessage = message;
-                     if (typeof message === 'string') {
-                        if (message.includes('insufficient funds') || message.includes('Insufficient Balance')) {
-                            friendlyMessage = `Saldo akun ${sourceName} Anda tidak mencukupi. Silakan isi ulang di situs web ${sourceName}.`;
-                        } else if (message.includes('exceeded your current quota')) {
-                            friendlyMessage = `Kuota API Anda di ${sourceName} telah habis.`;
-                        }
-                    }
-                    return { error: `Error dari ${provider} (${sourceName}): ${friendlyMessage}` };
-                }
-
-                const result = await response.json();
-                const textResult = result.choices?.[0]?.message?.content;
-
-                if (textResult) {
-                    return { text: textResult };
-                }
-                
-                return { error: `Tidak ada respons teks dari ${provider} via ${sourceName}.` };
-
-            } catch (error) {
-                console.error(`API call error for ${provider} via ${sourceName}:`, error);
-                return { error: `Gagal menghubungi ${sourceName}. Periksa koneksi internet atau kunci API Anda.` };
+        function endTour() {
+            tourOverlay.classList.remove('active');
+            tourTooltip.classList.remove('active');
+            if (highlightedElement) {
+                highlightedElement.classList.remove('tour-highlight');
+                highlightedElement = null;
             }
         }
+
+        function showTourStep(index) {
+            if (index < 0 || index >= tourSteps.length) {
+                endTour();
+                return;
+            }
+
+            const step = tourSteps[index];
+
+            // Lakukan aksi sebelum menampilkan, seperti klik tab
+            if (step.action) {
+                step.action();
+            }
+
+            // Hapus highlight dari elemen sebelumnya
+            if (highlightedElement) {
+                highlightedElement.classList.remove('tour-highlight');
+            }
+            
+            setTimeout(() => {
+                const targetElement = document.querySelector(step.element);
+                if (!targetElement) {
+                    console.warn(`Elemen tur tidak ditemukan: ${step.element}`);
+                    // Coba ke langkah berikutnya jika elemen tidak ada
+                    currentTourStep = index + 1;
+                    showTourStep(currentTourStep);
+                    return;
+                }
+
+                highlightedElement = targetElement;
+                highlightedElement.classList.add('tour-highlight');
+                
+                tourTitle.textContent = step.title;
+                tourText.textContent = step.text;
+
+                const rect = targetElement.getBoundingClientRect();
+                const tooltipRect = tourTooltip.getBoundingClientRect();
+
+                // Posisikan tooltip
+                let top = rect.bottom + 10;
+                let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+                // Pastikan tidak keluar layar
+                if (top + tooltipRect.height > window.innerHeight) {
+                    top = rect.top - tooltipRect.height - 10;
+                }
+                if (left < 10) left = 10;
+                if (left + tooltipRect.width > window.innerWidth) {
+                    left = window.innerWidth - tooltipRect.width - 10;
+                }
+
+                tourTooltip.style.top = `${top}px`;
+                tourTooltip.style.left = `${left}px`;
+                
+                // Update tombol
+                tourPrevBtn.style.display = index === 0 ? 'none' : 'inline-block';
+                tourNextBtn.textContent = index === tourSteps.length - 1 ? 'Selesai' : 'Lanjut';
+
+            }, 200); // Penundaan singkat untuk transisi tab
+        }
+
         
         // --- 4. HELPER & STORAGE FUNCTIONS ---
         const saveToStorage = (key, data) => localStorage.setItem(key, JSON.stringify(data));
@@ -1668,6 +1802,18 @@
         fetchUpdateSummary();
 
         // --- Event Listeners ---
+        tourStartBtn.addEventListener('click', startTour);
+        tourNextBtn.addEventListener('click', () => {
+            currentTourStep++;
+            showTourStep(currentTourStep);
+        });
+        tourPrevBtn.addEventListener('click', () => {
+            currentTourStep--;
+            showTourStep(currentTourStep);
+        });
+        tourFinishBtn.addEventListener('click', endTour);
+        tourOverlay.addEventListener('click', endTour);
+
         sourceTextEl.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(handleTextTranslation, 500); charCountEl.textContent = `${sourceTextEl.value.length} / 5.000`; clearTimeout(predictiveDebounceTimer); predictiveDebounceTimer = setTimeout(fetchPredictiveText, 500); });
         targetLangEl.addEventListener('change', handleTextTranslation);
         swapBtn.addEventListener('click', handleSwap);
@@ -1815,3 +1961,5 @@
     </script>
 </body>
 </html>
+
+
