@@ -982,12 +982,25 @@
             showTourStep(currentTourStep);
         }
 
-        function endTour() {
+        async function endTour() {
             tourOverlay.classList.remove('active');
             tourTooltip.classList.remove('active');
             if (highlightedElement) {
                 highlightedElement.classList.remove('tour-highlight');
                 highlightedElement = null;
+            }
+            // Tandai bahwa pengguna sudah pernah melihat tur
+            if (currentUser) {
+                const { db, doc, setDoc } = window.firebaseServices;
+                try {
+                    // Untuk pengguna yang login, set flag di profil Firestore mereka.
+                    await setDoc(doc(db, "users", currentUser.uid), { hasSeenTour: true }, { merge: true });
+                } catch (error) {
+                    console.error("Gagal menyimpan status tur di Firestore:", error);
+                }
+            } else {
+                // Untuk tamu, gunakan localStorage
+                localStorage.setItem('hasVisitedBefore', 'true');
             }
         }
 
@@ -1682,6 +1695,20 @@
                 mainContentWrapper.classList.remove('hidden'); 
                 bottomButtons.classList.remove('hidden'); 
                 bottomButtons.classList.add('flex'); 
+
+                // Logika baru untuk menampilkan tur
+                const { db, doc, getDoc } = window.firebaseServices;
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(userDocRef);
+                    if ((docSnap.exists() && !docSnap.data().hasSeenTour) || !docSnap.exists()) {
+                        // Jika pengguna baru atau belum pernah melihat tur, tampilkan.
+                        setTimeout(startTour, 1500);
+                    }
+                } catch (error) {
+                    console.error("Gagal memeriksa status tur:", error);
+                }
+
                 if (isAdmin) {
                     manageUpdatesBtn.classList.remove('hidden');
                     adminTabBtn.classList.remove('hidden');
@@ -1961,5 +1988,7 @@
     </script>
 </body>
 </html>
+
+
 
 
