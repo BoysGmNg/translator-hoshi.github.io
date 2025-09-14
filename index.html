@@ -26,36 +26,45 @@
             firebaseConfig = null;
         }
         
-        let app, auth, db;
-        
         if (firebaseConfig) {
             try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
                 
                 // Membuat layanan Firebase dapat diakses secara global
-                window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, signOut };
+                window.firebaseServices = { 
+                    auth, db, 
+                    collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, 
+                    signInWithEmailAndPassword, 
+                    createUserWithEmailAndPassword, 
+                    signOut 
+                };
                 console.log("Firebase initialized successfully.");
 
-                // Listener status autentikasi
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        // Pengguna sudah login.
-                        console.log("User is signed in:", user.uid);
-                        window.setupAuthUI(user);
-                    } else {
-                        // Pengguna belum login.
-                        console.log("User is signed out.");
-                        // Coba sign in secara anonim jika tidak ada user
-                        try {
-                           await signInAnonymously(auth);
-                        } catch (error) {
-                           console.error("Anonymous sign-in failed:", error);
-                        }
-                        window.setupAuthUI(null);
-                    }
-                });
+                // Menetapkan persistensi agar user tetap login
+                setPersistence(auth, browserLocalPersistence)
+                    .then(() => {
+                        console.log("Auth persistence set to local.");
+                        // Listener status autentikasi, dipanggil setelah persistensi diatur
+                        onAuthStateChanged(auth, (user) => {
+                            if (user) {
+                                // Pengguna sudah login.
+                                console.log("User is signed in:", user.uid);
+                            } else {
+                                // Pengguna belum login, coba login anonim
+                                console.log("User is signed out, attempting anonymous sign-in.");
+                                signInAnonymously(auth).catch(error => {
+                                    console.error("Anonymous sign-in failed:", error);
+                                });
+                            }
+                            // Panggil fungsi UI updater di script utama
+                            window.setupAuthUI(user);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error setting persistence:", error);
+                    });
                 
             } catch (e) {
                 console.error("Error initializing Firebase:", e);
@@ -67,10 +76,6 @@
         } else {
             console.error("Firebase config is not available. App functionality will be limited.");
         }
-        
-        // Mengekspos fungsi auth ke window untuk diakses dari script non-module
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
     </script>
 
     <style>
@@ -414,9 +419,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
     <script>
-    // NOTE: Kode JavaScript fungsionalitas inti sebagian besar dipertahankan dari kode asli
-    // karena sudah sangat lengkap. Perubahan utama ada pada CSS, HTML, dan koneksi Firebase.
-    // Kode JS berikut identik dengan kode asli dengan beberapa penyesuaian minor untuk UI baru.
     document.addEventListener('DOMContentLoaded', () => {
 
         // --- 1. DOM ELEMENTS ---
@@ -625,11 +627,18 @@
                 await getApiKeyFromFirestore(user.uid); 
                 await getUserProfile(user.uid); 
             } else { 
+                // This state handles both logged out and anonymous users
                 authContainer.classList.remove('hidden'); 
                 userInfo.classList.add('hidden'); 
                 userEmailEl.textContent = ''; 
-                loginPrompt.classList.remove('hidden'); 
-                mainContentWrapper.classList.add('hidden'); 
+                // Show main content for anonymous users, but prompt for logged-in users
+                if(user && user.isAnonymous){
+                    loginPrompt.classList.add('hidden');
+                    mainContentWrapper.classList.remove('hidden');
+                } else {
+                    loginPrompt.classList.remove('hidden');
+                    mainContentWrapper.classList.add('hidden');
+                }
                 adminTabBtn.classList.add('hidden');
             } 
         }
@@ -718,9 +727,59 @@
         registerBtn.addEventListener('click', () => registerModal.classList.add('flex'));
         loginPromptBtn.addEventListener('click', () => loginModal.classList.add('flex'));
         registerPromptBtn.addEventListener('click', () => registerModal.classList.add('flex'));
-        logoutBtn.addEventListener('click', () => window.firebaseServices.signOut(window.firebaseServices.auth));
-        loginForm.addEventListener('submit', async (e) => { e.preventDefault(); try { await window.signInWithEmailAndPassword(window.firebaseServices.auth, loginForm['login-email'].value, loginForm['login-password'].value); loginModal.classList.remove('flex'); loginForm.reset(); loginError.textContent = ''; } catch (error) { loginError.textContent = "Email atau password salah."; } });
-        registerForm.addEventListener('submit', async (e) => { e.preventDefault(); try { await window.createUserWithEmailAndPassword(window.firebaseServices.auth, registerForm['register-email'].value, registerForm['register-password'].value); registerModal.classList.remove('flex'); registerForm.reset(); registerError.textContent = ''; showNotification('Akun berhasil dibuat!'); } catch (error) { registerError.textContent = "Gagal membuat akun."; } });
+        logoutBtn.addEventListener('click', () => { if (window.firebaseServices) window.firebaseServices.signOut(window.firebaseServices.auth); });
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.textContent = '';
+            if (!window.firebaseServices) { loginError.textContent = 'Layanan otentikasi tidak siap.'; return; }
+            const { auth, signInWithEmailAndPassword } = window.firebaseServices;
+            try {
+                await signInWithEmailAndPassword(auth, loginForm['login-email'].value, loginForm['login-password'].value);
+                loginModal.classList.remove('flex');
+                loginForm.reset();
+            } catch (error) {
+                console.error("Login error:", error.code);
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                    case 'auth/invalid-credential':
+                        loginError.textContent = 'Email atau password yang Anda masukkan salah.'; break;
+                    case 'auth/invalid-email':
+                        loginError.textContent = 'Format email tidak valid.'; break;
+                    case 'auth/too-many-requests':
+                        loginError.textContent = 'Terlalu banyak percobaan. Coba lagi nanti.'; break;
+                    default:
+                        loginError.textContent = 'Terjadi kesalahan saat login.'; break;
+                }
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            registerError.textContent = '';
+            if (!window.firebaseServices) { registerError.textContent = 'Layanan otentikasi tidak siap.'; return; }
+            const { auth, createUserWithEmailAndPassword } = window.firebaseServices;
+            try {
+                await createUserWithEmailAndPassword(auth, registerForm['register-email'].value, registerForm['register-password'].value);
+                registerModal.classList.remove('flex');
+                registerForm.reset();
+                showNotification('Akun berhasil dibuat! Anda sudah login.');
+            } catch (error) {
+                console.error("Register error:", error.code);
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        registerError.textContent = 'Email ini sudah terdaftar.'; break;
+                    case 'auth/weak-password':
+                        registerError.textContent = 'Password terlalu lemah (minimal 6 karakter).'; break;
+                    case 'auth/invalid-email':
+                        registerError.textContent = 'Format email tidak valid.'; break;
+                    default:
+                        registerError.textContent = 'Gagal membuat akun.'; break;
+                }
+            }
+        });
+
         apiKeyBtn.addEventListener('click', () => apiKeyModal.classList.add('flex'));
         saveApiKeyBtn.addEventListener('click', async () => { const key = apiKeyInput.value.trim(); const provider = apiProviderSelect.value; if (currentUser && !currentUser.isAnonymous) await saveApiKeyToFirestore(currentUser.uid, provider, key); else { userApiKeys[provider] = key; showNotification(`Kunci API disimpan untuk sesi ini.`);} apiKeyModal.classList.remove('flex'); });
         apiProviderSelect.addEventListener('change', () => { currentAiProvider = apiProviderSelect.value; apiKeyInput.value = userApiKeys[currentAiProvider] || ''; });
@@ -733,4 +792,5 @@
     </script>
 </body>
 </html>
+
 
