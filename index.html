@@ -1886,6 +1886,7 @@
                 mainContentWrapper.classList.remove('hidden'); 
                 bottomButtons.classList.remove('hidden'); 
                 bottomButtons.classList.add('flex'); 
+                
                 if (isAdmin) {
                     manageUpdatesBtn.classList.remove('hidden');
                     adminTabBtn.classList.remove('hidden');
@@ -1895,6 +1896,7 @@
                     adminTabBtn.classList.add('hidden');
                     adminCreateNotificationBtn.classList.add('hidden');
                 }
+                
                 await getApiKeyFromFirestore(user.uid); 
                 await getUserProfile(user.uid); 
             } else { 
