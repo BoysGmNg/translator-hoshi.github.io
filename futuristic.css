@@ -1,0 +1,70 @@
+/* Futuristic theme for year 10000 */
+body.futuristic {
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(135deg, #000428, #004e92);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+  color: #0ff;
+  min-height: 100vh;
+}
+
+body.futuristic * {
+  font-family: inherit;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+body.futuristic header,
+body.futuristic .bg-white,
+body.futuristic .dark\:bg-gray-800,
+body.futuristic .bg-slate-100,
+body.futuristic .dark\:bg-gray-700 {
+  background-color: rgba(16, 16, 48, 0.6) !important;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+}
+
+body.futuristic .text-slate-800,
+body.futuristic .dark\:text-slate-200,
+body.futuristic .text-slate-600,
+body.futuristic .text-slate-300,
+body.futuristic .text-slate-500,
+body.futuristic .dark\:text-slate-400 {
+  color: #0ff !important;
+}
+
+body.futuristic button {
+  background-color: rgba(0, 255, 255, 0.15);
+  border: 1px solid #0ff;
+  color: #0ff;
+  border-radius: 0.5rem;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+body.futuristic button:hover {
+  background-color: rgba(255, 0, 255, 0.25);
+  box-shadow: 0 0 10px #f0f;
+}
+
+body.futuristic input,
+body.futuristic textarea,
+body.futuristic select {
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid #0ff;
+  color: #0ff;
+  border-radius: 0.5rem;
+}
+
+body.futuristic .tab-btn.tab-active {
+  border-color: #f0f;
+  color: #f0f;
+}
+
+body.futuristic .tab-btn {
+  color: #0ff;
+}
