@@ -187,12 +187,6 @@
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
     <div class="w-full min-h-screen flex flex-col">
-        <!-- Notifikasi Global -->
-        <a id="global-notification-banner" href="#" target="_blank" rel="noopener noreferrer" class="hidden sticky top-0 z-40 w-full p-3 text-center text-sm font-medium transition-all group">
-            <span id="global-notification-message"></span>
-            <span id="global-notification-link-indicator" class="hidden ml-2 px-2 py-0.5 bg-white/50 dark:bg-black/20 rounded-full text-xs group-hover:underline">Kunjungi 🔗</span>
-            <button id="global-notification-close" class="absolute top-1/2 right-4 -translate-y-1/2 text-xl font-bold opacity-70 hover:opacity-100">&times;</button>
-        </a>
 
         <!-- Header -->
         <header class="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-slate-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 sticky top-0 z-30">
@@ -215,6 +209,9 @@
 
                 <div class="h-6 w-px bg-slate-200 dark:bg-gray-700"></div>
                 
+                <button id="announcements-btn" aria-label="Pengumuman" title="Pengumuman" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 12.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
+                </button>
                 <button id="word-of-the-day-btn" aria-label="Kata Hari Ini" title="Kata Hari Ini" class="text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
                 </button>
@@ -593,14 +590,8 @@
                                 <button id="admin-manage-updates-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Kelola Pembaruan</button>
                             </div>
                             <div class="p-4 bg-slate-100 dark:bg-gray-700 rounded-lg">
-                                <h3 class="font-semibold mb-2">Kelola Notifikasi Global</h3>
-                                <button id="admin-create-notification-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Buat Notifikasi Baru</button>
-                                <div class="mt-4">
-                                    <h4 class="font-semibold text-sm mb-2">Riwayat Notifikasi</h4>
-                                    <div id="notification-history-list" class="h-48 overflow-y-auto scrollable space-y-2 p-2 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-600">
-                                        <p class="text-center text-slate-400">Memuat riwayat...</p>
-                                    </div>
-                                </div>
+                                <h3 class="font-semibold mb-2">Kelola Pengumuman</h3>
+                                <button id="admin-manage-announcements-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Kelola Pengumuman</button>
                             </div>
                             <div class="p-4 bg-slate-100 dark:bg-gray-700 rounded-lg">
                                 <h3 class="font-semibold mb-2">Kelola Pengguna</h3>
@@ -724,32 +715,36 @@
         </div>
     </div>
 
-    <!-- MODAL BARU: Admin Notifikasi -->
-    <div id="notification-admin-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg">
+    <!-- MODAL BARU: Kelola Pengumuman -->
+    <div id="manage-announcements-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
             <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-                <h3 class="text-lg font-semibold">Buat Notifikasi Global</h3>
+                <h3 class="text-lg font-semibold">Kelola Pengumuman</h3>
                 <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
             </div>
             <div class="p-4 space-y-4">
                 <div>
-                    <label for="notification-message-input" class="block text-sm font-medium">Pesan Notifikasi</label>
-                    <textarea id="notification-message-input" rows="3" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Contoh: Pemeliharaan terjadwal akan dilakukan pada..."></textarea>
+                    <label for="announcement-title-input" class="block text-sm font-medium">Judul Pengumuman</label>
+                    <input id="announcement-title-input" type="text" placeholder="Contoh: Informasi Pemeliharaan" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600">
                 </div>
                 <div>
-                    <label for="notification-link-input" class="block text-sm font-medium">Link URL (Opsional)</label>
-                    <input type="url" id="notification-link-input" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="https://contoh.com/halaman-promo">
+                    <label for="announcement-content-input" class="block text-sm font-medium">Isi Pengumuman (pisahkan dengan baris baru)</label>
+                    <textarea id="announcement-content-input" rows="8" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Contoh:&#10;Akan ada pemeliharaan..."></textarea>
                 </div>
-                <div>
-                    <label for="notification-type-select" class="block text-sm font-medium">Tipe Notifikasi</label>
-                    <select id="notification-type-select" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"><option value="info">Info (Biru)</option><option value="warning">Peringatan (Kuning)</option><option value="success">Sukses (Hijau)</option></select>
-                </div>
-                <div>
-                    <label for="notification-schedule-input" class="block text-sm font-medium">Jadwalkan untuk Nanti (Opsional)</label>
-                    <input type="datetime-local" id="notification-schedule-input" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-slate-300">
-                </div>
-                <button id="send-notification-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Kirim atau Jadwalkan Notifikasi</button>
-                <button id="deactivate-all-notifications-btn" class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 transition-colors mt-2">Nonaktifkan Semua Notifikasi</button>
+                <button id="save-announcements-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Pengumuman</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BARU: Pengumuman -->
+    <div id="announcements-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 id="announcement-title" class="text-lg font-semibold">Pengumuman</h3>
+                <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
+            </div>
+            <div id="announcement-content" class="p-6 text-left space-y-2 max-h-[60vh] overflow-y-auto scrollable">
+                <p class="text-slate-500">Memuat pengumuman...</p>
             </div>
         </div>
     </div>
@@ -861,15 +856,14 @@
         const adminPanel = document.getElementById('admin-panel');
         const adminManageUpdatesBtn = document.getElementById('admin-manage-updates-btn');
         const userListContainer = document.getElementById('user-list-container');
-        // Elemen Notifikasi Global
-        const globalNotificationBanner = document.getElementById('global-notification-banner');
-        const globalNotificationMessage = document.getElementById('global-notification-message');
-        const globalNotificationClose = document.getElementById('global-notification-close');
-        const adminCreateNotificationBtn = document.getElementById('admin-create-notification-btn');
-        const notificationAdminModal = document.getElementById('notification-admin-modal');
-        const sendNotificationBtn = document.getElementById('send-notification-btn');
-        const notificationHistoryList = document.getElementById('notification-history-list');
-        const deactivateAllNotificationsBtn = document.getElementById('deactivate-all-notifications-btn');
+        // Elemen Pengumuman Baru
+        const announcementsBtn = document.getElementById('announcements-btn');
+        const announcementsModal = document.getElementById('announcements-modal');
+        const announcementTitle = document.getElementById('announcement-title');
+        const announcementContent = document.getElementById('announcement-content');
+        const adminManageAnnouncementsBtn = document.getElementById('admin-manage-announcements-btn');
+        const manageAnnouncementsModal = document.getElementById('manage-announcements-modal');
+        const saveAnnouncementsBtn = document.getElementById('save-announcements-btn');
         const typingSoundToggle = document.getElementById('typing-sound-toggle');
 
 
@@ -897,7 +891,6 @@
         
         let audioCtx = null;
         let typingSoundEnabled = false;
-        let globalListenerInitialized = false; // Flag untuk memastikan listener hanya diinisialisasi sekali
         // --- 3. API & CORE FUNCTIONS ---
         async function translate(text, sourceLang, targetLang) {
              if (!text) return ["", "", []];
@@ -1617,6 +1610,55 @@
              manageUpdatesModal.classList.add('flex');
         }
         
+        // --- FUNGSI PENGUMUMAN BARU ---
+        function fetchAnnouncements() {
+            const { db, doc, onSnapshot } = window.firebaseServices;
+            const announcementDocRef = doc(db, "announcements", "latest");
+            
+            onSnapshot(announcementDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    renderAnnouncements(data.title, data.content);
+                } else {
+                    renderAnnouncements("Tidak Ada Pengumuman", ["Saat ini tidak ada pengumuman terbaru."]);
+                }
+            });
+        }
+
+        function renderAnnouncements(title, content) {
+            announcementTitle.textContent = title;
+            const htmlContent = content.map(item => `<p>${item}</p>`).join('');
+            announcementContent.innerHTML = htmlContent;
+        }
+
+        async function saveAnnouncements() {
+            const { db, doc, setDoc } = window.firebaseServices;
+            const title = document.getElementById('announcement-title-input').value.trim();
+            const content = document.getElementById('announcement-content-input').value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+            if (!title || content.length === 0) {
+                showNotification("Judul dan isi pengumuman tidak boleh kosong.");
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, "announcements", "latest"), { title, content, timestamp: new Date() });
+                showNotification("Pengumuman berhasil disimpan!");
+                manageAnnouncementsModal.classList.remove('flex');
+            } catch (error) {
+                console.error("Error saving announcements:", error);
+                showNotification("Gagal menyimpan pengumuman.");
+            }
+        }
+
+        function openManageAnnouncementsModal() {
+             const { db, doc, getDoc } = window.firebaseServices;
+             getDoc(doc(db, "announcements", "latest")).then((docSnap) => {
+                if (docSnap.exists()) { const data = docSnap.data(); document.getElementById('announcement-title-input').value = data.title; document.getElementById('announcement-content-input').value = data.content.join('\n'); }
+             });
+             manageAnnouncementsModal.classList.add('flex');
+        }
+
         // --- FUNGSI ADMIN BARU ---
         function renderAdminPanel() {
             // Memuat daftar pengguna saat panel admin dibuka
@@ -1716,160 +1758,9 @@
             }
         }
 
-        // --- FUNGSI NOTIFIKASI GLOBAL ---
-        function listenForGlobalNotification() {
-            const { db, collection, onSnapshot, updateDoc, doc, serverTimestamp } = window.firebaseServices;
-            const announcementsRef = collection(db, "announcements");
-
-            onSnapshot(announcementsRef, (querySnapshot) => {
-                const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-
-                // Admin-only: Periksa notifikasi terjadwal yang waktunya sudah lewat
-                if (isAdmin) {
-                    querySnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        if (!data.isActive && data.scheduledAt && data.scheduledAt.toMillis() < Date.now()) {
-                            updateDoc(doc(db, "announcements", docSnap.id), { isActive: true });
-                        }
-                    });
-                }
-
-                let latestActiveNotification = null;
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.isActive && data.createdAt) { // PERBAIKAN: Pastikan createdAt tidak null
-                        if (!latestActiveNotification || data.createdAt.toMillis() > latestActiveNotification.createdAt.toMillis()) {
-                            latestActiveNotification = { id: doc.id, ...data };
-                        }
-                    }
-                });
-
-                if (latestActiveNotification && sessionStorage.getItem('dismissedNotification') !== latestActiveNotification.id) {
-                    displayGlobalNotification(latestActiveNotification);
-                } else {
-                    globalNotificationBanner.classList.add('hidden');
-                }
-            });
-        }
-
-        function displayGlobalNotification(notification) {
-            globalNotificationMessage.textContent = notification.message;
-            globalNotificationBanner.href = notification.link || '#';
-            globalNotificationBanner.style.cursor = notification.link ? 'pointer' : 'default';
-            document.getElementById('global-notification-link-indicator').classList.toggle('hidden', !notification.link);
-            globalNotificationBanner.dataset.id = notification.id;
-            
-            globalNotificationBanner.className = 'sticky top-0 z-40 w-full p-3 text-center text-sm font-medium transition-all group';
-
-            if (notification.type === 'warning') {
-                globalNotificationBanner.classList.add('bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-900', 'dark:text-yellow-200');
-            } else if (notification.type === 'success') {
-                globalNotificationBanner.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-900', 'dark:text-green-200');
-            } else { // default to 'info'
-                globalNotificationBanner.classList.add('bg-blue-100', 'text-blue-800', 'dark:bg-blue-900', 'dark:text-blue-200');
-            }
-            globalNotificationBanner.classList.remove('hidden');
-        }
-
-        async function sendGlobalNotification() {
-            const { db, collection, addDoc, serverTimestamp } = window.firebaseServices;
-            const { updateDoc, query, where, getDocs } = window.firebaseServices;
-
-            const message = document.getElementById('notification-message-input').value.trim();
-            const type = document.getElementById('notification-type-select').value;
-            const link = document.getElementById('notification-link-input').value.trim();
-            const scheduleTime = document.getElementById('notification-schedule-input').value;
-
-            if (!message) { showNotification("Pesan tidak boleh kosong."); return; }
-
-            const isScheduled = scheduleTime !== '';
-            const scheduledAt = isScheduled ? new Date(scheduleTime) : null;
-
-            // Jika notifikasi tidak dijadwalkan (langsung kirim), nonaktifkan semua notifikasi lain
-            if (!isScheduled) {
-                const activeNotifsQuery = query(collection(db, "announcements"), where("isActive", "==", true));
-                const activeNotifsSnapshot = await getDocs(activeNotifsQuery);
-                activeNotifsSnapshot.forEach(docSnap => {
-                    updateDoc(doc(db, "announcements", docSnap.id), { isActive: false });
-                });
-            }
-
-            await addDoc(collection(db, "announcements"), { 
-                message, 
-                type, 
-                link: link || null,
-                isActive: !isScheduled, 
-                createdAt: serverTimestamp(), 
-                createdBy: currentUser.email,
-                scheduledAt: scheduledAt
-            });
-
-            showNotification(isScheduled ? "Notifikasi berhasil dijadwalkan!" : "Notifikasi global berhasil dikirim!");
-            notificationAdminModal.classList.remove('flex');
-            document.getElementById('notification-message-input').value = '';
-            document.getElementById('notification-link-input').value = '';
-            document.getElementById('notification-schedule-input').value = '';
-        }
-
-        function listenForAdminAnnouncements() {
-            const { db, collection, onSnapshot } = window.firebaseServices;
-            const announcementsRef = collection(db, "announcements");
-            onSnapshot(announcementsRef, (snapshot) => {
-                const announcements = [];
-                snapshot.forEach(doc => announcements.push({ id: doc.id, ...doc.data() }));
-                announcements.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                renderAdminAnnouncements(announcements);
-            });
-        }
-
-        function renderAdminAnnouncements(announcements) {
-            notificationHistoryList.innerHTML = '';
-            if (announcements.length === 0) {
-                notificationHistoryList.innerHTML = '<p class="text-center text-slate-400">Belum ada notifikasi.</p>';
-                return;
-            }
-            announcements.forEach(item => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'p-2 border-b dark:border-gray-600 text-xs';
-                const isScheduledFuture = item.scheduledAt && item.scheduledAt.toMillis() > Date.now();
-                const statusText = item.isActive ? 'Aktif' : (isScheduledFuture ? `Terjadwal` : 'Tidak Aktif');
-                const statusColor = item.isActive ? 'text-green-500' : (isScheduledFuture ? 'text-blue-500' : 'text-red-500');
-
-                itemEl.innerHTML = `
-                    <p class="font-semibold truncate">${item.message}</p>
-                    ${item.link ? `<p class="text-slate-400 truncate">🔗 ${item.link}</p>` : ''}
-                    <div class="flex justify-between items-center mt-2">
-                        <span class="font-bold ${statusColor}">${statusText}</span>
-                        <button data-id="${item.id}" data-active="${!item.isActive}" class="toggle-notification-btn text-white text-xs font-semibold py-1 px-2 rounded-full ${item.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}">
-                            ${item.isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
-                    </div>
-                `;
-                notificationHistoryList.appendChild(itemEl);
-            });
-        }
-
-        async function toggleAnnouncementStatus(id, newStatus) {
-            const { db, doc, updateDoc } = window.firebaseServices;
-            await updateDoc(doc(db, "announcements", id), { isActive: newStatus, scheduledAt: null }); // Hapus jadwal jika diaktifkan manual
-            showNotification(`Notifikasi telah ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}.`);
-        }
-
-        async function deactivateAllNotifications() {
-            const { db, collection, query, where, getDocs, updateDoc, doc } = window.firebaseServices;
-            const activeNotifsQuery = query(collection(db, "announcements"), where("isActive", "==", true));
-            const activeNotifsSnapshot = await getDocs(activeNotifsQuery);
-            activeNotifsSnapshot.forEach(docSnap => updateDoc(doc(db, "announcements", docSnap.id), { isActive: false }));
-            showNotification("Semua notifikasi aktif telah dinonaktifkan.");
-        }
-
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
         window.setupAuthUI = async (user) => { 
             // PERBAIKAN: Panggil listener notifikasi di sini untuk memastikan Firebase siap.
-            if (!globalListenerInitialized) {
-                listenForGlobalNotification();
-                globalListenerInitialized = true;
-            }
 
             currentUser = user; 
             const isAdmin = user && user.email === ADMIN_EMAIL;
@@ -1890,11 +1781,9 @@
                 if (isAdmin) {
                     manageUpdatesBtn.classList.remove('hidden');
                     adminTabBtn.classList.remove('hidden');
-                    adminCreateNotificationBtn.classList.remove('hidden');
                 } else {
                     manageUpdatesBtn.classList.add('hidden');
                     adminTabBtn.classList.add('hidden');
-                    adminCreateNotificationBtn.classList.add('hidden');
                 }
                 
                 await getApiKeyFromFirestore(user.uid); 
@@ -1912,7 +1801,6 @@
                 bottomButtons.classList.remove('flex'); 
                 manageUpdatesBtn.classList.add('hidden'); 
                 adminTabBtn.classList.add('hidden');
-                adminCreateNotificationBtn.classList.add('hidden');
                 goOfflineAsPartner(); 
             } 
         }
@@ -2017,7 +1905,8 @@
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         handleImageTranslation('https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda');
         fetchUpdateSummary();
-
+        fetchAnnouncements(); // Panggil fungsi baru
+        
         // --- Event Listeners ---
         sourceTextEl.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(handleTextTranslation, 500); charCountEl.textContent = `${sourceTextEl.value.length} / 5.000`; clearTimeout(predictiveDebounceTimer); predictiveDebounceTimer = setTimeout(fetchPredictiveText, 500); });
         targetLangEl.addEventListener('change', handleTextTranslation);
@@ -2031,7 +1920,7 @@
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
-        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400', 'text-red-500'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); if (btn.dataset.tab === 'admin' && currentUser.email === ADMIN_EMAIL) { renderAdminPanel(); listenForAdminAnnouncements(); }}));
+        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400', 'text-red-500'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); if (btn.dataset.tab === 'admin' && currentUser.email === ADMIN_EMAIL) { renderAdminPanel(); }}));
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
@@ -2153,22 +2042,12 @@
         goOfflineBtn.addEventListener('click', goOfflineAsPartner);
         // Event Listeners untuk Kelola Pembaruan
         manageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
-        adminManageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
-        // Event Listeners untuk Notifikasi Global
-        adminCreateNotificationBtn.addEventListener('click', () => notificationAdminModal.classList.add('flex'));
-        sendNotificationBtn.addEventListener('click', sendGlobalNotification);
-        deactivateAllNotificationsBtn.addEventListener('click', deactivateAllNotifications);
-        notificationHistoryList.addEventListener('click', (e) => {
-            const btn = e.target.closest('.toggle-notification-btn');
-            if (btn) toggleAnnouncementStatus(btn.dataset.id, btn.dataset.active === 'true');
-        });
-        globalNotificationClose.addEventListener('click', (e) => {
-            e.preventDefault(); // Mencegah link banner diikuti saat tombol close diklik
-            e.stopPropagation(); // Mencegah event klik menyebar ke banner
-            globalNotificationBanner.classList.add('hidden');
-            sessionStorage.setItem('dismissedNotification', globalNotificationBanner.dataset.id);
-        });
+        adminManageUpdatesBtn.addEventListener('click', openManageUpdatesModal); // Tetap ada
         saveUpdatesBtn.addEventListener('click', saveUpdateSummary);
+        // Event Listeners untuk Pengumuman Baru
+        announcementsBtn.addEventListener('click', () => announcementsModal.classList.add('flex'));
+        adminManageAnnouncementsBtn.addEventListener('click', openManageAnnouncementsModal);
+        saveAnnouncementsBtn.addEventListener('click', saveAnnouncements);
     });
     </script>
 </body>
