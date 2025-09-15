@@ -594,6 +594,12 @@
                             <div class="p-4 bg-slate-100 dark:bg-gray-700 rounded-lg">
                                 <h3 class="font-semibold mb-2">Kelola Notifikasi Global</h3>
                                 <button id="admin-create-notification-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Buat Notifikasi Baru</button>
+                                <div class="mt-4">
+                                    <h4 class="font-semibold text-sm mb-2">Riwayat Notifikasi</h4>
+                                    <div id="notification-history-list" class="h-48 overflow-y-auto scrollable space-y-2 p-2 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-600">
+                                        <p class="text-center text-slate-400">Memuat riwayat...</p>
+                                    </div>
+                                </div>
                             </div>
                             <div class="p-4 bg-slate-100 dark:bg-gray-700 rounded-lg">
                                 <h3 class="font-semibold mb-2">Kelola Pengguna</h3>
@@ -733,7 +739,12 @@
                     <label for="notification-type-select" class="block text-sm font-medium">Tipe Notifikasi</label>
                     <select id="notification-type-select" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"><option value="info">Info (Biru)</option><option value="warning">Peringatan (Kuning)</option><option value="success">Sukses (Hijau)</option></select>
                 </div>
-                <button id="send-notification-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Kirim Notifikasi</button>
+                <div>
+                    <label for="notification-schedule-input" class="block text-sm font-medium">Jadwalkan untuk Nanti (Opsional)</label>
+                    <input type="datetime-local" id="notification-schedule-input" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-slate-300">
+                </div>
+                <button id="send-notification-btn" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors">Kirim atau Jadwalkan Notifikasi</button>
+                <button id="deactivate-all-notifications-btn" class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700 transition-colors mt-2">Nonaktifkan Semua Notifikasi</button>
             </div>
         </div>
     </div>
@@ -852,6 +863,8 @@
         const adminCreateNotificationBtn = document.getElementById('admin-create-notification-btn');
         const notificationAdminModal = document.getElementById('notification-admin-modal');
         const sendNotificationBtn = document.getElementById('send-notification-btn');
+        const notificationHistoryList = document.getElementById('notification-history-list');
+        const deactivateAllNotificationsBtn = document.getElementById('deactivate-all-notifications-btn');
         const typingSoundToggle = document.getElementById('typing-sound-toggle');
 
 
@@ -1699,14 +1712,26 @@
 
         // --- FUNGSI NOTIFIKASI GLOBAL ---
         function listenForGlobalNotification() {
-            const { db, collection, onSnapshot } = window.firebaseServices;
-            const q = collection(db, "announcements");
+            const { db, collection, onSnapshot, updateDoc, doc, serverTimestamp } = window.firebaseServices;
+            const announcementsRef = collection(db, "announcements");
 
-            onSnapshot(q, (querySnapshot) => {
+            onSnapshot(announcementsRef, (querySnapshot) => {
+                const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+
+                // Admin-only: Periksa notifikasi terjadwal yang waktunya sudah lewat
+                if (isAdmin) {
+                    querySnapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        if (!data.isActive && data.scheduledAt && data.scheduledAt.toMillis() < Date.now()) {
+                            updateDoc(doc(db, "announcements", docSnap.id), { isActive: true });
+                        }
+                    });
+                }
+
                 let latestActiveNotification = null;
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.isActive) {
+                    if (data.isActive && data.createdAt) { // PERBAIKAN: Pastikan createdAt tidak null
                         if (!latestActiveNotification || data.createdAt.toMillis() > latestActiveNotification.createdAt.toMillis()) {
                             latestActiveNotification = { id: doc.id, ...data };
                         }
@@ -1740,12 +1765,90 @@
 
         async function sendGlobalNotification() {
             const { db, collection, addDoc, serverTimestamp } = window.firebaseServices;
+            const { updateDoc, query, where, getDocs } = window.firebaseServices;
+
             const message = document.getElementById('notification-message-input').value.trim();
             const type = document.getElementById('notification-type-select').value;
+            const scheduleTime = document.getElementById('notification-schedule-input').value;
+
             if (!message) { showNotification("Pesan tidak boleh kosong."); return; }
-            await addDoc(collection(db, "announcements"), { message, type, isActive: true, createdAt: serverTimestamp(), createdBy: currentUser.email });
-            showNotification("Notifikasi global berhasil dikirim!");
+
+            const isScheduled = scheduleTime !== '';
+            const scheduledAt = isScheduled ? new Date(scheduleTime) : null;
+
+            // Jika notifikasi tidak dijadwalkan (langsung kirim), nonaktifkan semua notifikasi lain
+            if (!isScheduled) {
+                const activeNotifsQuery = query(collection(db, "announcements"), where("isActive", "==", true));
+                const activeNotifsSnapshot = await getDocs(activeNotifsQuery);
+                activeNotifsSnapshot.forEach(docSnap => {
+                    updateDoc(doc(db, "announcements", docSnap.id), { isActive: false });
+                });
+            }
+
+            await addDoc(collection(db, "announcements"), { 
+                message, 
+                type, 
+                isActive: !isScheduled, 
+                createdAt: serverTimestamp(), 
+                createdBy: currentUser.email,
+                scheduledAt: scheduledAt
+            });
+
+            showNotification(isScheduled ? "Notifikasi berhasil dijadwalkan!" : "Notifikasi global berhasil dikirim!");
             notificationAdminModal.classList.remove('flex');
+            document.getElementById('notification-message-input').value = '';
+            document.getElementById('notification-schedule-input').value = '';
+        }
+
+        function listenForAdminAnnouncements() {
+            const { db, collection, onSnapshot } = window.firebaseServices;
+            const announcementsRef = collection(db, "announcements");
+            onSnapshot(announcementsRef, (snapshot) => {
+                const announcements = [];
+                snapshot.forEach(doc => announcements.push({ id: doc.id, ...doc.data() }));
+                announcements.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                renderAdminAnnouncements(announcements);
+            });
+        }
+
+        function renderAdminAnnouncements(announcements) {
+            notificationHistoryList.innerHTML = '';
+            if (announcements.length === 0) {
+                notificationHistoryList.innerHTML = '<p class="text-center text-slate-400">Belum ada notifikasi.</p>';
+                return;
+            }
+            announcements.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-2 border-b dark:border-gray-600 text-xs';
+                const isScheduledFuture = item.scheduledAt && item.scheduledAt.toMillis() > Date.now();
+                const statusText = item.isActive ? 'Aktif' : (isScheduledFuture ? `Terjadwal (${new Date(item.scheduledAt.toDate()).toLocaleString()})` : 'Tidak Aktif');
+                const statusColor = item.isActive ? 'text-green-500' : (isScheduledFuture ? 'text-blue-500' : 'text-red-500');
+
+                itemEl.innerHTML = `
+                    <p class="font-semibold truncate">${item.message}</p>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="font-bold ${statusColor}">${statusText}</span>
+                        <button data-id="${item.id}" data-active="${!item.isActive}" class="toggle-notification-btn text-white text-xs font-semibold py-1 px-2 rounded-full ${item.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}">
+                            ${item.isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                    </div>
+                `;
+                notificationHistoryList.appendChild(itemEl);
+            });
+        }
+
+        async function toggleAnnouncementStatus(id, newStatus) {
+            const { db, doc, updateDoc } = window.firebaseServices;
+            await updateDoc(doc(db, "announcements", id), { isActive: newStatus, scheduledAt: null }); // Hapus jadwal jika diaktifkan manual
+            showNotification(`Notifikasi telah ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}.`);
+        }
+
+        async function deactivateAllNotifications() {
+            const { db, collection, query, where, getDocs, updateDoc, doc } = window.firebaseServices;
+            const activeNotifsQuery = query(collection(db, "announcements"), where("isActive", "==", true));
+            const activeNotifsSnapshot = await getDocs(activeNotifsQuery);
+            activeNotifsSnapshot.forEach(docSnap => updateDoc(doc(db, "announcements", docSnap.id), { isActive: false }));
+            showNotification("Semua notifikasi aktif telah dinonaktifkan.");
         }
 
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
@@ -1892,7 +1995,7 @@
         loadTypingSoundSetting();
         speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
-        handleImageTranslation('[https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda](https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda)');
+        handleImageTranslation('https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda');
         fetchUpdateSummary();
         listenForGlobalNotification();
 
@@ -1909,7 +2012,7 @@
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
-        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400', 'text-red-500'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); if (btn.dataset.tab === 'admin' && currentUser.email === ADMIN_EMAIL) renderAdminPanel();}));
+        tabBtns.forEach(btn => btn.addEventListener('click', (e) => { if(btn.disabled) return; logUserActivity('change_tab', { tab: btn.dataset.tab }); tabBtns.forEach(b => { b.classList.remove('tab-active', 'text-slate-500', 'dark:text-slate-400', 'text-red-500'); if(b === btn) b.classList.add('tab-active'); else b.classList.add('text-slate-500', 'dark:text-slate-400'); }); tabPanels.forEach(p => p.classList.add('hidden')); document.getElementById(`${btn.dataset.tab}-panel`).classList.remove('hidden'); if (btn.dataset.tab === 'quiz') generateQuiz(); if (btn.dataset.tab === 'camera') startCamera(); else stopCamera(); if (btn.dataset.tab === 'partner' && currentUser) listenForPartners(); else if (unsubscribeFromPartners) unsubscribeFromPartners(); if (btn.dataset.tab === 'admin' && currentUser.email === ADMIN_EMAIL) { renderAdminPanel(); listenForAdminAnnouncements(); }}));
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
@@ -2035,6 +2138,11 @@
         // Event Listeners untuk Notifikasi Global
         adminCreateNotificationBtn.addEventListener('click', () => notificationAdminModal.classList.add('flex'));
         sendNotificationBtn.addEventListener('click', sendGlobalNotification);
+        deactivateAllNotificationsBtn.addEventListener('click', deactivateAllNotifications);
+        notificationHistoryList.addEventListener('click', (e) => {
+            const btn = e.target.closest('.toggle-notification-btn');
+            if (btn) toggleAnnouncementStatus(btn.dataset.id, btn.dataset.active === 'true');
+        });
         globalNotificationClose.addEventListener('click', () => {
             globalNotificationBanner.classList.add('hidden');
             sessionStorage.setItem('dismissedNotification', globalNotificationBanner.dataset.id);
