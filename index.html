@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Tesseract.js untuk OCR pada gambar -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     
@@ -73,7 +74,51 @@
         applyTheme();
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Orbitron', 'Inter', sans-serif;
+            background: radial-gradient(circle at top left, #020024, #090979, #00d4ff) !important;
+            background-size: 600% 600%;
+            animation: gradientShift 15s ease infinite;
+            color: #e0e0e0 !important;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        header, .modal, .drop-zone {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        button {
+            background: linear-gradient(135deg, #00f5a0, #00d9f5);
+            color: #0b0e17;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 217, 245, 0.5);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        button:hover {
+            box-shadow: 0 0 15px rgba(0, 217, 245, 0.8);
+            transform: translateY(-2px);
+        }
+
+        input, textarea, select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: inherit;
+        }
+
+        a {
+            color: #5efce8;
+        }
+
         /* Custom Scrollbar */
         textarea::-webkit-scrollbar, .scrollable::-webkit-scrollbar { width: 8px; }
         textarea::-webkit-scrollbar-track, .scrollable::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -173,7 +218,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+<body class="transition-colors duration-300">
 
     <div class="w-full min-h-screen flex flex-col">
         <!-- Header -->
