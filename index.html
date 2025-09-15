@@ -188,10 +188,11 @@
 
     <div class="w-full min-h-screen flex flex-col">
         <!-- Notifikasi Global -->
-        <div id="global-notification-banner" class="hidden sticky top-0 z-40 w-full p-3 text-center text-sm font-medium transition-all">
+        <a id="global-notification-banner" href="#" target="_blank" rel="noopener noreferrer" class="hidden sticky top-0 z-40 w-full p-3 text-center text-sm font-medium transition-all group">
             <span id="global-notification-message"></span>
-            <button id="global-notification-close" class="absolute top-1/2 right-4 -translate-y-1/2 text-xl font-bold">&times;</button>
-        </div>
+            <span id="global-notification-link-indicator" class="hidden ml-2 px-2 py-0.5 bg-white/50 dark:bg-black/20 rounded-full text-xs group-hover:underline">Kunjungi 🔗</span>
+            <button id="global-notification-close" class="absolute top-1/2 right-4 -translate-y-1/2 text-xl font-bold opacity-70 hover:opacity-100">&times;</button>
+        </a>
 
         <!-- Header -->
         <header class="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-slate-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 sticky top-0 z-30">
@@ -736,6 +737,10 @@
                     <textarea id="notification-message-input" rows="3" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="Contoh: Pemeliharaan terjadwal akan dilakukan pada..."></textarea>
                 </div>
                 <div>
+                    <label for="notification-link-input" class="block text-sm font-medium">Link URL (Opsional)</label>
+                    <input type="url" id="notification-link-input" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="https://contoh.com/halaman-promo">
+                </div>
+                <div>
                     <label for="notification-type-select" class="block text-sm font-medium">Tipe Notifikasi</label>
                     <select id="notification-type-select" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"><option value="info">Info (Biru)</option><option value="warning">Peringatan (Kuning)</option><option value="success">Sukses (Hijau)</option></select>
                 </div>
@@ -892,6 +897,7 @@
         
         let audioCtx = null;
         let typingSoundEnabled = false;
+        let globalListenerInitialized = false; // Flag untuk memastikan listener hanya diinisialisasi sekali
         // --- 3. API & CORE FUNCTIONS ---
         async function translate(text, sourceLang, targetLang) {
              if (!text) return ["", "", []];
@@ -1748,10 +1754,12 @@
 
         function displayGlobalNotification(notification) {
             globalNotificationMessage.textContent = notification.message;
+            globalNotificationBanner.href = notification.link || '#';
+            globalNotificationBanner.style.cursor = notification.link ? 'pointer' : 'default';
+            document.getElementById('global-notification-link-indicator').classList.toggle('hidden', !notification.link);
             globalNotificationBanner.dataset.id = notification.id;
             
-            // Reset classes
-            globalNotificationBanner.className = 'sticky top-0 z-40 w-full p-3 text-center text-sm font-medium transition-all';
+            globalNotificationBanner.className = 'sticky top-0 z-40 w-full p-3 text-center text-sm font-medium transition-all group';
 
             if (notification.type === 'warning') {
                 globalNotificationBanner.classList.add('bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-900', 'dark:text-yellow-200');
@@ -1769,6 +1777,7 @@
 
             const message = document.getElementById('notification-message-input').value.trim();
             const type = document.getElementById('notification-type-select').value;
+            const link = document.getElementById('notification-link-input').value.trim();
             const scheduleTime = document.getElementById('notification-schedule-input').value;
 
             if (!message) { showNotification("Pesan tidak boleh kosong."); return; }
@@ -1788,6 +1797,7 @@
             await addDoc(collection(db, "announcements"), { 
                 message, 
                 type, 
+                link: link || null,
                 isActive: !isScheduled, 
                 createdAt: serverTimestamp(), 
                 createdBy: currentUser.email,
@@ -1797,6 +1807,7 @@
             showNotification(isScheduled ? "Notifikasi berhasil dijadwalkan!" : "Notifikasi global berhasil dikirim!");
             notificationAdminModal.classList.remove('flex');
             document.getElementById('notification-message-input').value = '';
+            document.getElementById('notification-link-input').value = '';
             document.getElementById('notification-schedule-input').value = '';
         }
 
@@ -1821,12 +1832,13 @@
                 const itemEl = document.createElement('div');
                 itemEl.className = 'p-2 border-b dark:border-gray-600 text-xs';
                 const isScheduledFuture = item.scheduledAt && item.scheduledAt.toMillis() > Date.now();
-                const statusText = item.isActive ? 'Aktif' : (isScheduledFuture ? `Terjadwal (${new Date(item.scheduledAt.toDate()).toLocaleString()})` : 'Tidak Aktif');
+                const statusText = item.isActive ? 'Aktif' : (isScheduledFuture ? `Terjadwal` : 'Tidak Aktif');
                 const statusColor = item.isActive ? 'text-green-500' : (isScheduledFuture ? 'text-blue-500' : 'text-red-500');
 
                 itemEl.innerHTML = `
                     <p class="font-semibold truncate">${item.message}</p>
-                    <div class="flex justify-between items-center mt-1">
+                    ${item.link ? `<p class="text-slate-400 truncate">🔗 ${item.link}</p>` : ''}
+                    <div class="flex justify-between items-center mt-2">
                         <span class="font-bold ${statusColor}">${statusText}</span>
                         <button data-id="${item.id}" data-active="${!item.isActive}" class="toggle-notification-btn text-white text-xs font-semibold py-1 px-2 rounded-full ${item.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}">
                             ${item.isActive ? 'Nonaktifkan' : 'Aktifkan'}
@@ -1853,6 +1865,12 @@
 
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
         window.setupAuthUI = async (user) => { 
+            // PERBAIKAN: Panggil listener notifikasi di sini untuk memastikan Firebase siap.
+            if (!globalListenerInitialized) {
+                listenForGlobalNotification();
+                globalListenerInitialized = true;
+            }
+
             currentUser = user; 
             const isAdmin = user && user.email === ADMIN_EMAIL;
             
@@ -1997,7 +2015,6 @@
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
         handleImageTranslation('https://placehold.co/800x400/e2e8f0/64748b?text=Pilih+Gambar+Anda');
         fetchUpdateSummary();
-        listenForGlobalNotification();
 
         // --- Event Listeners ---
         sourceTextEl.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(handleTextTranslation, 500); charCountEl.textContent = `${sourceTextEl.value.length} / 5.000`; clearTimeout(predictiveDebounceTimer); predictiveDebounceTimer = setTimeout(fetchPredictiveText, 500); });
@@ -2143,7 +2160,9 @@
             const btn = e.target.closest('.toggle-notification-btn');
             if (btn) toggleAnnouncementStatus(btn.dataset.id, btn.dataset.active === 'true');
         });
-        globalNotificationClose.addEventListener('click', () => {
+        globalNotificationClose.addEventListener('click', (e) => {
+            e.preventDefault(); // Mencegah link banner diikuti saat tombol close diklik
+            e.stopPropagation(); // Mencegah event klik menyebar ke banner
             globalNotificationBanner.classList.add('hidden');
             sessionStorage.setItem('dismissedNotification', globalNotificationBanner.dataset.id);
         });
