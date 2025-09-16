@@ -736,11 +736,6 @@
                 <div id="badges-container" class="grid grid-cols-3 sm:grid-cols-4 gap-4">
                     <!-- Lencana akan di-generate oleh JS -->
                 </div>
-                <hr class="dark:border-gray-700 my-6">
-                <p id="premium-status-text" class="text-sm mt-2 text-green-500 font-semibold hidden">Status: Premium Aktif ✨</p>
-                <button id="go-premium-btn" class="w-full mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
-                    Go Premium
-                </button>
             </div>
         </div>
     </div>
@@ -830,38 +825,23 @@
     </div>
 
     <!-- MODAL BARU: Edit Pengguna -->
-    <div id="edit-user-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50 overflow-y-auto">
+    <div id="edit-user-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
             <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
                 <h3 class="text-lg font-semibold">Edit Pengguna</h3>
                 <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
             </div>
-            <div class="p-6 space-y-6">
+            <div class="p-6 space-y-4">
                 <p class="font-semibold" id="edit-user-email"></p>
                 <input type="hidden" id="edit-user-id">
-                <div class="space-y-4">
-                    <div>
-                        <label for="edit-user-points" class="block text-sm font-medium">Poin</label>
-                        <input id="edit-user-points" type="number" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600">
-                    </div>
-                    <div>
-                        <h4 class="font-semibold mb-2">Lencana</h4>
-                        <div id="edit-user-badges" class="grid grid-cols-2 gap-2">
-                            <!-- Checkbox akan di-generate oleh JS -->
-                        </div>
-                    </div>
+                <div>
+                    <label for="edit-user-points" class="block text-sm font-medium">Poin</label>
+                    <input id="edit-user-points" type="number" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600">
                 </div>
-                <hr class="dark:border-gray-600">
-                <div class="space-y-4">
-                    <h4 class="font-semibold">Manajemen Premium</h4>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="edit-user-is-premium">
-                        <span>Jadikan Pengguna Premium</span>
-                    </label>
-                    <div>
-                        <label for="edit-user-premium-expires" class="block text-sm font-medium">Tanggal Kedaluwarsa Premium</label>
-                        <input id="edit-user-premium-expires" type="datetime-local" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600">
-                        <p class="text-xs text-slate-500 mt-1">Kosongkan untuk premium selamanya.</p>
+                <div>
+                    <h4 class="font-semibold mb-2">Lencana</h4>
+                    <div id="edit-user-badges" class="grid grid-cols-2 gap-2">
+                        <!-- Checkbox akan di-generate oleh JS -->
                     </div>
                 </div>
                 <button id="save-user-changes-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Perubahan</button>
@@ -982,8 +962,6 @@
         const goOnlineBtn = document.getElementById('go-online-btn');
         const goOfflineBtn = document.getElementById('go-offline-btn');
         const partnerList = document.getElementById('partner-list');
-        const goPremiumBtn = document.getElementById('go-premium-btn');
-        const premiumModal = document.getElementById('premium-modal');
         // Elemen untuk Kelola Pembaruan
         const updateSummaryContainer = document.getElementById('update-summary-container');
         const manageUpdatesBtn = document.getElementById('manage-updates-btn');
@@ -1005,8 +983,6 @@
         const editUserId = document.getElementById('edit-user-id');
         const editUserPoints = document.getElementById('edit-user-points');
         const editUserBadges = document.getElementById('edit-user-badges');
-        const editUserIsPremium = document.getElementById('edit-user-is-premium');
-        const editUserPremiumExpires = document.getElementById('edit-user-premium-expires');
         const saveUserChangesBtn = document.getElementById('save-user-changes-btn');
         const announcementIndicator = document.getElementById('announcement-indicator');
         // Elemen Pengumuman Baru
@@ -1036,7 +1012,6 @@
         let currentImageSrc = null;
         let zoomState = { level: 1, pan: { x: 0, y: 0 }, isPanning: false, start: { x: 0, y: 0 } };
         let isRecording = false;
-        let hasShownLeaderboardNotif = false;
         let recognition;
         let activeMicButton = null;
         let currentUser = null;
@@ -2188,12 +2163,6 @@
                 item.innerHTML = `<div class="flex items-center gap-4"><span class="font-bold text-lg w-8 text-center ${rankColor}">${rank}</span><div><p class="font-semibold">${user.email.split('@')[0]}</p><p class="text-xs text-slate-500 dark:text-slate-400">Level ${levelData.level}</p></div></div><span class="font-bold text-amber-500">${user.points || 0} Poin</span>`;
                 leaderboardList.appendChild(item);
             });
-
-            const isCurrentUserOnLeaderboard = users.some(user => user.id === currentUser?.uid);
-            if (isCurrentUserOnLeaderboard && !hasShownLeaderboardNotif) {
-                showNotification("Selamat! Anda masuk dalam 10 besar papan peringkat! 🏆", "info");
-                hasShownLeaderboardNotif = true; // Tampilkan hanya sekali per sesi
-            }
         }
 
         async function openEditUserModal(userId) {
@@ -2205,19 +2174,6 @@
                     editUserEmail.textContent = user.email;
                     editUserId.value = userId;
                     editUserPoints.value = user.points || 0;
-
-                    // Logika Premium
-                    const premium = user.premium || {};
-                    editUserIsPremium.checked = premium.is_active || false;
-                    if (premium.expires_at) {
-                        // Konversi dari Firestore Timestamp/ms ke format datetime-local
-                        const expiryDate = new Date(premium.expires_at);
-                        // Adjust for timezone offset to display correctly in local time
-                        expiryDate.setMinutes(expiryDate.getMinutes() - expiryDate.getTimezoneOffset());
-                        editUserPremiumExpires.value = expiryDate.toISOString().slice(0, 16);
-                    } else {
-                        editUserPremiumExpires.value = '';
-                    }
 
                     editUserBadges.innerHTML = '';
                     Object.entries(ALL_BADGES).forEach(([key, badge]) => {
@@ -2245,30 +2201,13 @@
             const userId = editUserId.value;
             const points = parseInt(editUserPoints.value, 10);
             const selectedBadges = Array.from(document.querySelectorAll('#edit-user-badges .badge-checkbox:checked')).map(cb => cb.value);
-            const isPremium = editUserIsPremium.checked;
-            const premiumExpiresValue = editUserPremiumExpires.value;
-            let expiresAt = null;
-            if (premiumExpiresValue) {
-                expiresAt = new Date(premiumExpiresValue).getTime();
-            }
 
-            const { db, doc, getDoc, updateDoc } = window.firebaseServices;
-            const userRef = doc(db, "users", userId);
-
+            const { db, doc, updateDoc } = window.firebaseServices;
             try {
-                const docSnap = await getDoc(userRef);
-                const oldPoints = docSnap.data()?.points || 0;
-
-                await updateDoc(userRef, {
+                await updateDoc(doc(db, "users", userId), {
                     points: points,
-                    badges: selectedBadges,
-                    premium: {
-                        is_active: isPremium,
-                        expires_at: isPremium ? expiresAt : null
-                    }
+                    badges: selectedBadges
                 });
-                await checkAndAwardLevelRewards(userId, oldPoints, points, false);
-
                 await fetchUsers(); // Muat ulang daftar pengguna untuk menampilkan data baru
                 showNotification("Data pengguna berhasil diperbarui.", "success");
                 editUserModal.classList.remove('flex');
