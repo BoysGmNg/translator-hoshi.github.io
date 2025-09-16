@@ -113,15 +113,19 @@
         /* Animasi Notifikasi Baru */
         /* Animasi Notifikasi */
         #notification {
-            transform: translate(-50%, 150%); /* Mulai dari bawah */
+            transform: translate(-50%, -150%); /* Mulai dari atas, di luar layar */
             opacity: 0;
             transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s ease;
         }
         #notification.show {
-            transform: translate(-50%, 0); /* Pindah ke posisi akhir di atas */
+            transform: translate(-50%, 0); /* Pindah ke posisi akhir */
             opacity: 1;
         }
 
+        #notification-icon svg {
+            width: 1.25rem; /* 20px */
+            height: 1.25rem; /* 20px */
+        }
         .dict-word { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: #3b82f6; }
         .toggle-label { transition: background-color 0.2s ease-in; }
         .toggle-label .dot { transition: transform 0.2s ease-in; }
@@ -190,6 +194,14 @@
         #announcement-indicator { box-shadow: 0 0 0 2px var(--indicator-bg, white); }
         .dark #announcement-indicator { --indicator-bg: #1f2937; }
 
+        /* Animasi untuk item histori */
+        .history-item {
+            transition: all 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        .history-item.hide {
+            opacity: 0; max-height: 0px; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; border-width: 0;
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -217,6 +229,9 @@
 
                 <div class="h-6 w-px bg-slate-200 dark:bg-gray-700"></div>
                 
+                <button id="tutorial-btn" aria-label="Tutorial" title="Tutorial Cepat" class="hidden relative text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+                </button>
                 <button id="announcements-btn" aria-label="Pengumuman" title="Pengumuman" class="relative text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 12.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg>
                     <span id="announcement-indicator" class="hidden absolute top-1 right-1 block w-2.5 h-2.5 bg-red-500 rounded-full"></span>
@@ -642,6 +657,16 @@
                     <button id="export-history-csv-btn" title="Ekspor riwayat ke file CSV" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                     </button>
+                    <button id="export-history-json-btn" title="Ekspor riwayat ke file JSON" class="text-purple-500 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    </button>
+                    <input type="file" id="import-history-csv-input" accept=".csv" class="hidden"/>
+                    <button id="import-history-csv-btn" title="Impor riwayat dari file CSV" class="text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.5 3a2.5 2.5 0 00-2.416 2.083l-1.425 8.55A2.5 2.5 0 002.5 17h15a2.5 2.5 0 002.416-3.367l-1.425-8.55A2.5 2.5 0 0015.5 3h-11zm1.94 4.293a1 1 0 011.414 0L9 8.586V7a1 1 0 112 0v1.586l1.146-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    </button>
+                    <button id="clear-history-btn" title="Hapus semua riwayat" class="ml-auto text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                    </button>
                 </div>
                 <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
             </div>
@@ -761,8 +786,36 @@
         </div>
     </div>
 
+    <!-- MODAL BARU: Edit Pengguna -->
+    <div id="edit-user-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold">Edit Pengguna</h3>
+                <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="font-semibold" id="edit-user-email"></p>
+                <input type="hidden" id="edit-user-id">
+                <div>
+                    <label for="edit-user-points" class="block text-sm font-medium">Poin</label>
+                    <input id="edit-user-points" type="number" class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">Lencana</h4>
+                    <div id="edit-user-badges" class="grid grid-cols-2 gap-2">
+                        <!-- Checkbox akan di-generate oleh JS -->
+                    </div>
+                </div>
+                <button id="save-user-changes-btn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification -->
-    <div id="notification" class="fixed bottom-5 left-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50">Teks disalin!</div>
+    <div id="notification" class="fixed top-5 left-1/2 flex items-center gap-3 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50">
+        <span id="notification-icon"></span>
+        <span id="notification-text">Teks disalin!</span>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js" defer></script>
     <script>
@@ -774,6 +827,8 @@
         const charCountEl = document.getElementById('char-count');
         const swapBtn = document.getElementById('swap-btn');
         const notification = document.getElementById('notification');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationText = document.getElementById('notification-text');
         const dictionaryResultEl = document.getElementById('dictionary-result');
         const themeMenuButton = document.getElementById('theme-menu-button'), themeMenu = document.getElementById('theme-menu');
         const tabBtns = document.querySelectorAll('.tab-btn'), tabPanels = document.querySelectorAll('.tab-panel');
@@ -781,6 +836,9 @@
         const historyModal = document.getElementById('history-modal'), savedModal = document.getElementById('saved-modal');
         const historyList = document.getElementById('history-list'), savedList = document.getElementById('saved-list');
         const historySearchInput = document.getElementById('history-search-input');
+        const importHistoryCsvBtn = document.getElementById('import-history-csv-btn');
+        const importHistoryCsvInput = document.getElementById('import-history-csv-input');
+        const exportHistoryJsonBtn = document.getElementById('export-history-json-btn');
         const exportHistoryCsvBtn = document.getElementById('export-history-csv-btn');
         const imageUpload = document.getElementById('image-upload'), ocrStatus = document.getElementById('ocr-status'), ocrProgress = document.getElementById('ocr-progress'), ocrProgressBar = document.getElementById('ocr-progress-bar'), imagePreviewContainer = document.getElementById('image-preview-container'), imageTargetLangEl = document.getElementById('image-target-lang'), imageDropZone = document.getElementById('image-drop-zone'), imageViewport = document.getElementById('image-viewport'), imageTransformer = document.getElementById('image-transformer'), zoomInBtn = document.getElementById('zoom-in-btn'), zoomOutBtn = document.getElementById('zoom-out-btn'), zoomLevelDisplay = document.getElementById('zoom-level-display'), resetViewBtn = document.getElementById('reset-view-btn'), compareToggle = document.getElementById('compare-toggle');
         const docUpload = document.getElementById('doc-upload'), docStatus = document.getElementById('doc-status'), docTextResult = document.getElementById('doc-text-result'), docTargetLangEl = document.getElementById('doc-target-lang'), docDropZone = document.getElementById('doc-drop-zone');
@@ -832,6 +890,7 @@
         const quizFeedback = document.getElementById('quiz-feedback');
         const nextQuizBtn = document.getElementById('next-quiz-btn');
         const mainContentWrapper = document.getElementById('main-content-wrapper');
+        const tutorialBtn = document.getElementById('tutorial-btn');
         const loginPrompt = document.getElementById('login-prompt');
         const loginPromptBtn = document.getElementById('login-prompt-btn');
         const registerPromptBtn = document.getElementById('register-prompt-btn');
@@ -869,6 +928,13 @@
         const adminPanel = document.getElementById('admin-panel');
         const adminManageUpdatesBtn = document.getElementById('admin-manage-updates-btn');
         const userListContainer = document.getElementById('user-list-container');
+        // Elemen Modal Edit Pengguna
+        const editUserModal = document.getElementById('edit-user-modal');
+        const editUserEmail = document.getElementById('edit-user-email');
+        const editUserId = document.getElementById('edit-user-id');
+        const editUserPoints = document.getElementById('edit-user-points');
+        const editUserBadges = document.getElementById('edit-user-badges');
+        const saveUserChangesBtn = document.getElementById('save-user-changes-btn');
         const announcementIndicator = document.getElementById('announcement-indicator');
         // Elemen Pengumuman Baru
         const announcementsBtn = document.getElementById('announcements-btn');
@@ -878,12 +944,19 @@
         const adminManageAnnouncementsBtn = document.getElementById('admin-manage-announcements-btn');
         const manageAnnouncementsModal = document.getElementById('manage-announcements-modal');
         const saveAnnouncementsBtn = document.getElementById('save-announcements-btn');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
         const typingSoundToggle = document.getElementById('typing-sound-toggle');
 
 
         // --- 2. STATE & CONSTANTS ---
         const languages = { "auto": "Deteksi Otomatis", "af": "Afrikaans", "sq": "Albanian", "am": "Amharic", "ar": "Arabic", "hy": "Armenian", "az": "Azerbaijani", "eu": "Basque", "be": "Belarusian", "bn": "Bengali", "bs": "Bosnian", "bg": "Bulgarian", "ca": "Catalan", "ceb": "Cebuano", "ny": "Chichewa", "zh-CN": "Chinese (Simplified)", "zh-TW": "Chinese (Traditional)", "co": "Corsican", "hr": "Croatian", "cs": "Czech", "da": "Danish", "nl": "Dutch", "en": "English", "eo": "Esperanto", "et": "Estonian", "tl": "Filipino", "fi": "Finnish", "fr": "French", "fy": "Frisian", "gl": "Galician", "ka": "Georgian", "de": "German", "el": "Greek", "gu": "Gujarati", "ht": "Haitian Creole", "ha": "Hausa", "haw": "Hawaiian", "iw": "Hebrew", "hi": "Hindi", "hmn": "Hmong", "hu": "Hungarian", "is": "Icelandic", "ig": "Igbo", "id": "Indonesian", "ga": "Irish", "it": "Italian", "ja": "Japanese", "jw": "Javanese", "kn": "Kannada", "kk": "Kazakh", "km": "Khmer", "ko": "Korean", "ku": "Kurdish (Kurmanji)", "ky": "Kyrgyz", "lo": "Lao", "la": "Latin", "lv": "Latvian", "lt": "Lithuanian", "lb": "Luxembourgish", "mk": "Macedonian", "mg": "Malagasy", "ms": "Malay", "ml": "Malayalam", "mt": "Maltese", "mi": "Maori", "mr": "Marathi", "mn": "Mongolian", "my": "Myanmar (Burmese)", "ne": "Nepali", "no": "Norwegian", "ps": "Pashto", "fa": "Persian", "pl": "Polish", "pt": "Portuguese", "pa": "Punjabi", "ro": "Romanian", "ru": "Russian", "sm": "Samoan", "gd": "Scots Gaelic", "sr": "Serbian", "st": "Sesotho", "sn": "Shona", "sd": "Sindhi", "si": "Sinhala", "sk": "Slovak", "sl": "Slovenian", "so": "Somali", "es": "Spanish", "su": "Sundanese", "sw": "Swahili", "sv": "Swedish", "tg": "Tajik", "ta": "Tamil", "te": "Telugu", "th": "Thai", "tr": "Turkish", "uk": "Ukrainian", "ur": "Urdu", "uz": "Uzbek", "vi": "Vietnamese", "cy": "Welsh", "xh": "Xhosa", "yi": "Yiddish", "yo": "Yoruba", "zu": "Zulu" };
         const HISTORY_KEY = 'translation_history', SAVED_KEY = 'translation_saved', GLOSSARY_KEY = 'translation_glossary';
+        const ALL_BADGES = {
+            'pemula': { emoji: '🔰', name: 'Pemula', title: 'Penerjemah Pemula: Selesaikan 10 terjemahan.' },
+            'ahli': { emoji: '⭐', name: 'Ahli', title: 'Penerjemah Ahli: Selesaikan 100 terjemahan.' },
+            'korektor': { emoji: '✍️', name: 'Korektor', title: 'Korektor Andal: Koreksi 5 teks dengan AI.' },
+            'polyglot': { emoji: '🌐', name: 'Polyglot', title: 'Polyglot: Terjemahkan ke 5 bahasa berbeda.' }
+        };
         let currentTranslationData = {};
         let debounceTimer, predictiveDebounceTimer, originalDocText = null, originalSrtSubs = null, translatedSrtContent = null;
         let currentImageSrc = null;
@@ -1053,12 +1126,49 @@
             }
             window.speechSynthesis.speak(utterance); 
         }
-        function showNotification(message) {
-            notification.textContent = message;
+        function playNotificationSound(type = 'info') {
+            if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.error("Web Audio API is not supported."); return; } }
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            switch (type) {
+                case 'success':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+                case 'error':
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.15);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.25);
+                    break;
+                case 'info':
+                default:
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+            }
+        }
+        function showNotification(message, type = 'success') {
+            const icons = { success: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg>', error: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>', info: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>' };
+            const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600' };
+            notification.className = `fixed top-5 left-1/2 flex items-center gap-3 text-white px-4 py-3 rounded-lg shadow-lg z-50 ${colors[type] || colors.info}`;
+            notificationIcon.innerHTML = icons[type] || icons.info;
+            notificationText.textContent = message;
+            playNotificationSound(type);
             notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 2500); // Notifikasi akan terlihat selama 2.5 detik sebelum transisi keluar dimulai
+            setTimeout(() => notification.classList.remove('show'), 2500);
         }
         async function getDefinition(word, lang) { dictionaryResultEl.innerHTML = `Mencari definisi untuk "<b>${word}</b>"...`; dictionaryResultEl.classList.remove('hidden'); try { const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/${lang}/${word}`); if (!response.ok) throw new Error('Definisi tidak ditemukan.'); const data = await response.json(); let content = `<h3>Definisi untuk <b>${data[0].word}</b></h3>`; data[0].meanings.forEach(meaning => { content += `<p class="italic text-slate-500 mt-2">${meaning.partOfSpeech}</p>`; meaning.definitions.forEach((def, i) => { content += `<p class="ml-2">${i + 1}. ${def.definition}</p>`; if(def.example) content += `<p class="ml-4 text-sm text-slate-400">Contoh: "${def.example}"</p>`}); }); dictionaryResultEl.innerHTML = content; } catch (error) { window.open(`https://www.google.com/search?q=arti+${encodeURIComponent(word)}`, '_blank'); dictionaryResultEl.classList.add('hidden'); } }
         function getVoiceSettings() { return { speed: parseFloat(document.querySelector('input[name="speed"]:checked')?.value || 1) }; }
@@ -1082,13 +1192,34 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.setValueAtTime(700 + Math.random() * 200, audioCtx.currentTime); 
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
             oscillator.start(audioCtx.currentTime);
             oscillator.stop(audioCtx.currentTime + 0.1);
         }
-        function generateSRT(subs) { return subs.map(s => `${s.id}\n${s.startTime} --> ${s.endTime}\n${s.translatedText}`).join('\n\n'); }
+        const keySoundProfiles = [
+            { type: 'triangle', freq: 800, duration: 0.08, gain: 0.1 },  // Original-ish
+            { type: 'square', freq: 1200, duration: 0.05, gain: 0.05 }, // Clicky
+            { type: 'sine', freq: 600, duration: 0.1, gain: 0.15 },    // Softer
+            { type: 'sawtooth', freq: 900, duration: 0.07, gain: 0.08 } // Buzzy
+        ];
+        function playKeySound() {
+            if (!typingSoundEnabled) return;
+            if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.error("Web Audio API is not supported."); typingSoundEnabled = false; return; } }
+            const profile = keySoundProfiles[Math.floor(Math.random() * keySoundProfiles.length)];
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = profile.type;
+            oscillator.frequency.setValueAtTime(profile.freq + (Math.random() - 0.5) * 100, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(profile.gain, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + profile.duration);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + profile.duration);
+        }
+        function generateSRT(subs) { return subs.map(s => `${s.id}\n${s.startTime} --> ${s.endTime}\n${s.translatedText || s.text}`).join('\n\n'); }
         function arrayBufferToBase64(buffer) { let binary = ''; const bytes = new Uint8Array(buffer); for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); } return window.btoa(binary); }
         
         // --- 5. EVENT HANDLERS ---
@@ -1193,7 +1324,7 @@
         async function handleAiAction(action, buttonEl) { 
             const text = aiSourceEl.value.trim(); 
             if (!text) { 
-                showNotification("Masukkan teks terlebih dahulu."); 
+                showNotification("Masukkan teks terlebih dahulu.", "info"); 
                 return; 
             } 
             if (!userApiKeys[currentAiProvider]) {
@@ -1227,7 +1358,7 @@
             if (result.error) { 
                 videoStatusEl.textContent = result.error; 
                 return; 
-            } 
+            }
             let translatedLines = result.text.split('\n---\n'); 
             if (translatedLines.length !== originalSrtSubs.length) { 
                 videoStatusEl.textContent = 'Error: AI translation returned unexpected format.'; 
@@ -1245,7 +1376,7 @@
         function handleSwap() { if (sourceLangEl.value === 'auto') { showNotification("Tidak bisa menukar 'Deteksi Otomatis'."); return; } logUserActivity('swap_languages'); const sourceLang = sourceLangEl.value, targetLang = targetLangEl.value, sourceText = sourceTextEl.value, targetText = translatedOutput.textContent; sourceLangEl.value = targetLang; targetLangEl.value = sourceLang; sourceTextEl.value = targetText; handleTextTranslation(); }
         async function handleLyricsTranslation() { 
             if (!userApiKeys[currentAiProvider]) {
-                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`, "error");
                 return;
             }
             const text = lyricsSource.value.trim(); 
@@ -1263,7 +1394,7 @@
         }
         async function handleCodeTranslation() { 
              if (!userApiKeys[currentAiProvider]) {
-                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`, "error");
                 return;
             }
             const text = codeSource.value.trim(); 
@@ -1283,7 +1414,7 @@
             if (!file) return;
             const geminiApiKey = userApiKeys.gemini;
             if (!geminiApiKey) {
-                showNotification("Fitur audio memerlukan kunci API Gemini dari Google AI Studio.");
+                showNotification("Fitur audio memerlukan kunci API Gemini dari Google AI Studio.", "error");
                 audioTranscribedText.textContent = 'Kunci API Gemini belum diatur. Silakan atur di modal API.';
                 return;
             }
@@ -1313,12 +1444,12 @@
         }
         async function handleGrammarCheck() { 
             if (!userApiKeys[currentAiProvider]) {
-                 showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`);
+                 showNotification(`Kunci API untuk ${currentAiProvider} belum diatur.`, "error");
                 return;
             }
             const text = sourceTextEl.value.trim(); 
             if (!text) { 
-                showNotification("Masukkan teks."); 
+                showNotification("Masukkan teks.", "info"); 
                 return; 
             } 
             logUserActivity('check_grammar'); 
@@ -1330,7 +1461,7 @@
             loader.classList.add('hidden'); 
             checkGrammarBtn.disabled = false; 
             if (result.error) { 
-                showNotification(result.error); 
+                showNotification(result.error, "error"); 
             } else { 
                 correctedText = result.text.trim(); 
                 originalTextCorrectionEl.textContent = text; 
@@ -1342,7 +1473,7 @@
             } 
         }
         async function handleFeedback(rating) {
-            if (!currentTranslationData.id || !currentUser) { showNotification("Silakan login untuk memberi feedback."); return; }
+            if (!currentTranslationData.id || !currentUser) { showNotification("Silakan login untuk memberi feedback.", "info"); return; }
             const { db, collection, addDoc, serverTimestamp } = window.firebaseServices;
             try {
                 await addDoc(collection(db, "translation_feedback"), {
@@ -1356,7 +1487,7 @@
                 document.querySelector(`.feedback-btn[data-rating="${rating}"]`).classList.add('selected');
             } catch (error) {
                 console.error("Error submitting feedback:", error);
-                showNotification("Gagal mengirim feedback.");
+                showNotification("Gagal mengirim feedback.", "error");
             }
         }
         async function handleSuggestionSubmit() {
@@ -1374,14 +1505,70 @@
                 correctionSuggestionModal.classList.remove('flex');
             } catch (error) {
                 console.error("Error submitting suggestion:", error);
-                showNotification("Gagal mengirim saran.");
+                showNotification("Gagal mengirim saran.", "error");
             }
+        }
+
+        function handleHistoryImport(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').slice(1); // Abaikan header
+                    let history = getFromStorage(HISTORY_KEY);
+                    let importedCount = 0;
+
+                    const langNameToCode = Object.fromEntries(Object.entries(languages).map(([code, name]) => [name, code]));
+
+                    lines.forEach((line, index) => {
+                        if (!line.trim()) return;
+                        // Parser CSV sederhana, mengasumsikan format yang diekspor
+                        const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g).map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
+                        
+                        const sourceLangName = values[1];
+                        const targetLangName = values[2];
+                        const sourceText = values[3];
+                        const translatedText = values[4];
+
+                        const sourceLang = langNameToCode[sourceLangName] || 'auto';
+                        const targetLang = langNameToCode[targetLangName];
+
+                        if (sourceText && translatedText && targetLang) {
+                            history.unshift({ id: Date.now() + index, sourceLang, targetLang, sourceText, translatedText });
+                            importedCount++;
+                        }
+                    });
+
+                    saveToStorage(HISTORY_KEY, history);
+                    renderList(historyList, history, 'history');
+                    showNotification(`${importedCount} item berhasil diimpor!`);
+                } catch (error) {
+                    showNotification("Gagal mengimpor file. Pastikan format CSV benar.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportHistoryToJSON() {
+            const history = getFromStorage(HISTORY_KEY);
+            if (history.length === 0) {
+                showNotification("Tidak ada riwayat untuk diekspor.");
+                return;
+            }
+            const jsonString = JSON.stringify(history, null, 2); // null, 2 untuk pretty-printing
+            const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `penerjemah_hoshi_riwayat_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            showNotification("Riwayat diekspor ke JSON!");
         }
 
         function exportHistoryToCSV() {
             const history = getFromStorage(HISTORY_KEY);
             if (history.length === 0) {
-                showNotification("Tidak ada riwayat untuk diekspor.");
+                showNotification("Tidak ada riwayat untuk diekspor.", "info");
                 return;
             }
 
@@ -1434,16 +1621,24 @@
             items.forEach(item => {
                 const isSaved = getFromStorage(SAVED_KEY).some(s => s.id === item.id);
                 const itemEl = document.createElement('div');
-                itemEl.className = 'p-3 border-b dark:border-gray-700';
+                itemEl.className = 'history-item p-3 border-b dark:border-gray-700';
                 let buttons = type === 'history' ? `<button class="action-btn text-blue-500 disabled:text-gray-400" data-action="save" data-id="${item.id}" ${isSaved ? 'disabled' : ''}>${isSaved ? 'Tersimpan' : 'Simpan'}</button><button class="action-btn text-red-500" data-action="delete-history" data-id="${item.id}">Hapus</button>` : `<button class="action-btn text-yellow-500" data-action="unsave" data-id="${item.id}">Hapus Simpanan</button>`;
-                itemEl.innerHTML = `<div class="history-item-content cursor-pointer" data-id="${item.id}"><div class="text-xs text-slate-500 dark:text-slate-400 mb-1">${languages[item.sourceLang] || 'Auto'} &rarr; ${languages[item.targetLang]}</div><p class="font-semibold truncate">${item.sourceText}</p><p class="text-blue-500 dark:text-blue-400 truncate">${item.translatedText}</p></div><div class="flex gap-4 mt-2 text-xs">${buttons}</div>`;
+                
+                // Format tanggal dan waktu
+                const timestamp = new Date(item.id);
+                const formattedDate = timestamp.toLocaleString('id-ID', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                itemEl.innerHTML = `<div class="history-item-content cursor-pointer" data-id="${item.id}"><div class="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1"><span>${languages[item.sourceLang] || 'Auto'} &rarr; ${languages[item.targetLang]}</span><span>${formattedDate}</span></div><p class="font-semibold truncate source-text-history">${item.sourceText}</p><p class="text-blue-500 dark:text-blue-400 truncate translated-text-history">${item.translatedText}</p></div><div class="flex gap-4 mt-2 text-xs">${buttons}</div>`;
                 fragment.appendChild(itemEl);
             });
             listContainer.innerHTML = '';
             listContainer.appendChild(fragment);
         }
         function loadHistoryItem(id) { const item = getFromStorage(HISTORY_KEY).find(i => i.id === id); if (item) { document.querySelector('.tab-btn[data-tab="text"]').click(); sourceLangEl.value = item.sourceLang; targetLangEl.value = item.targetLang; sourceTextEl.value = item.sourceText; handleTextTranslation(); historyModal.classList.remove('flex'); savedModal.classList.remove('flex'); } }
-        function mainListClickHandler(e) { const actionBtn = e.target.closest('.action-btn'); if (actionBtn) { const { action, id } = actionBtn.dataset; let history = getFromStorage(HISTORY_KEY); let saved = getFromStorage(SAVED_KEY); const numericId = parseInt(id, 10); if (action === 'save') { const itemToSave = history.find(item => item.id === numericId); if (itemToSave && !saved.some(s => s.id === numericId)) { saved.unshift(itemToSave); saveToStorage(SAVED_KEY, saved); } } else if (action === 'unsave') { saved = saved.filter(item => item.id !== numericId); saveToStorage(SAVED_KEY, saved); } else if (action === 'delete-history') { history = history.filter(item => item.id !== numericId); saved = saved.filter(item => item.id !== numericId); saveToStorage(HISTORY_KEY, history); saveToStorage(SAVED_KEY, saved); } renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); updateSaveButtonState(); return; } const content = e.target.closest('.history-item-content'); if (content) { loadHistoryItem(parseInt(content.dataset.id, 10)); } }
+        function mainListClickHandler(e) { const actionBtn = e.target.closest('.action-btn'); if (actionBtn) { const { action, id } = actionBtn.dataset; let history = getFromStorage(HISTORY_KEY); let saved = getFromStorage(SAVED_KEY); const numericId = parseInt(id, 10); if (action === 'save') { const itemToSave = history.find(item => item.id === numericId); if (itemToSave && !saved.some(s => s.id === numericId)) { saved.unshift(itemToSave); saveToStorage(SAVED_KEY, saved); showNotification("Terjemahan disimpan."); } } else if (action === 'unsave') { saved = saved.filter(item => item.id !== numericId); saveToStorage(SAVED_KEY, saved); showNotification("Dihapus dari simpanan.", "info"); } else if (action === 'delete-history') { history = history.filter(item => item.id !== numericId); saved = saved.filter(item => item.id !== numericId); saveToStorage(HISTORY_KEY, history); saveToStorage(SAVED_KEY, saved); showNotification("Item riwayat dihapus.", "info"); } renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); updateSaveButtonState(); return; } const content = e.target.closest('.history-item-content'); if (content) { loadHistoryItem(parseInt(content.dataset.id, 10)); } }
         function updateView() { imageTransformer.style.transform = `scale(${zoomState.level}) translate(${zoomState.pan.x}px, ${zoomState.pan.y}px)`; zoomLevelDisplay.textContent = `${Math.round(zoomState.level * 100)}%`; }
         function resetZoom() { zoomState = { level: 1, pan: { x: 0, y: 0 }, isPanning: false, start: { x: 0, y: 0 } }; updateView(); }
         function addConversationBubble(sourceText, translatedText, sourceLang) { conversationPlaceholder.classList.add('hidden'); const bubble = document.createElement('div'); const isLang1 = sourceLang === conversationLang1.value || (sourceLang === 'auto' && activeMicButton.id === 'mic-btn-1'); bubble.className = `w-full flex mb-2 ${isLang1 ? 'justify-end' : 'justify-start'}`; bubble.innerHTML = `<div class="max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-lg ${isLang1 ? 'bg-blue-500 text-white' : 'bg-slate-200 dark:bg-gray-700'}"><p class="font-semibold">${sourceText}</p><p class="text-sm opacity-90 mt-1">${translatedText}</p></div>`; conversationView.appendChild(bubble); conversationView.scrollTop = conversationView.scrollHeight; }
@@ -1481,7 +1676,7 @@
         }
 
         async function startCamera() {
-            if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+            if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); }
             try {
                 cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 cameraFeed.srcObject = cameraStream;
@@ -1500,7 +1695,7 @@
         }
 
         function handleCapture() {
-            if (!cameraStream) { showNotification("Kamera tidak aktif."); return; }
+            if (!cameraStream) { showNotification("Kamera tidak aktif.", "info"); return; }
             const context = cameraCanvas.getContext('2d');
             cameraCanvas.width = cameraFeed.videoWidth;
             cameraCanvas.height = cameraFeed.videoHeight;
@@ -1511,7 +1706,7 @@
         }
 
         async function goOnlineAsPartner() {
-            if (!currentUser) { showNotification("Login untuk menjadi partner."); return; }
+            if (!currentUser) { showNotification("Login untuk menjadi partner.", "info"); return; }
             const { db, doc, setDoc } = window.firebaseServices;
             const nativeLang = partnerNativeLang.value;
             const practiceLang = partnerPracticeLang.value;
@@ -1527,7 +1722,7 @@
                 goOfflineBtn.classList.remove('hidden');
                 showNotification("Anda sekarang online sebagai partner!");
                 listenForPartners();
-            } catch (e) { console.error(e); showNotification("Gagal untuk online."); goOnlineBtn.disabled = false; }
+            } catch (e) { console.error(e); showNotification("Gagal untuk online.", "error"); goOnlineBtn.disabled = false; }
         }
 
         async function goOfflineAsPartner() {
@@ -1538,9 +1733,9 @@
                 await deleteDoc(doc(db, "language_partners", currentUser.uid));
                 goOfflineBtn.classList.add('hidden');
                 goOnlineBtn.classList.remove('hidden');
-                showNotification("Anda sekarang offline.");
+                showNotification("Anda sekarang offline.", "info");
                 if (unsubscribeFromPartners) unsubscribeFromPartners();
-            } catch (e) { console.error(e); showNotification("Gagal untuk offline."); goOfflineBtn.disabled = false; }
+            } catch (e) { console.error(e); showNotification("Gagal untuk offline.", "error"); goOfflineBtn.disabled = false; }
         }
 
         function listenForPartners() {
@@ -1617,7 +1812,7 @@
             const updates = updateTextInput.value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
             if (!version || updates.length === 0) {
-                showNotification("Versi dan ringkasan pembaruan tidak boleh kosong.");
+                showNotification("Versi dan ringkasan pembaruan tidak boleh kosong.", "error");
                 return;
             }
 
@@ -1631,7 +1826,7 @@
                 manageUpdatesModal.classList.remove('flex');
             } catch (error) {
                 console.error("Error saving updates:", error);
-                showNotification("Gagal menyimpan pembaruan.");
+                showNotification("Gagal menyimpan pembaruan.", "error");
             }
         }
 
@@ -1685,7 +1880,7 @@
             const content = document.getElementById('announcement-content-input').value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
             if (!title || content.length === 0) {
-                showNotification("Judul dan isi pengumuman tidak boleh kosong.");
+                showNotification("Judul dan isi pengumuman tidak boleh kosong.", "error");
                 return;
             }
 
@@ -1695,7 +1890,7 @@
                 manageAnnouncementsModal.classList.remove('flex');
             } catch (error) {
                 console.error("Error saving announcements:", error);
-                showNotification("Gagal menyimpan pengumuman.");
+                showNotification("Gagal menyimpan pengumuman.", "error");
             }
         }
 
@@ -1745,6 +1940,7 @@
                         <p class="text-xs ${user.isBanned ? 'text-red-600' : 'text-slate-500'}">Status: ${user.isBanned ? 'Diblokir' : 'Aktif'}</p>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button class="edit-btn bg-yellow-500 text-white text-xs font-semibold py-1 px-3 rounded-full hover:bg-yellow-600" data-user-id="${user.id}">Edit</button>
                         ${user.isBanned ? 
                             `<button class="unban-btn bg-green-500 text-white text-xs font-semibold py-1 px-3 rounded-full hover:bg-green-600" data-user-id="${user.id}">Buka Blokir</button>` :
                             `<button class="ban-btn bg-red-500 text-white text-xs font-semibold py-1 px-3 rounded-full hover:bg-red-600" data-user-id="${user.id}">Blokir</button>`
@@ -1760,6 +1956,8 @@
                     banUser(targetBtn.dataset.userId);
                 } else if (targetBtn.classList.contains('unban-btn')) {
                     unbanUser(targetBtn.dataset.userId);
+                } else if (targetBtn.classList.contains('edit-btn')) {
+                    openEditUserModal(targetBtn.dataset.userId);
                 }
             });
         }
@@ -1770,10 +1968,10 @@
                 await updateDoc(doc(db, "users", userId), {
                     isBanned: true
                 });
-                showNotification("Pengguna berhasil diblokir.");
+                showNotification("Pengguna berhasil diblokir.", "success");
             } catch (error) {
                 console.error("Gagal memblokir pengguna:", error);
-                showNotification("Gagal memblokir pengguna.");
+                showNotification("Gagal memblokir pengguna.", "error");
             }
         }
         
@@ -1783,10 +1981,61 @@
                 await updateDoc(doc(db, "users", userId), {
                     isBanned: false
                 });
-                showNotification("Pengguna berhasil dibuka blokirnya.");
+                showNotification("Pengguna berhasil dibuka blokirnya.", "success");
             } catch (error) {
                 console.error("Gagal membuka blokir pengguna:", error);
-                showNotification("Gagal membuka blokir pengguna.");
+                showNotification("Gagal membuka blokir pengguna.", "error");
+            }
+        }
+
+        async function openEditUserModal(userId) {
+            const { db, doc, getDoc } = window.firebaseServices;
+            try {
+                const docSnap = await getDoc(doc(db, "users", userId));
+                if (docSnap.exists()) {
+                    const user = docSnap.data();
+                    editUserEmail.textContent = user.email;
+                    editUserId.value = userId;
+                    editUserPoints.value = user.points || 0;
+
+                    editUserBadges.innerHTML = '';
+                    Object.entries(ALL_BADGES).forEach(([key, badge]) => {
+                        const isChecked = user.badges?.includes(key);
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center gap-2 cursor-pointer';
+                        label.innerHTML = `
+                            <input type="checkbox" value="${key}" class="badge-checkbox" ${isChecked ? 'checked' : ''}>
+                            <span>${badge.emoji} ${badge.name}</span>
+                        `;
+                        editUserBadges.appendChild(label);
+                    });
+
+                    editUserModal.classList.add('flex');
+                } else {
+                    showNotification("Pengguna tidak ditemukan.", "error");
+                }
+            } catch (error) {
+                console.error("Gagal membuka modal edit:", error);
+                showNotification("Gagal memuat data pengguna.", "error");
+            }
+        }
+
+        async function saveUserChanges() {
+            const userId = editUserId.value;
+            const points = parseInt(editUserPoints.value, 10);
+            const selectedBadges = Array.from(document.querySelectorAll('#edit-user-badges .badge-checkbox:checked')).map(cb => cb.value);
+
+            const { db, doc, updateDoc } = window.firebaseServices;
+            try {
+                await updateDoc(doc(db, "users", userId), {
+                    points: points,
+                    badges: selectedBadges
+                });
+                showNotification("Data pengguna berhasil diperbarui.", "success");
+                editUserModal.classList.remove('flex');
+            } catch (error) {
+                console.error("Gagal menyimpan perubahan:", error);
+                showNotification("Gagal menyimpan perubahan.", "error");
             }
         }
         
@@ -1795,7 +2044,7 @@
             try {
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists() && docSnap.data().isBanned) {
-                    showNotification("Akun Anda telah diblokir.");
+                    showNotification("Akun Anda telah diblokir.", "error");
                     await window.signOut(window.firebaseServices.auth);
                     return false;
                 }
@@ -1962,9 +2211,9 @@
         saveTranslationBtn.addEventListener('click', handleSaveClick);
         sourceSpeakBtn.addEventListener('click', () => speak(sourceTextEl.value, sourceLangEl.value));
         targetSpeakBtn.addEventListener('click', () => speak(translatedOutput.textContent, targetLangEl.value, voiceToneSelect.value));
-        copyBtn.addEventListener('click', () => { if(translatedOutput.textContent) { navigator.clipboard.writeText(translatedOutput.textContent).then(() => showNotification('Teks disalin!'), () => showNotification('Gagal menyalin.')); }});
+        copyBtn.addEventListener('click', () => { if(translatedOutput.textContent) { navigator.clipboard.writeText(translatedOutput.textContent).then(() => showNotification('Teks disalin!'), () => showNotification('Gagal menyalin.', 'error')); }});
         googleSearchBtn.addEventListener('click', () => { if(translatedOutput.textContent) window.open(`https://www.google.com/search?q=${encodeURIComponent(translatedOutput.textContent)}`, '_blank')});
-        shareBtn.addEventListener('click', async () => { if (navigator.share && translatedOutput.textContent) { try { await navigator.share({ title: 'Terjemahan', text: translatedOutput.textContent }); } catch (err) { showNotification('Gagal membagikan.'); } } else { showNotification('Fitur bagikan tidak didukung.'); } });
+        shareBtn.addEventListener('click', async () => { if (navigator.share && translatedOutput.textContent) { try { await navigator.share({ title: 'Terjemahan', text: translatedOutput.textContent }); } catch (err) { showNotification('Gagal membagikan.', 'error'); } } else { showNotification('Fitur bagikan tidak didukung.', 'info'); } });
         themeMenuButton.addEventListener('click', () => themeMenu.classList.toggle('hidden'));
         document.addEventListener('click', e => { if (!themeMenuButton.contains(e.target) && !themeMenu.contains(e.target)) themeMenu.classList.add('hidden'); });
         themeMenu.addEventListener('click', e => { e.preventDefault(); const theme = e.target.dataset.theme; if (theme) { localStorage.setItem('theme', theme); applyTheme(); themeMenu.classList.add('hidden'); } });
@@ -2001,13 +2250,13 @@
                 if (currentUser) {
                     await saveApiKeyToFirestore(currentUser.uid, provider, key);
                 } else {
-                    userApiKeys[provider] = key;
+                    userApiKeys[provider] = key; // Simpan sementara jika tidak login
                     showNotification(`Kunci API ${provider} disimpan untuk sesi ini!`);
                 }
                 apiKeyModal.classList.remove('flex');
             } else {
                 if (currentUser) {
-                    await saveApiKeyToFirestore(currentUser.uid, provider, '');
+                    await saveApiKeyToFirestore(currentUser.uid, provider, ''); // Hapus dari Firestore
                 } else {
                     delete userApiKeys[provider];
                 }
@@ -2021,11 +2270,19 @@
         historyList.addEventListener('click', mainListClickHandler);
         savedList.addEventListener('click', mainListClickHandler);
         historySearchInput.addEventListener('input', () => {
-            const searchTerm = historySearchInput.value.toLowerCase();
-            const allHistory = getFromStorage(HISTORY_KEY);
-            const filteredHistory = allHistory.filter(item => item.sourceText.toLowerCase().includes(searchTerm) || item.translatedText.toLowerCase().includes(searchTerm));
-            renderList(historyList, filteredHistory, 'history');
+            const searchTerm = historySearchInput.value.toLowerCase().trim();
+            const items = historyList.querySelectorAll('.history-item');
+            items.forEach(item => {
+                const sourceText = item.querySelector('.source-text-history')?.textContent.toLowerCase() || '';
+                const translatedText = item.querySelector('.translated-text-history')?.textContent.toLowerCase() || '';
+                if (sourceText.includes(searchTerm) || translatedText.includes(searchTerm)) {
+                    item.classList.remove('hide');
+                } else {
+                    item.classList.add('hide');
+                }
+            });
         });
+        exportHistoryJsonBtn.addEventListener('click', exportHistoryToJSON);
         exportHistoryCsvBtn.addEventListener('click', exportHistoryToCSV);
         imageUpload.addEventListener('change', (e) => handleImageTranslation(e.target.files[0]));
         docUpload.addEventListener('change', (e) => handleDocumentTranslation(e.target.files[0]));
@@ -2092,6 +2349,7 @@
         manageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
         adminManageUpdatesBtn.addEventListener('click', openManageUpdatesModal); // Tetap ada
         saveUpdatesBtn.addEventListener('click', saveUpdateSummary);
+        saveUserChangesBtn.addEventListener('click', saveUserChanges);
         // Event Listeners untuk Pengumuman Baru
         announcementsBtn.addEventListener('click', () => {
             announcementsModal.classList.add('flex');
@@ -2112,6 +2370,25 @@
             if (typingSoundEnabled) playKeySound(); // Mainkan suara saat diaktifkan
         });
         [sourceTextEl, aiSourceEl, lyricsSource, codeSource, suggestionTextarea].forEach(el => el.addEventListener('keydown', playKeySound));
+        // Event Listener untuk Impor & Hapus Semua
+        importHistoryCsvBtn.addEventListener('click', () => importHistoryCsvInput.click());
+        importHistoryCsvInput.addEventListener('change', (e) => {
+            handleHistoryImport(e.target.files[0]);
+            e.target.value = ''; // Reset input agar bisa impor file yang sama lagi
+        });
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat? Tindakan ini tidak dapat dibatalkan.')) {
+                saveToStorage(HISTORY_KEY, []); renderList(historyList, [], 'history'); showNotification('Semua riwayat telah dihapus.', 'info');
+            }
+        });
+        // Logika Tutorial
+        function checkTutorial() { if (!localStorage.getItem('hasSeenTutorial')) { tutorialBtn.classList.remove('hidden'); } }
+        tutorialBtn.addEventListener('click', () => {
+            alert('Selamat Datang di Penerjemah Hoshi!\n\n1. Ketik teks di kotak kiri.\n2. Terjemahan akan muncul di kanan.\n3. Gunakan tab di atas untuk fitur lain seperti terjemahan suara dan gambar.');
+            localStorage.setItem('hasSeenTutorial', 'true');
+            tutorialBtn.classList.add('hidden');
+        });
+        checkTutorial();
     });
     </script>
 </body>
