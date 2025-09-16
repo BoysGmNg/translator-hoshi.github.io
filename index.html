@@ -16,7 +16,7 @@
         // Mengimpor fungsi yang diperlukan dari SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs, increment } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
         const firebaseConfig = {
@@ -37,7 +37,7 @@
             auth = getAuth(app);
             db = getFirestore(app);
             // Membuat layanan Firebase dapat diakses secara global untuk kemudahan
-            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs };
+            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs, increment };
             console.log("Firebase initialized successfully");
         } catch (e) {
             console.error("Error initializing Firebase. Please check your config.", e);
@@ -281,8 +281,8 @@
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="document">Dokumen</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="subtitle">Subtitle</button>
                         <!-- Tabs Premium -->
+                        <button id="ai-tab-btn" class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="ai" disabled title="Fitur Premium">Asisten AI 💎</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="audio">Audio 🎵💎</button>
-                        <button id="ai-tab-btn" class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="ai">Asisten AI 💎</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="lyrics">Lirik Lagu 💎</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="code">Kode 💎</button>
                         <button class="tab-btn flex-shrink-0 flex items-center gap-2 py-3 px-4 text-sm text-slate-500 dark:text-slate-400 border-b-2 border-transparent transition-colors" data-tab="quiz">Kuis Bahasa 💎</button>
@@ -315,7 +315,7 @@
                                 <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-200 dark:border-gray-700">
                                     <div class="flex gap-2">
                                         <button id="source-speak-btn" aria-label="Dengarkan teks sumber" title="Dengarkan teks sumber" class="p-2 text-slate-400 hover:text-blue-500 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5.071 8.043a.75.75 0 01.275-.566l3.5-2.5a.75.75 0 011.154.566v10a.75.75 0 01-1.154.566l-3.5-2.5a.75.75 0 01-.275-.566H4.75a.75.75 0 010-1.5h.321z" /><path d="M11.75 6.12a.75.75 0 011.5 0v7.76a.75.75 0 01-1.5 0V6.12zM14.622 4.332a.75.75 0 011.06 0l.07.07a.75.75 0 010 1.06l-.07.07a5.5 5.5 0 010 7.778l.07.07a.75.75 0 010 1.06l-.07.07a.75.75 0 01-1.06 0l-.07-.07a7 7 0 010-9.9l.07-.07z" /></svg></button>
-                                        <button id="check-grammar-btn" aria-label="Periksa Teks dengan AI" title="Periksa Teks dengan AI" class="p-2 text-slate-400 hover:text-blue-500 transition-colors flex items-center gap-1">
+                                        <button id="check-grammar-btn" aria-label="Periksa Teks dengan AI" title="Periksa Teks dengan AI" class="p-2 text-slate-400 hover:text-blue-500 transition-colors flex items-center gap-1" disabled>
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clip-rule="evenodd" /></svg>
                                             <span class="text-xs font-bold">AI</span>
                                             <div class="loader hidden"></div>
@@ -904,6 +904,7 @@
         const predictiveTextSuggestion = document.getElementById('predictive-text-suggestion');
         const lyricsTargetLang = document.getElementById('lyrics-target-lang'), lyricsSource = document.getElementById('lyrics-source'), lyricsResult = document.getElementById('lyrics-result'), translateLyricsBtn = document.getElementById('translate-lyrics-btn');
         const codeTargetLang = document.getElementById('code-target-lang'), codeSource = document.getElementById('code-source'), codeResult = document.getElementById('code-result'), translateCodeBtn = document.getElementById('translate-code-btn');
+        const aiTabBtn = document.getElementById('ai-tab-btn');
         const audioTargetLang = document.getElementById('audio-target-lang'), audioUpload = document.getElementById('audio-upload'), audioUploadBtn = document.getElementById('audio-upload-btn'), audioDropZone = document.getElementById('audio-drop-zone'), audioTranscribedText = document.getElementById('audio-transcribed-text'), audioTranslatedText = document.getElementById('audio-translated-text'), audioFileName = document.getElementById('audio-file-name');
         const aiDomainSelect = document.getElementById('ai-domain-select');
         const checkGrammarBtn = document.getElementById('check-grammar-btn');
@@ -1302,7 +1303,7 @@
             typewriterRender(translatedOutput, translated); // Menggunakan efek typewriter
             if (romanization) romanizationOutput.textContent = romanization;
             if (alternatives?.length > 0) renderAlternatives(alternatives);
-
+            awardPoints(1, 'text_translation');
             saveToHistory(currentTranslationData);
             updateSaveButtonState();
             renderFeedbackUI();
@@ -1391,6 +1392,7 @@
             const result = await callAiAPI(prompt); 
             aiResultEl.value = result.text || result.error; 
             buttonEl.disabled = false; 
+            if (!result.error) awardPoints(5, 'ai_assist');
             loader.classList.add('hidden'); 
         }
         async function handleSubtitleUpload(file) { if (!file) return; logUserActivity('translate_subtitle'); videoStatusEl.textContent = 'Membaca file...'; const srtContent = await file.text(); subtitleOriginalEl.textContent = srtContent; originalSrtSubs = parseSRT(srtContent); await retranslateSubtitles(); }
@@ -1511,6 +1513,7 @@
             checkGrammarBtn.disabled = false; 
             if (result.error) { 
                 showNotification(result.error, "error"); 
+                awardPoints(5, 'ai_grammar_check');
             } else { 
                 correctedText = result.text.trim(); 
                 originalTextCorrectionEl.textContent = text; 
@@ -1551,6 +1554,7 @@
                     timestamp: serverTimestamp()
                 });
                 showNotification("Saran Anda telah dikirim. Terima kasih!");
+                awardPoints(15, 'feedback_suggestion');
                 correctionSuggestionModal.classList.remove('flex');
             } catch (error) {
                 console.error("Error submitting suggestion:", error);
@@ -2037,6 +2041,71 @@
             }
         }
 
+        // --- FUNGSI HADIAH & POIN ---
+        async function awardPoints(pointsToAdd, activityType) {
+            if (!currentUser) return;
+            const { db, doc, getDoc, updateDoc, increment } = window.firebaseServices;
+            const userRef = doc(db, "users", currentUser.uid);
+
+            try {
+                // Ambil data lama untuk perbandingan level
+                const docSnap = await getDoc(userRef);
+                const oldData = docSnap.data() || { points: 0, badges: [] };
+                const oldPoints = oldData.points;
+
+                // Tambah poin secara atomik
+                await updateDoc(userRef, { points: increment(pointsToAdd) });
+
+                const newPoints = oldPoints + pointsToAdd;
+                
+                showNotification(`+${pointsToAdd} Poin!`, 'info');
+
+                // Periksa kenaikan level dan hadiah
+                await checkAndAwardLevelRewards(oldPoints, newPoints);
+                
+                // Perbarui UI profil
+                await getUserProfile(currentUser.uid);
+                logUserActivity(activityType, { points_awarded: pointsToAdd });
+
+            } catch (error) {
+                console.error("Gagal memberikan poin:", error);
+            }
+        }
+
+        async function checkAndAwardLevelRewards(oldPoints, newPoints) {
+            const oldLevelData = calculateUserLevel(oldPoints);
+            const newLevelData = calculateUserLevel(newPoints);
+
+            if (newLevelData.level > oldLevelData.level) {
+                showNotification(`Naik Level! Anda sekarang Level ${newLevelData.level}! 🎉`, 'success');
+
+                // Hadiah di Level 3: Akses AI 24 Jam
+                if (newLevelData.level === 3) {
+                    const { db, doc, updateDoc } = window.firebaseServices;
+                    const userRef = doc(db, "users", currentUser.uid);
+                    const expirationTime = Date.now() + 24 * 60 * 60 * 1000; // 24 jam dari sekarang
+
+                    await updateDoc(userRef, { "rewards.ai_access_expires": expirationTime });
+                    
+                    showNotification("Hadiah Terbuka: Akses Asisten AI selama 24 jam! 💎", 'success');
+                    updatePremiumFeatureUI(); // Perbarui UI untuk menampilkan akses
+                }
+            }
+        }
+
+        function hasAccessToFeature(featureName, userData) {
+            if (!userData) return false;
+            if (userData.isAdmin) return true; // Admin selalu punya akses
+
+            switch (featureName) {
+                case 'ai':
+                    const hasReward = userData.rewards?.ai_access_expires && userData.rewards.ai_access_expires > Date.now();
+                    return hasReward; // Bisa ditambahkan || userData.isPremium jika ada langganan
+                default:
+                    return false;
+            }
+        }
+
         // --- FUNGSI LEADERBOARD & LEVEL ---
         function calculateUserLevel(points) {
             let level = 1;
@@ -2139,6 +2208,7 @@
                     points: points,
                     badges: selectedBadges
                 });
+                await fetchUsers(); // Muat ulang daftar pengguna untuk menampilkan data baru
                 showNotification("Data pengguna berhasil diperbarui.", "success");
                 editUserModal.classList.remove('flex');
             } catch (error) {
@@ -2160,6 +2230,22 @@
             } catch (error) {
                 console.error("Gagal memeriksa status pengguna:", error);
                 return false;
+            }
+        }
+
+        async function updatePremiumFeatureUI() {
+            if (!currentUser) return;
+            const { db, doc, getDoc } = window.firebaseServices;
+            const userRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(userRef);
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                const hasAiAccess = hasAccessToFeature('ai', userData);
+                
+                aiTabBtn.disabled = !hasAiAccess;
+                checkGrammarBtn.disabled = !hasAiAccess;
+                aiTabBtn.title = hasAiAccess ? "Asisten AI" : "Fitur Premium (Buka di Level 3)";
+                checkGrammarBtn.title = hasAiAccess ? "Periksa Teks dengan AI" : "Fitur Premium (Buka di Level 3)";
             }
         }
 
@@ -2193,6 +2279,7 @@
                 
                 await getApiKeyFromFirestore(user.uid); 
                 await getUserProfile(user.uid); 
+                await updatePremiumFeatureUI();
             } else { 
                 currentUser = null; 
                 userApiKeys = {}; 
@@ -2207,6 +2294,7 @@
                 manageUpdatesBtn.classList.add('hidden'); 
                 adminTabBtn.classList.add('hidden');
                 goOfflineAsPartner(); 
+                updatePremiumFeatureUI(); // Nonaktifkan fitur premium saat logout
             } 
         }
         async function getApiKeyFromFirestore(userId) { const { db, doc, getDoc } = window.firebaseServices; try { const docSnap = await getDoc(doc(db, 'users', userId)); if (docSnap.exists() && docSnap.data().apiKeys) { userApiKeys = docSnap.data().apiKeys; } else { userApiKeys = {}; } } catch (error) { console.error("Error getting API key:", error); userApiKeys = {}; } }
@@ -2228,7 +2316,10 @@
                     profileLevelProgress.style.width = `${levelData.progress}%`;
                     profileNextLevelPoints.textContent = levelData.pointsToNext > 0 ? `${levelData.pointsToNext} poin ke Lv. ${levelData.level + 1}` : 'Level Maksimal';
 
-                } else { await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, isBanned: false, badges: [] }); } 
+                } else { 
+                    await setDoc(doc(db, 'users', userId), { email: currentUser.email, points: 0, isBanned: false, badges: [], rewards: {} }); 
+                    await getUserProfile(userId); // Panggil lagi untuk render data awal
+                } 
             } catch (error) { console.error("Error getting user profile:", error); } 
         }
         async function showWordOfTheDay() { 
@@ -2296,7 +2387,7 @@
                 quizQuestion.textContent = result.error || "Gagal membuat kuis.";
             }
         }
-        function checkQuizAnswer(button, selected, correct) { document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); if (selected === correct) { button.classList.add('correct'); quizFeedback.textContent = 'Jawaban Benar! 🎉'; quizFeedback.className = 'mt-4 text-center font-semibold text-green-600'; } else { button.classList.add('incorrect'); quizFeedback.textContent = `Salah. Jawaban yang benar adalah "${correct}".`; quizFeedback.className = 'mt-4 text-center font-semibold text-red-600'; } nextQuizBtn.classList.remove('hidden'); }
+        function checkQuizAnswer(button, selected, correct) { document.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true); if (selected === correct) { button.classList.add('correct'); quizFeedback.textContent = 'Jawaban Benar! 🎉'; quizFeedback.className = 'mt-4 text-center font-semibold text-green-600'; awardPoints(10, 'quiz_correct'); } else { button.classList.add('incorrect'); quizFeedback.textContent = `Salah. Jawaban yang benar adalah "${correct}".`; quizFeedback.className = 'mt-4 text-center font-semibold text-red-600'; } nextQuizBtn.classList.remove('hidden'); }
         
         function loadAiProviderPreference() {
             const savedProvider = localStorage.getItem('ai_provider');
