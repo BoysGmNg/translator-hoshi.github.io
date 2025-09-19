@@ -10,7 +10,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- SDK & Library (ditunda untuk performa) -->
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js' defer></script>
+    <script>window.__enableOCR=false;</script>
+    <script>
+        // Lazy load heavy libs based on tab activation
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabBar = document.querySelectorAll('.tab-btn');
+            tabBar.forEach(btn => btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                if (tab === 'image' && !window.__enableOCR) {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                    s.defer = true;
+                    document.head.appendChild(s);
+                    window.__enableOCR = true;
+                }
+                if (tab === 'document' && !window.__pdfLoaded) {
+                    const s1 = document.createElement('script'); s1.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js'; s1.defer = true; document.head.appendChild(s1);
+                    const s2 = document.createElement('script'); s2.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js'; s2.defer = true; document.head.appendChild(s2);
+                    window.__pdfLoaded = true;
+                }
+                if (tab === 'ai' && !window.__introLoaded) {
+                    const c1 = document.createElement('link'); c1.rel='stylesheet'; c1.href='https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css'; document.head.appendChild(c1);
+                    const s = document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js'; s.defer=true; document.head.appendChild(s);
+                    window.__introLoaded=true;
+                }
+            }));
+        });
+    </script>
     <!-- Firebase SDK - Diperbarui ke versi modular terbaru -->
     <script type="module">
         // Mengimpor fungsi yang diperlukan dari SDK
@@ -47,10 +73,13 @@
             });
         }
         
-        // Memastikan auth state berubah
+        // Memastikan auth state berubah & local-only switch
+        const LOCAL_ONLY_KEY = 'localOnlyMode';
+        function isLocalOnly(){ return localStorage.getItem(LOCAL_ONLY_KEY) === '1'; }
         if (auth) {
             onAuthStateChanged(auth, (user) => {
                 window.setupAuthUI(user);
+                document.body.dataset.localOnly = isLocalOnly() ? '1' : '0';
             });
         }
         
@@ -58,6 +87,7 @@
         window.signInWithEmailAndPassword = signInWithEmailAndPassword;
         window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
         window.signOut = signOut;
+        window.setLocalOnlyMode = function(enabled){ localStorage.setItem(LOCAL_ONLY_KEY, enabled ? '1' : '0'); document.body.dataset.localOnly = enabled ? '1' : '0'; };
     </script>
 
     <script>
@@ -71,6 +101,83 @@
             }
         }
         applyTheme();
+    </script>
+    <script>
+        // IndexedDB setup for glossary and translation memory
+        (function(){
+            const DB_NAME = 'hoshi-db';
+            const DB_VERSION = 1;
+            let dbInstance = null;
+
+            function openDb() {
+                return new Promise((resolve, reject) => {
+                    if (dbInstance) return resolve(dbInstance);
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('glossary')) {
+                            const s = db.createObjectStore('glossary', { keyPath: 'id', autoIncrement: true });
+                            s.createIndex('byLang', ['sourceLang', 'targetLang'], { unique: false });
+                            s.createIndex('bySource', 'sourceText', { unique: false });
+                        }
+                        if (!db.objectStoreNames.contains('tm')) {
+                            const t = db.createObjectStore('tm', { keyPath: 'id', autoIncrement: true });
+                            t.createIndex('byPair', ['sourceLang', 'targetLang'], { unique: false });
+                        }
+                    };
+                    req.onsuccess = () => { dbInstance = req.result; resolve(dbInstance); };
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            async function idbAdd(storeName, value) {
+                const db = await openDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    tx.objectStore(storeName).add(value);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+            async function idbPut(storeName, value) {
+                const db = await openDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    tx.objectStore(storeName).put(value);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+            async function idbGetAll(storeName, indexName, key) {
+                const db = await openDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const req = indexName ? store.index(indexName).getAll(key) : store.getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+            async function idbDelete(storeName, id) {
+                const db = await openDb();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    tx.objectStore(storeName).delete(id);
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => reject(tx.error);
+                });
+            }
+
+            // Expose a light API
+            window.hoshiDb = {
+                addGlossary: (item) => idbAdd('glossary', item),
+                getGlossaryByLang: (src, tgt) => idbGetAll('glossary', 'byLang', [src, tgt]),
+                deleteGlossary: (id) => idbDelete('glossary', id),
+                addTM: (item) => idbAdd('tm', item),
+                listTMByPair: (src, tgt) => idbGetAll('tm', 'byPair', [src, tgt]),
+                putTM: (item) => idbPut('tm', item)
+            };
+        })();
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -203,6 +310,44 @@
             opacity: 0; max-height: 0px; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; border-width: 0;
         }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <script>
+        // Register Service Worker and handle updates/offline
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const reg = await navigator.serviceWorker.register('sw.js');
+                    if (reg.waiting) {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('Pembaruan tersedia. Akan dipakai saat reload.');
+                                }
+                            });
+                        }
+                    });
+                } catch (e) {
+                    console.warn('SW registration failed', e);
+                }
+            });
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SYNC_SAVED_TRANSLATIONS') {
+                    if (window.syncSavedTranslations) window.syncSavedTranslations();
+                }
+            });
+        }
+        // Background Sync request helper
+        async function requestTranslationsSync() {
+            if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                const reg = await navigator.serviceWorker.ready;
+                try { await reg.sync.register('sync-saved-translations'); } catch {}
+            }
+        }
+    </script>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
@@ -2143,7 +2288,18 @@
         nextQuizBtn.addEventListener('click', generateQuiz);
         translateLyricsBtn.addEventListener('click', handleLyricsTranslation);
         translateCodeBtn.addEventListener('click', handleCodeTranslation);
-        checkGrammarBtn.addEventListener('click', handleGrammarCheck);
+        checkGrammarBtn.addEventListener('click', async () => {
+            const btn = checkGrammarBtn;
+            const loader = btn.querySelector('.loader');
+            if (loader) loader.classList.remove('hidden');
+            btn.disabled = true;
+            try {
+                await handleGrammarCheck();
+            } finally {
+                btn.disabled = false;
+                if (loader) loader.classList.add('hidden');
+            }
+        });
         acceptCorrectionBtn.addEventListener('click', () => { sourceTextEl.value = correctedText; correctionModal.classList.remove('flex'); handleTextTranslation(); });
         rejectCorrectionBtn.addEventListener('click', () => correctionModal.classList.remove('flex'));
         profileBtn.addEventListener('click', () => profileModal.classList.add('flex'));
@@ -2205,6 +2361,181 @@
         });
         checkTutorial();
     });
+    </script>
+    <script>
+    // Enhancements: Glossary via IndexedDB, Alt Translations, Shortcuts, A11y, Background Sync hook
+    (function(){
+        if (!window.hoshiDb) return; // ensure IDB API is present
+
+        // Utilities
+        function getSelectedLangs(){
+            const srcSel = document.getElementById('source-lang');
+            const tgtSel = document.getElementById('target-lang');
+            return { sourceLang: srcSel?.value || 'auto', targetLang: tgtSel?.value || 'id' };
+        }
+
+        async function renderGlossary(){
+            const { sourceLang, targetLang } = getSelectedLangs();
+            const items = await window.hoshiDb.getGlossaryByLang(sourceLang, targetLang);
+            const listEl = document.getElementById('glossary-list');
+            if (!listEl) return;
+            listEl.innerHTML = items.map(it => `<div class="flex items-center justify-between p-2 border-b dark:border-gray-700"><div class="text-sm"><span class="font-semibold">${it.sourceText}</span> &rarr; <span>${it.targetText}</span></div><button class="delete-glossary-btn text-red-500 text-xs" data-id="${it.id}">Hapus</button></div>`).join('');
+        }
+
+        // Override add glossary to use IndexedDB
+        const addBtn = document.getElementById('add-glossary-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', async (e) => {
+                e.stopImmediatePropagation();
+                const srcLangEl = document.getElementById('glossary-source-lang');
+                const tgtLangEl = document.getElementById('glossary-target-lang');
+                const srcTextEl = document.getElementById('glossary-source-text');
+                const tgtTextEl = document.getElementById('glossary-target-text');
+                const sourceText = (srcTextEl?.value || '').trim();
+                const targetText = (tgtTextEl?.value || '').trim();
+                if (!sourceText || !targetText) return;
+                await window.hoshiDb.addGlossary({
+                    sourceLang: srcLangEl?.value || 'auto',
+                    targetLang: tgtLangEl?.value || 'id',
+                    sourceText,
+                    targetText
+                });
+                if (srcTextEl) srcTextEl.value = '';
+                if (tgtTextEl) tgtTextEl.value = '';
+                renderGlossary();
+            }, { capture: true });
+        }
+
+        // Override delete glossary
+        const listEl = document.getElementById('glossary-list');
+        if (listEl) {
+            listEl.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.delete-glossary-btn');
+                if (!btn) return;
+                e.stopImmediatePropagation();
+                const id = Number(btn.dataset.id);
+                if (Number.isFinite(id)) {
+                    await window.hoshiDb.deleteGlossary(id);
+                    renderGlossary();
+                }
+            }, { capture: true });
+        }
+
+        // Import/Export CSV for glossary
+        const importBtn = document.getElementById('import-glossary-btn');
+        const exportBtn = document.getElementById('export-glossary-btn');
+        const importInput = document.getElementById('import-glossary-input');
+        if (importBtn && importInput) {
+            importBtn.addEventListener('click', () => importInput.click());
+            importInput.addEventListener('change', async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const text = await file.text();
+                const lines = text.split(/\r?\n/).filter(Boolean);
+                for (const line of lines) {
+                    const [sourceLang, targetLang, sourceText, targetText] = line.split(',');
+                    if (sourceText && targetText) await window.hoshiDb.addGlossary({ sourceLang, targetLang, sourceText, targetText });
+                }
+                renderGlossary();
+                e.target.value = '';
+            });
+        }
+        if (exportBtn) {
+            exportBtn.addEventListener('click', async () => {
+                const { sourceLang, targetLang } = getSelectedLangs();
+                const items = await window.hoshiDb.getGlossaryByLang(sourceLang, targetLang);
+                const csv = items.map(i => [i.sourceLang, i.targetLang, i.sourceText, i.targetText].map(s => (s||'').replaceAll(',', ' ')).join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `glossary-${sourceLang}-${targetLang}.csv`; a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Alternative translations based on TM and glossary
+        window.generateAlternativeTranslations = async function(sourceText){
+            const { sourceLang, targetLang } = getSelectedLangs();
+            const alts = [];
+            const tms = await window.hoshiDb.listTMByPair(sourceLang, targetLang);
+            for (const tm of tms) {
+                if (tm.sourceText && sourceText && tm.sourceText.toLowerCase() === sourceText.toLowerCase()) {
+                    alts.push(tm.targetText);
+                }
+            }
+            const glossaryItems = await window.hoshiDb.getGlossaryByLang(sourceLang, targetLang);
+            for (const g of glossaryItems) {
+                if (sourceText && g.sourceText && sourceText.toLowerCase().includes(g.sourceText.toLowerCase())) {
+                    alts.push(sourceText.replace(new RegExp(g.sourceText, 'gi'), g.targetText));
+                }
+            }
+            // Render
+            const container = document.getElementById('alternative-translations');
+            if (container) {
+                const unique = Array.from(new Set(alts)).slice(0, 5);
+                container.innerHTML = unique.map(t => `<div class="alternative-translation">${t}</div>`).join('');
+                container.onclick = (e) => {
+                    const el = e.target.closest('.alternative-translation');
+                    if (!el) return;
+                    const out = document.getElementById('translated-output');
+                    if (out) out.textContent = el.textContent;
+                };
+            }
+        }
+
+        // Hook into translation completion if available
+        if (!window.__hoshiAltHookInstalled) {
+            window.__hoshiAltHookInstalled = true;
+            const originalHandle = window.handleTextTranslationComplete;
+            window.handleTextTranslationComplete = async function(data){
+                try { await window.generateAlternativeTranslations(data?.sourceText || ''); } catch {}
+                if (typeof originalHandle === 'function') return originalHandle(data);
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
+            const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+            if (ctrlOrCmd && e.key.toLowerCase() === 'enter') {
+                const btn = document.getElementById('translate-btn') || document.getElementById('google-translate-btn');
+                if (btn) { e.preventDefault(); btn.click(); }
+            }
+            if (ctrlOrCmd && e.key.toLowerCase() === 'c') {
+                const btn = document.getElementById('copy-btn');
+                if (btn) { e.preventDefault(); btn.click(); }
+            }
+            if (e.altKey && e.key.toLowerCase() === 's') {
+                const btn = document.getElementById('swap-btn');
+                if (btn) { e.preventDefault(); btn.click(); }
+            }
+            if (e.key === 'Tab') {
+                const sug = document.getElementById('predictive-text-suggestion');
+                const input = document.getElementById('source-text');
+                if (sug && input && sug.textContent) {
+                    e.preventDefault();
+                    input.value += sug.textContent;
+                }
+            }
+        });
+
+        // Basic accessibility for toggle and mic buttons
+        const micButtons = document.querySelectorAll('.mic-btn');
+        micButtons.forEach(b => { b.setAttribute('role','button'); b.setAttribute('aria-pressed','false'); b.setAttribute('aria-label','Rekam suara'); });
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.mic-btn');
+            if (btn) btn.setAttribute('aria-pressed', btn.classList.contains('recording') ? 'true' : 'false');
+        });
+
+        // Background Sync hook implementation stub
+        window.syncSavedTranslations = async function(){
+            // Place to push pending offline-saved translations to cloud if needed
+            // No-op for now
+        }
+
+        // Expose renderGlossary and init when modal opens
+        window.renderGlossary = renderGlossary;
+    })();
     </script>
 </body>
 </html>
