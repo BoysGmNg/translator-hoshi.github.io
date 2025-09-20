@@ -14,39 +14,406 @@
     <!-- Firebase SDK - Diperbarui ke versi modular terbaru -->
     <script type="module">
         // Mengimpor fungsi yang diperlukan dari SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/fi        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword, updateEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword, updateEmail, deleteUser } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs, increment } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
+        // UNTUK MENDAPATKAN KONFIGURASI YANG BENAR:
+        // 1. Buka Firebase Console (https://console.firebase.google.com)
+        // 2. Pilih project "translator-hoshi"
+        // 3. Klik ikon gear (Settings) > Project settings
+        // 4. Scroll ke bawah ke bagian "Your apps"
+        // 5. Klik "Config" pada web app Anda
+        // 6. Copy konfigurasi yang muncul dan ganti di bawah ini
+        
         const firebaseConfig = {
-            apiKey: "AIzaSyCybId57osSubD6X5wA0V780dtMjgA69o8",
-            authDomain: "translator-hoshi.firebaseapp.com",
-            databaseURL: "https://translator-hoshi-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "translator-hoshi",
-            storageBucket: "translator-hoshi.firebasestorage.app",
-            messagingSenderId: "164689906651",
-            appId: "1:164689906651:web:cdf41e88d0507f5e39f5fe",
-            measurementId: "G-TY2B1HXB71"
+  apiKey: "AIzaSyCybId57osSubD6X5wA0V780dtMjgA69o8",
+  authDomain: "translator-hoshi.firebaseapp.com",
+  databaseURL: "https://translator-hoshi-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "translator-hoshi",
+  storageBucket: "translator-hoshi.firebasestorage.app",
+  messagingSenderId: "164689906651",
+  appId: "1:164689906651:web:cdf41e88d0507f5e39f5fe",
+  measurementId: "G-TY2B1HXB71"
         };
+        
+        // Fungsi untuk memvalidasi konfigurasi Firebase
+        function validateFirebaseConfig() {
+            const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+            const placeholderValues = ['...', '123456789012', '1:123456789012:web:abcdef1234567890abcdef'];
+            
+            const missingFields = requiredFields.filter(field => {
+                const value = firebaseConfig[field];
+                return !value || placeholderValues.includes(value);
+            });
+            
+            if (missingFields.length > 0) {
+                console.error('❌ Firebase configuration is incomplete. Missing or placeholder values for:', missingFields);
+                console.error('Please update the Firebase configuration with real values from Firebase Console.');
+                return false;
+            }
+            
+            console.log('✅ Firebase configuration appears to be valid');
+            console.log('📋 Configuration details:', {
+                apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
+                authDomain: firebaseConfig.authDomain ? '✅ Set' : '❌ Missing',
+                projectId: firebaseConfig.projectId ? '✅ Set' : '❌ Missing',
+                storageBucket: firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing',
+                messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
+                appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing',
+                databaseURL: firebaseConfig.databaseURL ? '✅ Set' : '❌ Missing',
+                measurementId: firebaseConfig.measurementId ? '✅ Set' : '❌ Missing'
+            });
+            return true;
+        }
 
         // Inisialisasi Firebase
         let app;
         let auth;
         let db;
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            // Membuat layanan Firebase dapat diakses secara global untuk kemudahan
-            window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs, increment };
-            console.log("Firebase initialized successfully");
-        } catch (e) {
-            console.error("Error initializing Firebase. Please check your config.", e);
+        
+        console.log("🚀 Starting Firebase initialization...");
+        console.log("📋 Firebase Config:", firebaseConfig);
+        
+        // Validasi konfigurasi Firebase terlebih dahulu
+        if (!validateFirebaseConfig()) {
+            console.error("❌ Firebase configuration is invalid. Please check your config.");
             document.addEventListener('DOMContentLoaded', () => {
                 const authContainer = document.getElementById('auth-container');
-                if(authContainer) authContainer.innerHTML = '<p class="text-xs text-red-500">Firebase Gagal Terhubung</p>';
+                if(authContainer) authContainer.innerHTML = '<p class="text-xs text-red-500">Konfigurasi Firebase Tidak Valid - Periksa Console</p>';
+            });
+        } else {
+            console.log("✅ Firebase configuration validation passed");
+            try {
+                console.log("🔧 Initializing Firebase app...");
+                app = initializeApp(firebaseConfig);
+                console.log("✅ Firebase app initialized");
+                
+                console.log("🔐 Initializing Firebase Auth...");
+                auth = getAuth(app);
+                console.log("✅ Firebase Auth initialized");
+                
+                console.log("💾 Initializing Firestore...");
+                db = getFirestore(app);
+                console.log("✅ Firestore initialized");
+                
+                // Membuat layanan Firebase dapat diakses secara global untuk kemudahan
+                window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs, increment, updatePassword, updateEmail, deleteUser };
+                console.log("✅ Firebase initialized successfully");
+                console.log("Firebase Services:", window.firebaseServices);
+                
+                // Test Firestore connection
+                console.log("🧪 Testing Firestore connection...");
+                testFirestoreConnection();
+                
+                // Show success message on page
+                document.addEventListener('DOMContentLoaded', () => {
+                    const authContainer = document.getElementById('auth-container');
+                    if(authContainer) {
+                        authContainer.innerHTML = '<p class="text-xs text-green-500">✅ Firebase Terhubung - Siap Digunakan</p>';
+                    }
+                });
+            } catch (e) {
+                console.error("❌ Error initializing Firebase. Please check your config.", e);
+                console.error("Error details:", e.message);
+                console.error("Error stack:", e.stack);
+                document.addEventListener('DOMContentLoaded', () => {
+                    const authContainer = document.getElementById('auth-container');
+                    if(authContainer) authContainer.innerHTML = '<p class="text-xs text-red-500">Firebase Gagal Terhubung - Periksa Console</p>';
+                });
+            }
+        }
+        
+        // Function to test Firestore connection
+        async function testFirestoreConnection() {
+            console.log("🧪 Starting Firestore connection test...");
+            
+            try {
+                if (!window.firebaseServices) {
+                    throw new Error("Firebase services not initialized");
+                }
+                
+                const { db, doc, setDoc, getDoc } = window.firebaseServices;
+                console.log("📋 Firebase services available:", { db, doc, setDoc, getDoc });
+                
+                const testDoc = doc(db, 'test', 'connection');
+                console.log("📄 Test document reference created:", testDoc);
+                
+                console.log("💾 Writing test document...");
+                await setDoc(testDoc, { 
+                    timestamp: new Date().toISOString(),
+                    message: 'Firestore connection test',
+                    testId: Math.random().toString(36).substr(2, 9)
+                });
+                console.log("✅ Test document written successfully");
+                
+                console.log("📖 Reading test document...");
+                const testSnap = await getDoc(testDoc);
+                if (testSnap.exists()) {
+                    console.log("✅ Firestore connection successful!");
+                    console.log("📊 Test document data:", testSnap.data());
+                    
+                    // Clean up test document
+                    try {
+                        const { deleteDoc } = window.firebaseServices;
+                        await deleteDoc(testDoc);
+                        console.log("🧹 Test document cleaned up");
+                    } catch (cleanupError) {
+                        console.warn("⚠️ Could not clean up test document:", cleanupError);
+                    }
+                } else {
+                    console.error("❌ Firestore connection failed: Document not found after write");
+                }
+            } catch (error) {
+                console.error("❌ Firestore connection test failed:", error);
+                console.error("Error code:", error.code);
+                console.error("Error message:", error.message);
+                console.error("Error stack:", error.stack);
+                console.error("This usually means:");
+                console.error("1. Firebase configuration is incorrect");
+                console.error("2. Firestore rules are blocking access");
+                console.error("3. Network connectivity issues");
+                console.error("4. Firebase project doesn't exist or is not accessible");
+                console.error("5. Firestore is not enabled in Firebase Console");
+            }
+        }
+        
+        // Function to show Firebase configuration instructions
+        function showFirebaseConfigInstructions() {
+            const instructions = `
+🔧 CARA MENDAPATKAN KONFIGURASI FIREBASE YANG BENAR:
+
+1. Buka Firebase Console: https://console.firebase.google.com
+2. Pilih project "translator-hoshi" (atau buat project baru)
+3. Klik ikon gear (⚙️) di sidebar kiri > Project settings
+4. Scroll ke bawah ke bagian "Your apps"
+5. Jika belum ada web app, klik "Add app" > Web (</>) 
+6. Klik "Config" pada web app Anda
+7. Copy konfigurasi yang muncul dan ganti di file HTML
+
+Contoh konfigurasi yang benar:
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890abcdef"
+};
+
+⚠️ PASTIKAN:
+- Semua field terisi dengan nilai yang benar
+- Tidak ada placeholder seperti "..." atau "123456789012"
+- Project ID sesuai dengan project Firebase Anda
+- Firestore sudah diaktifkan di Firebase Console
+- Authentication sudah dikonfigurasi (Email/Password enabled)
+            `;
+            
+            console.log(instructions);
+            alert("Instruksi konfigurasi Firebase telah ditampilkan di console. Buka Developer Tools (F12) untuk melihatnya.");
+        }
+        
+        // Expose functions to window for debugging
+        window.showFirebaseConfigInstructions = showFirebaseConfigInstructions;
+        window.testFirestoreConnection = testFirestoreConnection;
+        window.validateFirebaseConfig = validateFirebaseConfig;
+        
+        // Firestore Rules Validator
+        window.validateFirestoreRules = async function() {
+            console.log("🔍 Starting Firestore Rules Validation...");
+            
+            if (!window.firebaseServices || !currentUser) {
+                console.error("❌ Firebase services or current user not available");
+                return;
+            }
+            
+            const tests = [
+                {
+                    name: "Test User Document Access",
+                    test: async () => {
+                        const { db, doc, getDoc, setDoc } = window.firebaseServices;
+                        const userRef = doc(db, 'users', currentUser.uid);
+                        
+                        const userDoc = await getDoc(userRef);
+                        if (!userDoc.exists()) {
+                            await setDoc(userRef, {
+                                email: currentUser.email,
+                                username: currentUser.email.split('@')[0],
+                                points: 0,
+                                isBanned: false,
+                                badges: [],
+                                rewards: {},
+                                premium: { is_active: false, expires_at: null },
+                                privacy: { saveHistory: true, analytics: true },
+                                createdAt: new Date()
+                            });
+                        }
+                        return "✅ User document access successful";
+                    }
+                },
+                {
+                    name: "Test Translation History",
+                    test: async () => {
+                        const { db, collection, addDoc, getDocs, query, where } = window.firebaseServices;
+                        
+                        await addDoc(collection(db, 'translations'), {
+                            userId: currentUser.uid,
+                            sourceText: "Test translation",
+                            translatedText: "Terjemahan test",
+                            sourceLang: "en",
+                            targetLang: "id",
+                            timestamp: new Date()
+                        });
+                        
+                        const q = query(collection(db, 'translations'), where('userId', '==', currentUser.uid));
+                        const snapshot = await getDocs(q);
+                        
+                        return `✅ Translation history test successful (${snapshot.size} documents)`;
+                    }
+                },
+                {
+                    name: "Test Saved Translations",
+                    test: async () => {
+                        const { db, collection, addDoc, getDocs, query, where } = window.firebaseServices;
+                        
+                        await addDoc(collection(db, 'saved_translations'), {
+                            userId: currentUser.uid,
+                            sourceText: "Test saved translation",
+                            translatedText: "Terjemahan tersimpan test",
+                            sourceLang: "en",
+                            targetLang: "id",
+                            timestamp: new Date()
+                        });
+                        
+                        const q = query(collection(db, 'saved_translations'), where('userId', '==', currentUser.uid));
+                        const snapshot = await getDocs(q);
+                        
+                        return `✅ Saved translations test successful (${snapshot.size} documents)`;
+                    }
+                },
+                {
+                    name: "Test User Activity Logging",
+                    test: async () => {
+                        const { db, collection, addDoc } = window.firebaseServices;
+                        
+                        await addDoc(collection(db, 'user_activity'), {
+                            userId: currentUser.uid,
+                            activityType: 'test_activity',
+                            timestamp: new Date(),
+                            metadata: { test: true }
+                        });
+                        
+                        return "✅ User activity logging test successful";
+                    }
+                },
+                {
+                    name: "Test Translation Feedback",
+                    test: async () => {
+                        const { db, collection, addDoc } = window.firebaseServices;
+                        
+                        await addDoc(collection(db, 'translation_feedback'), {
+                            userId: currentUser.uid,
+                            feedbackType: 'test_feedback',
+                            rating: 5,
+                            comment: 'Test feedback',
+                            timestamp: new Date()
+                        });
+                        
+                        return "✅ Translation feedback test successful";
+                    }
+                }
+            ];
+            
+            const results = [];
+            
+            for (const test of tests) {
+                try {
+                    console.log(`🧪 Running: ${test.name}`);
+                    const result = await test.test();
+                    results.push({ name: test.name, status: 'PASS', message: result });
+                    console.log(`✅ ${test.name}: PASS`);
+                } catch (error) {
+                    results.push({ name: test.name, status: 'FAIL', message: error.message });
+                    console.error(`❌ ${test.name}: FAIL - ${error.message}`);
+                }
+            }
+            
+            // Summary
+            console.log("\n📊 VALIDATION SUMMARY:");
+            console.log("=".repeat(50));
+            
+            const passed = results.filter(r => r.status === 'PASS').length;
+            const failed = results.filter(r => r.status === 'FAIL').length;
+            
+            results.forEach(result => {
+                const icon = result.status === 'PASS' ? '✅' : '❌';
+                console.log(`${icon} ${result.name}: ${result.status}`);
+                if (result.status === 'FAIL') {
+                    console.log(`   Error: ${result.message}`);
+                }
+            });
+            
+            console.log("=".repeat(50));
+            console.log(`📈 Results: ${passed} passed, ${failed} failed`);
+            
+            if (failed === 0) {
+                console.log("🎉 All tests passed! Firestore rules are working correctly.");
+            } else {
+                console.log("⚠️ Some tests failed. Please check the errors above.");
+            }
+            
+            return results;
+        };
+        
+        // Function to check Firebase status
+        function checkFirebaseStatus() {
+            console.log("🔍 Firebase Status Check:");
+            console.log("📋 Configuration valid:", validateFirebaseConfig());
+            console.log("🔧 App initialized:", !!app);
+            console.log("🔐 Auth initialized:", !!auth);
+            console.log("💾 Firestore initialized:", !!db);
+            console.log("🌐 Services available:", !!window.firebaseServices);
+            
+            if (window.firebaseServices) {
+                console.log("📊 Available services:", Object.keys(window.firebaseServices));
+            }
+            
+            return {
+                configValid: validateFirebaseConfig(),
+                appInitialized: !!app,
+                authInitialized: !!auth,
+                firestoreInitialized: !!db,
+                servicesAvailable: !!window.firebaseServices
+            };
+        }
+        
+        window.checkFirebaseStatus = checkFirebaseStatus;
+        
+        // Function to show Firebase status on page load
+        function showFirebaseStatusOnPage() {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    const status = checkFirebaseStatus();
+                    const authContainer = document.getElementById('auth-container');
+                    
+                    if (status.configValid && status.appInitialized && status.authInitialized && status.firestoreInitialized) {
+                        if (authContainer) {
+                            authContainer.innerHTML = '<p class="text-xs text-green-500">✅ Firebase Terhubung - Siap Digunakan</p>';
+                        }
+                        console.log("🎉 Firebase fully initialized and ready!");
+                    } else {
+                        if (authContainer) {
+                            authContainer.innerHTML = '<p class="text-xs text-yellow-500">⚠️ Firebase Sedang Memuat...</p>';
+                        }
+                        console.log("⏳ Firebase still initializing...");
+                    }
+                }, 1000);
             });
         }
+        
+        // Show status on page load
+        showFirebaseStatusOnPage();
         
         // Memastikan auth state berubah
         if (auth) {
@@ -62,8 +429,6 @@
         window.updatePassword = updatePassword;
         window.updateEmail = updateEmail;
         window.deleteUser = deleteUser;
-        window.reauthenticateWithCredential = reauthenticateWithCredential;
-        window.EmailAuthProvider = EmailAuthProvider;
     </script>
 
     <script>
@@ -655,163 +1020,6 @@
     </div>
 
     <!-- Modals -->
-
-    <!-- MODAL: Pengaturan Akun -->
-    <div id="account-settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-                <h3 class="text-lg font-semibold">Pengaturan Akun</h3>
-                <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
-            </div>
-            <div class="p-4 overflow-y-auto scrollable space-y-6">
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div>
-                        <h4 class="font-semibold mb-2">Info Akun</h4>
-                        <label class="block text-sm mb-1">Email</label>
-                        <input id="account-email-display" type="email" readonly class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 bg-gray-100">
-                        <label class="block text-sm mt-3 mb-1">Nama Pengguna</label>
-                        <input id="account-username-display" type="text" readonly class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 bg-gray-100">
-                        <label class="block text-sm mt-3 mb-1">Tanggal Bergabung</label>
-                        <input id="account-join-date" type="text" readonly class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 bg-gray-100">
-                    </div>
-                    <div>
-                        <h4 class="font-semibold mb-2">Ubah Email</h4>
-                        <input id="new-email-input" type="email" placeholder="Email baru" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input id="current-password-for-email" type="password" placeholder="Password saat ini" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 mt-2">
-                        <button id="change-email-btn" class="mt-2 w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Ubah Email</button>
-                        <h4 class="font-semibold mt-6 mb-2">Ubah Kata Sandi</h4>
-                        <input id="current-password-for-pass" type="password" placeholder="Password saat ini" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
-                        <input id="new-password-input" type="password" placeholder="Password baru (min. 6)" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 mt-2">
-                        <button id="change-password-btn" class="mt-2 w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700">Ubah Kata Sandi</button>
-                    </div>
-                </div>
-                <div class="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
-                    <h4 class="font-semibold text-red-600 dark:text-red-300 mb-2">Hapus Akun</h4>
-                    <p class="text-sm mb-2">Tindakan ini permanen dan akan menghapus semua data Anda.</p>
-                    <input id="current-password-for-delete" type="password" placeholder="Password saat ini" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 mb-2">
-                    <input id="delete-confirm-text" type="text" placeholder="Ketik: HAPUS AKUN" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 mb-2">
-                    <button id="delete-account-btn" class="w-full bg-red-600 text-white font-semibold py-2 rounded-lg hover:bg-red-700">Hapus Akun</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-    (function(){
-      function showNotif(msg, type){ try{ if(window.showNotification) window.showNotification(msg, type || 'info'); else alert(msg);}catch(e){alert(msg);} }
-      function formatJoinDate(ts){ try{ if(!ts) return ''; if(ts.seconds) return new Date(ts.seconds*1000).toLocaleDateString('id-ID', {year:'numeric', month:'short', day:'numeric'}); return new Date(ts).toLocaleDateString('id-ID', {year:'numeric', month:'short', day:'numeric'}); }catch(e){return '';} }
-      async function reauth(pass){ if(!window.currentUser) throw new Error('Tidak ada pengguna.'); const cred = window.EmailAuthProvider.credential(window.currentUser.email, pass); await window.reauthenticateWithCredential(window.currentUser, cred); }
-      async function ensureUserDoc(user){ const { db, doc, getDoc, setDoc, serverTimestamp } = window.firebaseServices; const ref = doc(db, 'users', user.uid); const snap = await getDoc(ref); if(!snap.exists()){ await setDoc(ref, { email: user.email, username: (user.email||'').split('@')[0], createdAt: serverTimestamp(), points: 0, level: 1 }); return (await getDoc(ref)).data(); } return snap.data(); }
-      function bindAccountSettings(){
-        const btn = document.getElementById('account-settings-btn');
-        const modal = document.getElementById('account-settings-modal');
-        if(!modal) return;
-        const closeEls = modal.querySelectorAll('.close-modal-btn');
-        const emailDisplay = document.getElementById('account-email-display');
-        const usernameDisplay = document.getElementById('account-username-display');
-        const joinDateEl = document.getElementById('account-join-date');
-        const newEmailInput = document.getElementById('new-email-input');
-        const currentPassForEmail = document.getElementById('current-password-for-email');
-        const changeEmailBtn = document.getElementById('change-email-btn');
-        const currentPassForPass = document.getElementById('current-password-for-pass');
-        const newPasswordInput = document.getElementById('new-password-input');
-        const changePasswordBtn = document.getElementById('change-password-btn');
-        const currentPassForDelete = document.getElementById('current-password-for-delete');
-        const deleteConfirmText = document.getElementById('delete-confirm-text');
-        const deleteAccountBtn = document.getElementById('delete-account-btn');
-        const open = async () => {
-          if(!wi          const user = window.currentUser || (window.firebaseServices && window.firebaseServices.auth && window.firebaseServices.auth.currentUser) || null;
-          if(!user) { showNotif('Silakan login terlebih dahulu.'); return; }
-          window.currentUser = user;
-          try{
-lDisplay && (emailDisplay.value = user.email || '');
-            const data = await ensureUserDoc(user);
-            usernameDisplay && (usernameDisplay.value = data.username || (user.email||'').split('@')[0]);
-            joinDateEl && (joinDateEl.value = formatJoinDate(data.createdAt));
-          }catch(err){ console.error(err); }
-          modal.classList.add('flex');
-        };
-        const close = () => modal.classList.remove('flex');
-        btn && btn.addEventListener('click', open);
-        closeEls.forEach(el => el.addEventListener('click', close));
-        changeEmailBtn && changeEmailBtn.addEventListener('click', async () => {
-          const newEmail = (newEmailInput && newEmailInput.value || '').trim();
-          const pass = (currentPassForEmail && currentPassForEmail.value || '').trim();
-          if(!newEmail || !pass) return showNotif('Isi email baru dan password saat ini.', 'error');
-          try{
-            await reauth(pass);
-            await window.updateEmail(window.currentUser, newEmail);
-            const { db, doc, updateDoc } = window.firebaseServices;
-            await updateDoc(doc(db, 'users', window.currentUser.uid), { email: newEmail });
-            emailDisplay && (emailDisplay.value = newEmail);
-            showNotif('Email berhasil diubah.', 'success');
-            newEmailInput.value = ''; currentPassForEmail.value = '';
-          }catch(e){ console.error(e); showNotif(e.message || 'Gagal mengubah email', 'error'); }
-        });
-        changePasswordBtn && changePasswordBtn.addEventListener('click', async () => {
-          const pass = (currentPassForPass && currentPassForPass.value || '').trim();
-          const newPass = (newPasswordInput && newPasswordInput.value || '').trim();
-          if(!pass || !newPass) return showNotif('Isi password saat ini dan password baru.', 'error');
-          if(newPass.length < 6) return showNotif('Password baru minimal 6 karakter.', 'error');
-          try{
-            await reauth(pass);
-            await window.updatePassword(window.currentUser, newPass);
-            showNotif('Kata sandi berhasil diubah.', 'success');
-            currentPassForPass.value = ''; newPasswordInput.value = '';
-          }catch(e){ console.error(e); showNotif(e.message || 'Gagal mengubah kata sandi', 'error'); }
-        });
-        deleteAccountBtn && deleteAccountBtn.addEventListener('click', async () => {
-          const pass = (currentPassForDelete && currentPassForDelete.value || '').trim();
-          const conf = (deleteConfirmText && deleteConfirmText.value || '').trim();
-          if(conf !== 'HAPUS AKUN') return showNotif('Ketik HAPUS AKUN untuk konfirmasi.', 'error');
-          if(!pass) return showNotif('Masukkan password saat ini.', 'error');
-          if(!window.currentUser) return;
-          try{
-            await reauth(pass);
-            const { db, doc, deleteDoc } = window.firebaseServices; try{ await deleteDoc(doc(db, 'users', window.currentUser.uid)); }catch(_){}
-            await window.deleteUser(window.currentUser);
-            showNotif('Akun berhasil dihapus.', 'success');
-            close();
-            setTimeout(()=>{ location.reload(); }, 800);
-          }catch(e){ console.error(e); showNotif(e.message || 'Gagal menghapus akun', 'error'); }
-        });
-      }
-      const prevSetup = window.setupAuthUI;
-      window.setupAuthUI = function(user){
-        try{
-          window.currentUser = user || null;
-          const btn = document.getElementById('account-settings-btn');
-          const authContainer = document.getElementById('auth-container');
-          const userInfo = document.getElementById('user-info');
-          if(user){
-            btn && btn.classList.remove('hidden');
-            authContainer && authContainer.classList.add('hidden');
-            userInfo && userInfo.classList.remove('hidden');
-            const emailEl = document.getElementById('user-email'); if(emailEl) emailEl.textContent = user.email || '';
-          }else{
-            btn && btn.classList.add('hidden');
-          }
-        }catch(e){}
-        if(typeof prevSetup === 'function') try{ prevSetup(user); }catch(e){}
-      };
-      document.addEventListener('DOMContentLoaded', bindAccountSettings);
-    })();
-    </script>
-ass="text-sm font-semibold">Tersimpan</span></button>
-            </div>
-        </main>
-        
-        <!-- Footer with Version Info -->
-        <footer class="text-center p-4 mt-8 text-xs text-slate-500 dark:text-slate-400">
-            <div id="update-summary-container">
-                <!-- Konten akan dimuat dari Firestore -->
-            </div>
-            <!-- Tombol Kelola Pembaruan hanya akan muncul jika pengguna login -->
-            <button id="manage-updates-btn" class="mt-4 hidden text-xs text-blue-600 dark:text-blue-400 hover:underline">Kelola Pembaruan</button>
-        </footer>
-    </div>
-
-    <!-- Modals -->
     <div id="login-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Login</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="login-form" class="p-4 space-y-4"><div><label for="login-email" class="block text-sm font-medium">Email</label><input id="login-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="login-password" class="block text-sm font-medium">Password</label><input id="login-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Login</button><p id="login-error" class="text-red-500 text-sm text-center"></p></form></div></div>
     <div id="register-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Daftar Akun Baru</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="register-form" class="p-4 space-y-4"><div><label for="register-email" class="block text-sm font-medium">Email</label><input id="register-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="register-password" class="block text-sm font-medium">Password (min. 6 karakter)</label><input id="register-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Daftar</button><p id="register-error" class="text-red-500 text-sm text-center"></p></form></div></div>
     <div id="history-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
@@ -914,6 +1122,108 @@ ass="text-sm font-semibold">Tersimpan</span></button>
             </div>
         </div>
     </div>
+    
+    <!-- MODAL: Pengaturan Akun -->
+    <div id="account-settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold">Pengaturan Akun</h3>
+                <button class="close-modal-btn text-2xl hover:text-red-500">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto scrollable space-y-6">
+                <!-- Informasi Akun -->
+                <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Informasi Akun</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Email</label>
+                            <input id="account-email-display" type="email" readonly class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 bg-gray-100 text-slate-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Nama Pengguna</label>
+                            <input id="account-username-display" type="text" readonly class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 bg-gray-100 text-slate-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Tanggal Bergabung</label>
+                            <input id="account-join-date" type="text" readonly class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 bg-gray-100 text-slate-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ubah Password -->
+                <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Ubah Password</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Password Saat Ini</label>
+                            <input id="current-password" type="password" placeholder="Masukkan password saat ini" class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Password Baru</label>
+                            <input id="new-password" type="password" placeholder="Masukkan password baru" class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="confirm-password" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Konfirmasi Password Baru</label>
+                            <input id="confirm-password" type="password" placeholder="Konfirmasi password baru" class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button id="change-password-btn" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Ubah Password</button>
+                    </div>
+                </div>
+
+                <!-- Ubah Email -->
+                <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Ubah Email</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="new-email" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Email Baru</label>
+                            <input id="new-email" type="email" placeholder="Masukkan email baru" class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="email-password" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Password untuk Konfirmasi</label>
+                            <input id="email-password" type="password" placeholder="Masukkan password untuk konfirmasi" class="w-full p-2 border rounded dark:bg-gray-600 dark:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button id="change-email-btn" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">Ubah Email</button>
+                    </div>
+                </div>
+
+                <!-- Ekspor Data -->
+                <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Ekspor Data</h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Unduh semua data akun Anda termasuk riwayat terjemahan, favorit, dan pengaturan.</p>
+                    <button id="export-data-btn" class="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">Ekspor Data Akun</button>
+                </div>
+
+                <!-- Pengaturan Privasi -->
+                <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Pengaturan Privasi</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Simpan Riwayat Terjemahan</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Menyimpan riwayat terjemahan untuk referensi</p>
+                            </div>
+                            <input id="save-history-toggle" type="checkbox" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Analitik Penggunaan</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Mengumpulkan data penggunaan untuk perbaikan aplikasi</p>
+                            </div>
+                            <input id="analytics-toggle" type="checkbox" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hapus Akun -->
+                <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
+                    <h4 class="font-semibold mb-3 text-red-800 dark:text-red-200">Zona Bahaya</h4>
+                    <p class="text-sm text-red-600 dark:text-red-300 mb-3">Menghapus akun akan menghapus semua data Anda secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
+                    <button id="delete-account-btn" class="w-full bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">Hapus Akun</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="word-of-the-day-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Kata Hari Ini</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><div id="word-of-the-day-content" class="p-6 text-center"></div><div class="p-4 border-t dark:border-gray-700 text-center"><button id="change-word-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Ubah Kata</button><p id="change-word-counter" class="text-xs text-slate-500 mt-2"></p></div></div></div>
     
     <!-- MODAL BARU: Saran Koreksi -->
@@ -1136,6 +1446,9 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         const profileBtn = document.getElementById('profile-btn');
         // Elemen Modal Profil Baru
         const profileModal = document.getElementById('profile-modal');
+        // Elemen Modal Pengaturan Akun
+        const accountSettingsBtn = document.getElementById('account-settings-btn');
+        const accountSettingsModal = document.getElementById('account-settings-modal');
         const userPointsEl = document.getElementById('user-points');
         const userLevelHeader = document.getElementById('user-level-header');
         const profileEmailEl = document.getElementById('profile-email');
@@ -1147,6 +1460,21 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         const profileUsernameInput = document.getElementById('profile-username-input');
         const saveUsernameBtn = document.getElementById('save-username-btn');
         const goPremiumBtn = document.getElementById('go-premium-btn');
+        // Elemen Pengaturan Akun
+        const accountEmailDisplay = document.getElementById('account-email-display');
+        const accountUsernameDisplay = document.getElementById('account-username-display');
+        const accountJoinDate = document.getElementById('account-join-date');
+        const currentPassword = document.getElementById('current-password');
+        const newPassword = document.getElementById('new-password');
+        const confirmPassword = document.getElementById('confirm-password');
+        const changePasswordBtn = document.getElementById('change-password-btn');
+        const newEmail = document.getElementById('new-email');
+        const emailPassword = document.getElementById('email-password');
+        const changeEmailBtn = document.getElementById('change-email-btn');
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const saveHistoryToggle = document.getElementById('save-history-toggle');
+        const analyticsToggle = document.getElementById('analytics-toggle');
+        const deleteAccountBtn = document.getElementById('delete-account-btn');
         const fontSizeSlider = document.getElementById('font-size-slider');
         // Elemen Word of the Day
         const wordOfTheDayBtn = document.getElementById('word-of-the-day-btn');
@@ -2311,6 +2639,10 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         acceptCorrectionBtn.addEventListener('click', () => { sourceTextEl.value = correctedText; correctionModal.classList.remove('flex'); handleTextTranslation(); });
         rejectCorrectionBtn.addEventListener('click', () => correctionModal.classList.remove('flex'));
         profileBtn.addEventListener('click', () => profileModal.classList.add('flex'));
+        accountSettingsBtn.addEventListener('click', () => {
+            loadAccountSettings();
+            accountSettingsModal.classList.add('flex');
+        });
         // Event Listeners untuk Feedback
         feedbackContainer.addEventListener('click', (e) => { const btn = e.target.closest('.feedback-btn'); if(btn) handleFeedback(btn.dataset.rating); });
         suggestEditBtn.addEventListener('click', () => { suggestionOriginalText.textContent = currentTranslationData.sourceText; suggestionCurrentTranslation.textContent = currentTranslationData.translatedText; suggestionTextarea.value = currentTranslationData.translatedText; correctionSuggestionModal.classList.add('flex'); });
@@ -2323,12 +2655,17 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         // Event Listeners untuk Kelola Pembaruan
         manageUpdatesBtn.addEventListener('click', openManageUpdatesModal);
         adminManageUpdatesBtn.addEventListener('click', openManageUpdatesModal); // Tetap ada
-        changePasswordBtn.addEventListener('click', () => changePasswordModal.classList.add('flex'));
-        changeEmailBtn.addEventListener('click', () => alert('Fitur "Ganti Email" sedang dalam pengembangan.'));
         saveUpdatesBtn.addEventListener('click', saveUpdateSummary);
         saveUserChangesBtn.addEventListener('click', saveUserChanges);
         saveUsernameBtn.addEventListener('click', saveUsername);
         goPremiumBtn.addEventListener('click', activatePremium);
+        // Event Listeners untuk Pengaturan Akun
+        changePasswordBtn.addEventListener('click', handleChangePassword);
+        changeEmailBtn.addEventListener('click', handleChangeEmail);
+        exportDataBtn.addEventListener('click', handleExportData);
+        saveHistoryToggle.addEventListener('change', handlePrivacySettingChange);
+        analyticsToggle.addEventListener('change', handlePrivacySettingChange);
+        deleteAccountBtn.addEventListener('click', handleDeleteAccount);
         // Event Listeners untuk Pengumuman Baru
         announcementsBtn.addEventListener('click', () => {
             announcementsModal.classList.add('flex');
@@ -2590,6 +2927,9 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         const profileBtn = document.getElementById('profile-btn');
         // Elemen Modal Profil Baru
         const profileModal = document.getElementById('profile-modal');
+        // Elemen Modal Pengaturan Akun
+        const accountSettingsBtn = document.getElementById('account-settings-btn');
+        const accountSettingsModal = document.getElementById('account-settings-modal');
         const userPointsEl = document.getElementById('user-points');
         const userLevelHeader = document.getElementById('user-level-header');
         const profileEmailEl = document.getElementById('profile-email');
@@ -2601,6 +2941,21 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         const profileUsernameInput = document.getElementById('profile-username-input');
         const saveUsernameBtn = document.getElementById('save-username-btn');
         const goPremiumBtn = document.getElementById('go-premium-btn');
+        // Elemen Pengaturan Akun
+        const accountEmailDisplay = document.getElementById('account-email-display');
+        const accountUsernameDisplay = document.getElementById('account-username-display');
+        const accountJoinDate = document.getElementById('account-join-date');
+        const currentPassword = document.getElementById('current-password');
+        const newPassword = document.getElementById('new-password');
+        const confirmPassword = document.getElementById('confirm-password');
+        const changePasswordBtn = document.getElementById('change-password-btn');
+        const newEmail = document.getElementById('new-email');
+        const emailPassword = document.getElementById('email-password');
+        const changeEmailBtn = document.getElementById('change-email-btn');
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const saveHistoryToggle = document.getElementById('save-history-toggle');
+        const analyticsToggle = document.getElementById('analytics-toggle');
+        const deleteAccountBtn = document.getElementById('delete-account-btn');
         const fontSizeSlider = document.getElementById('font-size-slider');
         // Elemen Word of the Day
         const wordOfTheDayBtn = document.getElementById('word-of-the-day-btn');
@@ -3960,6 +4315,497 @@ ass="text-sm font-semibold">Tersimpan</span></button>
             }
         }
 
+        // Fungsi-fungsi Pengaturan Akun
+        async function loadAccountSettings() {
+            console.log('🔍 Loading account settings...');
+            console.log('Current user:', currentUser);
+            
+            if (!currentUser) {
+                console.error('❌ No current user found');
+                showNotification('Anda harus login terlebih dahulu', 'error');
+                return;
+            }
+            
+            try {
+                console.log('🔗 Accessing Firebase services...');
+                const { db, doc, getDoc } = window.firebaseServices;
+                console.log('Firebase services:', { db, doc, getDoc });
+                
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                console.log('User document reference:', userDocRef);
+                
+                const userDoc = await getDoc(userDocRef);
+                console.log('User document snapshot:', userDoc);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    console.log('User data:', userData);
+                    
+                    // Load account information
+                    if (accountEmailDisplay) {
+                        accountEmailDisplay.value = currentUser.email;
+                        console.log('✅ Email loaded:', currentUser.email);
+                    }
+                    
+                    if (accountUsernameDisplay) {
+                        accountUsernameDisplay.value = userData.username || currentUser.email.split('@')[0];
+                        console.log('✅ Username loaded:', userData.username || currentUser.email.split('@')[0]);
+                    }
+                    
+                    // Format join date
+                    if (accountJoinDate) {
+                        const joinDate = userData.createdAt ? new Date(userData.createdAt.seconds * 1000) : new Date();
+                        accountJoinDate.value = joinDate.toLocaleDateString('id-ID', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        console.log('✅ Join date loaded:', accountJoinDate.value);
+                    }
+                    
+                    // Load privacy settings
+                    if (saveHistoryToggle) {
+                        saveHistoryToggle.checked = userData.privacy?.saveHistory !== false;
+                        console.log('✅ Save history setting loaded:', saveHistoryToggle.checked);
+                    }
+                    
+                    if (analyticsToggle) {
+                        analyticsToggle.checked = userData.privacy?.analytics !== false;
+                        console.log('✅ Analytics setting loaded:', analyticsToggle.checked);
+                    }
+                    
+                    console.log('✅ Account settings loaded successfully');
+                } else {
+                    console.log('⚠️ User document does not exist, creating default...');
+                    // Create default user document
+                    const { setDoc } = window.firebaseServices;
+                    await setDoc(userDocRef, {
+                        email: currentUser.email,
+                        username: currentUser.email.split('@')[0],
+                        points: 0,
+                        isBanned: false,
+                        badges: [],
+                        rewards: {},
+                        premium: { is_active: false, expires_at: null },
+                        privacy: { saveHistory: true, analytics: true },
+                        createdAt: new Date()
+                    });
+                    console.log('✅ Default user document created');
+                    
+                    // Reload settings
+                    await loadAccountSettings();
+                }
+            } catch (error) {
+                console.error('❌ Error loading account settings:', error);
+                showNotification('Gagal memuat pengaturan akun: ' + error.message, 'error');
+            }
+        }
+
+        async function handleChangePassword() {
+            console.log('🔐 Starting password change process...');
+            
+            if (!currentUser) {
+                console.error('❌ No current user found');
+                showNotification('Anda harus login terlebih dahulu', 'error');
+                return;
+            }
+            
+            const currentPass = currentPassword.value;
+            const newPass = newPassword.value;
+            const confirmPass = confirmPassword.value;
+            
+            console.log('Password validation:', {
+                hasCurrentPass: !!currentPass,
+                hasNewPass: !!newPass,
+                hasConfirmPass: !!confirmPass,
+                passwordsMatch: newPass === confirmPass,
+                newPassLength: newPass.length
+            });
+            
+            if (!currentPass || !newPass || !confirmPass) {
+                showNotification('Semua field harus diisi', 'error');
+                return;
+            }
+            
+            if (newPass !== confirmPass) {
+                showNotification('Password baru dan konfirmasi tidak cocok', 'error');
+                return;
+            }
+            
+            if (newPass.length < 6) {
+                showNotification('Password baru harus minimal 6 karakter', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = changePasswordBtn.textContent;
+            changePasswordBtn.textContent = 'Mengubah...';
+            changePasswordBtn.disabled = true;
+            
+            try {
+                console.log('🔑 Re-authenticating user...');
+                // Re-authenticate user
+                await window.signInWithEmailAndPassword(window.firebaseServices.auth, currentUser.email, currentPass);
+                console.log('✅ Re-authentication successful');
+                
+                console.log('🔄 Updating password...');
+                // Update password
+                await window.updatePassword(currentUser, newPass);
+                console.log('✅ Password updated successfully');
+                
+                showNotification('Password berhasil diubah!', 'success');
+                
+                // Clear form
+                currentPassword.value = '';
+                newPassword.value = '';
+                confirmPassword.value = '';
+                
+            } catch (error) {
+                console.error('❌ Error changing password:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                if (error.code === 'auth/wrong-password') {
+                    showNotification('Password saat ini salah', 'error');
+                } else if (error.code === 'auth/weak-password') {
+                    showNotification('Password terlalu lemah', 'error');
+                } else if (error.code === 'auth/requires-recent-login') {
+                    showNotification('Sesi login sudah kadaluarsa. Silakan login ulang.', 'error');
+                } else {
+                    showNotification('Gagal mengubah password: ' + error.message, 'error');
+                }
+            } finally {
+                // Reset loading state
+                changePasswordBtn.textContent = originalText;
+                changePasswordBtn.disabled = false;
+            }
+        }
+
+        async function handleChangeEmail() {
+            console.log('📧 Starting email change process...');
+            
+            if (!currentUser) {
+                console.error('❌ No current user found');
+                showNotification('Anda harus login terlebih dahulu', 'error');
+                return;
+            }
+            
+            const newEmailValue = newEmail.value;
+            const password = emailPassword.value;
+            
+            console.log('Email validation:', {
+                hasNewEmail: !!newEmailValue,
+                hasPassword: !!password,
+                emailFormat: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailValue),
+                currentEmail: currentUser.email
+            });
+            
+            if (!newEmailValue || !password) {
+                showNotification('Semua field harus diisi', 'error');
+                return;
+            }
+            
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailValue)) {
+                showNotification('Format email tidak valid', 'error');
+                return;
+            }
+            
+            if (newEmailValue === currentUser.email) {
+                showNotification('Email baru harus berbeda dengan email saat ini', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = changeEmailBtn.textContent;
+            changeEmailBtn.textContent = 'Mengubah...';
+            changeEmailBtn.disabled = true;
+            
+            try {
+                console.log('🔑 Re-authenticating user...');
+                // Re-authenticate user
+                await window.signInWithEmailAndPassword(window.firebaseServices.auth, currentUser.email, password);
+                console.log('✅ Re-authentication successful');
+                
+                console.log('📧 Updating email in Firebase Auth...');
+                // Update email
+                await window.updateEmail(currentUser, newEmailValue);
+                console.log('✅ Email updated in Firebase Auth');
+                
+                console.log('💾 Updating email in Firestore...');
+                // Update email in Firestore
+                const { db, doc, updateDoc } = window.firebaseServices;
+                await updateDoc(doc(db, 'users', currentUser.uid), { email: newEmailValue });
+                console.log('✅ Email updated in Firestore');
+                
+                showNotification('Email berhasil diubah!', 'success');
+                
+                // Clear form
+                newEmail.value = '';
+                emailPassword.value = '';
+                
+                // Reload account settings
+                await loadAccountSettings();
+                
+            } catch (error) {
+                console.error('❌ Error changing email:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                if (error.code === 'auth/wrong-password') {
+                    showNotification('Password salah', 'error');
+                } else if (error.code === 'auth/email-already-in-use') {
+                    showNotification('Email sudah digunakan', 'error');
+                } else if (error.code === 'auth/requires-recent-login') {
+                    showNotification('Sesi login sudah kadaluarsa. Silakan login ulang.', 'error');
+                } else if (error.code === 'auth/invalid-email') {
+                    showNotification('Format email tidak valid', 'error');
+                } else {
+                    showNotification('Gagal mengubah email: ' + error.message, 'error');
+                }
+            } finally {
+                // Reset loading state
+                changeEmailBtn.textContent = originalText;
+                changeEmailBtn.disabled = false;
+            }
+        }
+
+        async function handleExportData() {
+            console.log('📤 Starting data export process...');
+            
+            if (!currentUser) {
+                console.error('❌ No current user found');
+                showNotification('Anda harus login terlebih dahulu', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = exportDataBtn.textContent;
+            exportDataBtn.textContent = 'Mengekspor...';
+            exportDataBtn.disabled = true;
+            
+            try {
+                console.log('🔗 Accessing Firebase services...');
+                const { db, doc, getDoc, collection, getDocs, query, where } = window.firebaseServices;
+                console.log('✅ Firebase services accessed');
+                
+                console.log('📊 Getting user data...');
+                // Get user data
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const userData = userDoc.exists() ? userDoc.data() : {};
+                console.log('✅ User data retrieved:', userData);
+                
+                console.log('📝 Getting translation history...');
+                // Get translation history
+                const historyQuery = query(collection(db, 'translations'), where('userId', '==', currentUser.uid));
+                const historySnapshot = await getDocs(historyQuery);
+                const translations = historySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('✅ Translation history retrieved:', translations.length, 'items');
+                
+                console.log('💾 Getting saved translations...');
+                // Get saved translations
+                const savedQuery = query(collection(db, 'saved_translations'), where('userId', '==', currentUser.uid));
+                const savedSnapshot = await getDocs(savedQuery);
+                const savedTranslations = savedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('✅ Saved translations retrieved:', savedTranslations.length, 'items');
+                
+                console.log('📦 Preparing export data...');
+                // Prepare export data
+                const exportData = {
+                    userInfo: {
+                        email: currentUser.email,
+                        username: userData.username,
+                        points: userData.points,
+                        level: userData.level,
+                        badges: userData.badges,
+                        premium: userData.premium,
+                        createdAt: userData.createdAt
+                    },
+                    translations: translations,
+                    savedTranslations: savedTranslations,
+                    exportDate: new Date().toISOString(),
+                    version: '1.0'
+                };
+                console.log('✅ Export data prepared:', exportData);
+                
+                console.log('💾 Creating download file...');
+                // Create and download file
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `account-data-${currentUser.uid}-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                console.log('✅ Data export completed successfully');
+                showNotification('Data berhasil diekspor!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Error exporting data:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                showNotification('Gagal mengekspor data: ' + error.message, 'error');
+            } finally {
+                // Reset loading state
+                exportDataBtn.textContent = originalText;
+                exportDataBtn.disabled = false;
+            }
+        }
+
+        async function handlePrivacySettingChange(event) {
+            if (!currentUser) return;
+            
+            const setting = event.target.id;
+            const value = event.target.checked;
+            
+            try {
+                const { db, doc, updateDoc } = window.firebaseServices;
+                const userRef = doc(db, 'users', currentUser.uid);
+                
+                const updateData = {
+                    [`privacy.${setting.replace('-toggle', '')}`]: value
+                };
+                
+                await updateDoc(userRef, updateData);
+                showNotification('Pengaturan privasi berhasil disimpan', 'success');
+                
+            } catch (error) {
+                console.error('Error updating privacy setting:', error);
+                showNotification('Gagal menyimpan pengaturan', 'error');
+                // Revert the toggle
+                event.target.checked = !value;
+            }
+        }
+
+        async function handleDeleteAccount() {
+            if (!currentUser) return;
+            
+            // Create custom confirmation modal
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50 flex';
+            confirmModal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">Konfirmasi Penghapusan Akun</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                            <strong>PERINGATAN:</strong> Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data Anda secara permanen.
+                        </p>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                                    Ketik "HAPUS AKUN" untuk konfirmasi:
+                                </label>
+                                <input id="delete-confirm-text" type="text" placeholder="HAPUS AKUN" 
+                                       class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                                    Masukkan password untuk konfirmasi:
+                                </label>
+                                <input id="delete-confirm-password" type="password" placeholder="Password Anda" 
+                                       class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            </div>
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            <button id="cancel-delete-btn" class="flex-1 bg-slate-200 dark:bg-gray-600 text-slate-800 dark:text-slate-200 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 dark:hover:bg-gray-500 transition-colors">
+                                Batal
+                            </button>
+                            <button id="confirm-delete-btn" class="flex-1 bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                                Hapus Akun
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(confirmModal);
+            
+            const confirmTextInput = document.getElementById('delete-confirm-text');
+            const confirmPasswordInput = document.getElementById('delete-confirm-password');
+            const cancelBtn = document.getElementById('cancel-delete-btn');
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            
+            // Handle cancel
+            cancelBtn.addEventListener('click', () => {
+                document.body.removeChild(confirmModal);
+                showNotification('Penghapusan akun dibatalkan', 'info');
+            });
+            
+            // Handle confirm
+            confirmBtn.addEventListener('click', async () => {
+                const confirmText = confirmTextInput.value.trim();
+                const password = confirmPasswordInput.value;
+                
+                if (confirmText !== 'HAPUS AKUN') {
+                    showNotification('Teks konfirmasi tidak sesuai', 'error');
+                    return;
+                }
+                
+                if (!password) {
+                    showNotification('Password harus diisi', 'error');
+                    return;
+                }
+                
+                // Remove modal
+                document.body.removeChild(confirmModal);
+                
+                // Proceed with deletion
+                await proceedWithAccountDeletion(password);
+            });
+            
+            // Focus on first input
+            confirmTextInput.focus();
+        }
+        
+        async function proceedWithAccountDeletion(password) {
+            
+            try {
+                // Re-authenticate user
+                await window.signInWithEmailAndPassword(window.firebaseServices.auth, currentUser.email, password);
+                
+                // Delete user data from Firestore
+                const { db, doc, deleteDoc, collection, getDocs, query, where } = window.firebaseServices;
+                
+                // Delete user document
+                await deleteDoc(doc(db, 'users', currentUser.uid));
+                
+                // Delete user's translations
+                const translationsQuery = query(collection(db, 'translations'), where('userId', '==', currentUser.uid));
+                const translationsSnapshot = await getDocs(translationsQuery);
+                const deletePromises = translationsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+                
+                // Delete user's saved translations
+                const savedQuery = query(collection(db, 'saved_translations'), where('userId', '==', currentUser.uid));
+                const savedSnapshot = await getDocs(savedQuery);
+                const deleteSavedPromises = savedSnapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deleteSavedPromises);
+                
+                // Delete user account
+                await window.deleteUser(currentUser);
+                
+                showNotification('Akun berhasil dihapus', 'success');
+                
+                // Close modal and redirect
+                accountSettingsModal.classList.remove('flex');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                if (error.code === 'auth/wrong-password') {
+                    showNotification('Password salah', 'error');
+                } else {
+                    showNotification('Gagal menghapus akun', 'error');
+                }
+            }
+        }
+
         async function checkUserStatus(user) {
             const { db, doc, getDoc } = window.firebaseServices;
             try {
@@ -4040,7 +4886,9 @@ ass="text-sm font-semibold">Tersimpan</span></button>
                 authContainer.classList.add('hidden'); 
                 userInfo.classList.remove('hidden'); 
                 userInfo.classList.add('flex'); 
-                userEmailEl.textContent = user.email; 
+                userEmailEl.textContent = user.email;
+                // Show account settings button when user is logged in
+                accountSettingsBtn.classList.remove('hidden'); 
                 loginPrompt.classList.add('hidden'); 
                 mainContentWrapper.classList.remove('hidden'); 
                 bottomButtons.classList.remove('hidden'); 
@@ -4064,6 +4912,8 @@ ass="text-sm font-semibold">Tersimpan</span></button>
                 authContainer.classList.remove('hidden'); 
                 userInfo.classList.add('hidden'); 
                 userEmailEl.textContent = ''; 
+                // Hide account settings button when user is logged out
+                accountSettingsBtn.classList.add('hidden');
                 loginPrompt.classList.remove('hidden'); 
                 mainContentWrapper.classList.add('hidden'); 
                 bottomButtons.classList.add('hidden'); 
@@ -4331,6 +5181,10 @@ ass="text-sm font-semibold">Tersimpan</span></button>
         acceptCorrectionBtn.addEventListener('click', () => { sourceTextEl.value = correctedText; correctionModal.classList.remove('flex'); handleTextTranslation(); });
         rejectCorrectionBtn.addEventListener('click', () => correctionModal.classList.remove('flex'));
         profileBtn.addEventListener('click', () => profileModal.classList.add('flex'));
+        accountSettingsBtn.addEventListener('click', () => {
+            loadAccountSettings();
+            accountSettingsModal.classList.add('flex');
+        });
         // Event Listeners untuk Feedback
         feedbackContainer.addEventListener('click', (e) => { const btn = e.target.closest('.feedback-btn'); if(btn) handleFeedback(btn.dataset.rating); });
         suggestEditBtn.addEventListener('click', () => { suggestionOriginalText.textContent = currentTranslationData.sourceText; suggestionCurrentTranslation.textContent = currentTranslationData.translatedText; suggestionTextarea.value = currentTranslationData.translatedText; correctionSuggestionModal.classList.add('flex'); });
