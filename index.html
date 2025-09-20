@@ -1166,6 +1166,18 @@
         const goOnlineBtn = document.getElementById('go-online-btn');
         const goOfflineBtn = document.getElementById('go-offline-btn');
         const partnerList = document.getElementById('partner-list');
+        const chatModal = document.getElementById('chat-modal');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatPartnerNameEl = document.getElementById('chat-partner-name');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatBtn = document.getElementById('send-chat-btn');
+        const chatTypingIndicator = document.getElementById('chat-typing-indicator');
+        const chatModal = document.getElementById('chat-modal');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatPartnerNameEl = document.getElementById('chat-partner-name');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatBtn = document.getElementById('send-chat-btn');
+        const chatTypingIndicator = document.getElementById('chat-typing-indicator');
         // Elemen untuk Kelola Pembaruan
         const updateSummaryContainer = document.getElementById('update-summary-container');
         const manageUpdatesBtn = document.getElementById('manage-updates-btn');
@@ -1230,6 +1242,12 @@
         let quizHistory = [];
         let cameraStream = null;
         let unsubscribeFromPartners = null;
+        let unsubscribeFromChatMessages = null;
+        let unsubscribeFromTypingStatus = null;
+        let activeChatPartner = null;
+        let unsubscribeFromChatMessages = null;
+        let unsubscribeFromTypingStatus = null;
+        let activeChatPartner = null;
         
         let audioCtx = null;
         let typingSoundEnabled = false;
@@ -1989,6 +2007,7 @@
             const { db, doc, deleteDoc } = window.firebaseServices;
             goOfflineBtn.disabled = true;
             try {
+                closeChatModal();
                 await deleteDoc(doc(db, "language_partners", currentUser.uid));
                 goOfflineBtn.classList.add('hidden');
                 goOnlineBtn.classList.remove('hidden');
@@ -2030,12 +2049,201 @@
                     <button class="bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded-full hover:bg-blue-600">Hubungi</button>
                 `;
                 partnerEl.querySelector('button').onclick = () => {
+                    if (!currentUser) {
+                        showNotification('Login untuk memulai obrolan.', 'info');
+                        return;
+                    }
                     logUserActivity('connect_language_partner');
-                    alert(`Simulasi menghubungkan dengan ${p.email}... Fitur chat/video call akan diimplementasikan di sini.`);
+                    openPartnerChat(p);
                 };
                 partnerList.appendChild(partnerEl);
             });
         }
+
+        function getChatRoomId(userIdA, userIdB) {
+            return [userIdA, userIdB].sort().join('_');
+        }
+
+        async function openPartnerChat(partner) {
+            if (!currentUser) {
+                showNotification('Login untuk memulai obrolan.', 'info');
+                return;
+            }
+            if (!window.firebaseServices?.db) {
+                showNotification('Firebase belum siap. Coba lagi nanti.', 'error');
+                return;
+            }
+            activeChatPartner = partner;
+            const chatId = getChatRoomId(currentUser.uid, partner.id);
+            activeChatId = chatId;
+            chatPartnerNameEl.textContent = partner.username || partner.email?.split('@')[0] || 'Partner';
+            chatMessages.innerHTML = '<p class="text-sm text-slate-400 text-center">Memuat pesan...</p>';
+            chatModal.classList.add('flex');
+            chatInput.focus();
+
+            const { db, doc, setDoc, serverTimestamp } = window.firebaseServices;
+            try {
+                await setDoc(doc(db, 'language_partner_chats', chatId), {
+                    participants: [currentUser.uid, partner.id],
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+            } catch (error) {
+                console.error('Gagal membuka ruang chat:', error);
+                showNotification('Tidak dapat membuka ruang obrolan.', 'error');
+                closeChatModal();
+                return;
+            }
+
+            subscribeToChatMessages(chatId);
+            subscribeToTypingStatus(chatId, partner.id, chatPartnerNameEl.textContent);
+            updateTypingStatus(false);
+        }
+
+        function subscribeToChatMessages(chatId) {
+            if (!window.firebaseServices?.db) return;
+            if (unsubscribeFromChatMessages) unsubscribeFromChatMessages();
+            const { db, collection, query, orderBy, onSnapshot } = window.firebaseServices;
+            const chatRef = collection(db, 'language_partner_chats', chatId, 'messages');
+            const chatQuery = query(chatRef, orderBy('createdAt'));
+            unsubscribeFromChatMessages = onSnapshot(chatQuery, (snapshot) => {
+                const fragment = document.createDocumentFragment();
+                let hasMessages = false;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (!data) return;
+                    hasMessages = true;
+                    const messageEl = document.createElement('div');
+                    const isOwnMessage = data.senderId === currentUser?.uid;
+                    messageEl.className = `flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`;
+
+                    const bubble = document.createElement('div');
+                    bubble.className = `${isOwnMessage ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-gray-700 dark:text-white'} px-3 py-2 rounded-lg max-w-[80%] break-words shadow-sm text-sm`;
+                    bubble.textContent = data.text || '';
+
+                    const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : null;
+                    if (timestamp) {
+                        const timeLabel = document.createElement('p');
+                        timeLabel.className = 'text-[10px] opacity-70 text-right mt-1';
+                        timeLabel.textContent = timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                        bubble.appendChild(timeLabel);
+                    }
+
+                    messageEl.appendChild(bubble);
+                    fragment.appendChild(messageEl);
+                });
+
+                chatMessages.innerHTML = '';
+                if (!hasMessages) {
+                    chatMessages.innerHTML = '<p class="text-sm text-slate-400 text-center">Belum ada pesan. Mulai percakapan dengan partner Anda!</p>';
+                } else {
+                    chatMessages.appendChild(fragment);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+        }
+
+        function subscribeToTypingStatus(chatId, partnerId, partnerName) {
+            if (!window.firebaseServices?.db) return;
+            if (unsubscribeFromTypingStatus) unsubscribeFromTypingStatus();
+            const { db, collection, onSnapshot } = window.firebaseServices;
+            const typingRef = collection(db, 'language_partner_chats', chatId, 'typingStatus');
+            unsubscribeFromTypingStatus = onSnapshot(typingRef, (snapshot) => {
+                let partnerTyping = false;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data?.userId === partnerId && data.isTyping) {
+                        partnerTyping = true;
+                    }
+                });
+
+                if (partnerTyping) {
+                    chatTypingIndicator.textContent = `${partnerName} sedang mengetik...`;
+                    chatTypingIndicator.classList.remove('hidden');
+                } else {
+                    chatTypingIndicator.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateTypingStatus(isTyping, chatIdOverride = null, userIdOverride = null) {
+            if (!window.firebaseServices?.db) return;
+            const chatId = chatIdOverride || activeChatId;
+            const userId = userIdOverride || currentUser?.uid;
+            if (!chatId || !userId) return;
+            const { db, doc, setDoc, serverTimestamp } = window.firebaseServices;
+            setDoc(doc(db, 'language_partner_chats', chatId, 'typingStatus', userId), {
+                userId,
+                isTyping,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+        }
+
+        async function sendChatMessage() {
+            if (!currentUser || !activeChatId || !window.firebaseServices?.db) return;
+            const text = chatInput.value.trim();
+            if (!text) return;
+            sendChatBtn.disabled = true;
+            const { db, collection, addDoc, serverTimestamp, doc, setDoc } = window.firebaseServices;
+            try {
+                await addDoc(collection(db, 'language_partner_chats', activeChatId, 'messages'), {
+                    senderId: currentUser.uid,
+                    text,
+                    createdAt: serverTimestamp()
+                });
+                await setDoc(doc(db, 'language_partner_chats', activeChatId), {
+                    lastMessage: text,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+                chatInput.value = '';
+                updateTypingStatus(false);
+            } catch (error) {
+                console.error('Gagal mengirim pesan:', error);
+                showNotification('Pesan tidak dapat dikirim.', 'error');
+            } finally {
+                sendChatBtn.disabled = false;
+            }
+        }
+
+        function handleChatInput() {
+            if (!activeChatId) return;
+            if (chatInput.value.trim()) {
+                updateTypingStatus(true);
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => updateTypingStatus(false), 2000);
+            } else {
+                clearTimeout(typingTimeout);
+                updateTypingStatus(false);
+            }
+        }
+
+        function closeChatModal(forceUserId = null) {
+            const chatIdToClose = activeChatId;
+            const userId = forceUserId || currentUser?.uid;
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+                typingTimeout = null;
+            }
+            if (chatIdToClose && userId) {
+                updateTypingStatus(false, chatIdToClose, userId);
+            }
+            if (unsubscribeFromChatMessages) {
+                unsubscribeFromChatMessages();
+                unsubscribeFromChatMessages = null;
+            }
+            if (unsubscribeFromTypingStatus) {
+                unsubscribeFromTypingStatus();
+                unsubscribeFromTypingStatus = null;
+            }
+            activeChatId = null;
+            activeChatPartner = null;
+            chatInput.value = '';
+            chatMessages.innerHTML = '';
+            chatPartnerNameEl.textContent = '';
+            chatTypingIndicator.classList.add('hidden');
+            chatModal.classList.remove('flex');
+        }
+
+        window.startPartnerChat = openPartnerChat;
 
         // --- FUNGSI UNTUK KELOLA PEMBARUAN ---
         function fetchUpdateSummary() {
@@ -2177,7 +2385,15 @@
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
-        
+        sendChatBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+        chatInput.addEventListener('input', handleChatInput);
+
         const apiPlaceholders = {
             gemini: "Kunci dari OpenRouter / Google AI Studio",
             deepseek: "Kunci dari OpenRouter",
@@ -2222,7 +2438,15 @@
             }
         });
 
-        document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
+        document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            const modal = e.target.closest('.modal');
+            if (!modal) return;
+            if (modal.id === 'chat-modal') {
+                closeChatModal();
+            } else {
+                modal.classList.remove('flex');
+            }
+        }));
         historyList.addEventListener('click', mainListClickHandler);
         savedList.addEventListener('click', mainListClickHandler);
         historySearchInput.addEventListener('input', () => {
@@ -3627,6 +3851,7 @@
             const { db, doc, deleteDoc } = window.firebaseServices;
             goOfflineBtn.disabled = true;
             try {
+                closeChatModal();
                 await deleteDoc(doc(db, "language_partners", currentUser.uid));
                 goOfflineBtn.classList.add('hidden');
                 goOnlineBtn.classList.remove('hidden');
@@ -3662,18 +3887,207 @@
                 partnerEl.className = 'p-2 border-b dark:border-gray-600 flex justify-between items-center';
                 partnerEl.innerHTML = `
                     <div>
-                        <p class="font-semibold text-sm">${p.email.split('@')[0]}</p>
+                        <p class="font-semibold text-sm">${p.username || p.email.split('@')[0]}</p>
                         <p class="text-xs text-slate-500">Native: ${languages[p.native] || p.native}, Latihan: ${languages[p.practicing] || p.practicing}</p>
                     </div>
                     <button class="bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded-full hover:bg-blue-600">Hubungi</button>
                 `;
                 partnerEl.querySelector('button').onclick = () => {
+                    if (!currentUser) {
+                        showNotification('Login untuk memulai obrolan.', 'info');
+                        return;
+                    }
                     logUserActivity('connect_language_partner');
-                    alert(`Simulasi menghubungkan dengan ${p.email}... Fitur chat/video call akan diimplementasikan di sini.`);
+                    openPartnerChat(p);
                 };
                 partnerList.appendChild(partnerEl);
             });
         }
+
+        function getChatRoomId(userIdA, userIdB) {
+            return [userIdA, userIdB].sort().join('_');
+        }
+
+        async function openPartnerChat(partner) {
+            if (!currentUser) {
+                showNotification('Login untuk memulai obrolan.', 'info');
+                return;
+            }
+            if (!window.firebaseServices?.db) {
+                showNotification('Firebase belum siap. Coba lagi nanti.', 'error');
+                return;
+            }
+            activeChatPartner = partner;
+            const chatId = getChatRoomId(currentUser.uid, partner.id);
+            activeChatId = chatId;
+            chatPartnerNameEl.textContent = partner.username || partner.email?.split('@')[0] || 'Partner';
+            chatMessages.innerHTML = '<p class="text-sm text-slate-400 text-center">Memuat pesan...</p>';
+            chatModal.classList.add('flex');
+            chatInput.focus();
+
+            const { db, doc, setDoc, serverTimestamp } = window.firebaseServices;
+            try {
+                await setDoc(doc(db, 'language_partner_chats', chatId), {
+                    participants: [currentUser.uid, partner.id],
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+            } catch (error) {
+                console.error('Gagal membuka ruang chat:', error);
+                showNotification('Tidak dapat membuka ruang obrolan.', 'error');
+                closeChatModal();
+                return;
+            }
+
+            subscribeToChatMessages(chatId);
+            subscribeToTypingStatus(chatId, partner.id, chatPartnerNameEl.textContent);
+            updateTypingStatus(false);
+        }
+
+        function subscribeToChatMessages(chatId) {
+            if (!window.firebaseServices?.db) return;
+            if (unsubscribeFromChatMessages) unsubscribeFromChatMessages();
+            const { db, collection, query, orderBy, onSnapshot } = window.firebaseServices;
+            const chatRef = collection(db, 'language_partner_chats', chatId, 'messages');
+            const chatQuery = query(chatRef, orderBy('createdAt'));
+            unsubscribeFromChatMessages = onSnapshot(chatQuery, (snapshot) => {
+                const fragment = document.createDocumentFragment();
+                let hasMessages = false;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (!data) return;
+                    hasMessages = true;
+                    const messageEl = document.createElement('div');
+                    const isOwnMessage = data.senderId === currentUser?.uid;
+                    messageEl.className = `flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`;
+
+                    const bubble = document.createElement('div');
+                    bubble.className = `${isOwnMessage ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-gray-700 dark:text-white'} px-3 py-2 rounded-lg max-w-[80%] break-words shadow-sm text-sm`;
+                    bubble.textContent = data.text || '';
+
+                    const timestamp = data.createdAt?.toDate ? data.createdAt.toDate() : null;
+                    if (timestamp) {
+                        const timeLabel = document.createElement('p');
+                        timeLabel.className = 'text-[10px] opacity-70 text-right mt-1';
+                        timeLabel.textContent = timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                        bubble.appendChild(timeLabel);
+                    }
+
+                    messageEl.appendChild(bubble);
+                    fragment.appendChild(messageEl);
+                });
+
+                chatMessages.innerHTML = '';
+                if (!hasMessages) {
+                    chatMessages.innerHTML = '<p class="text-sm text-slate-400 text-center">Belum ada pesan. Mulai percakapan dengan partner Anda!</p>';
+                } else {
+                    chatMessages.appendChild(fragment);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+        }
+
+        function subscribeToTypingStatus(chatId, partnerId, partnerName) {
+            if (!window.firebaseServices?.db) return;
+            if (unsubscribeFromTypingStatus) unsubscribeFromTypingStatus();
+            const { db, collection, onSnapshot } = window.firebaseServices;
+            const typingRef = collection(db, 'language_partner_chats', chatId, 'typingStatus');
+            unsubscribeFromTypingStatus = onSnapshot(typingRef, (snapshot) => {
+                let partnerTyping = false;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data?.userId === partnerId && data.isTyping) {
+                        partnerTyping = true;
+                    }
+                });
+
+                if (partnerTyping) {
+                    chatTypingIndicator.textContent = `${partnerName} sedang mengetik...`;
+                    chatTypingIndicator.classList.remove('hidden');
+                } else {
+                    chatTypingIndicator.classList.add('hidden');
+                }
+            });
+        }
+
+        function updateTypingStatus(isTyping, chatIdOverride = null, userIdOverride = null) {
+            if (!window.firebaseServices?.db) return;
+            const chatId = chatIdOverride || activeChatId;
+            const userId = userIdOverride || currentUser?.uid;
+            if (!chatId || !userId) return;
+            const { db, doc, setDoc, serverTimestamp } = window.firebaseServices;
+            setDoc(doc(db, 'language_partner_chats', chatId, 'typingStatus', userId), {
+                userId,
+                isTyping,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+        }
+
+        async function sendChatMessage() {
+            if (!currentUser || !activeChatId || !window.firebaseServices?.db) return;
+            const text = chatInput.value.trim();
+            if (!text) return;
+            sendChatBtn.disabled = true;
+            const { db, collection, addDoc, serverTimestamp, doc, setDoc } = window.firebaseServices;
+            try {
+                await addDoc(collection(db, 'language_partner_chats', activeChatId, 'messages'), {
+                    senderId: currentUser.uid,
+                    text,
+                    createdAt: serverTimestamp()
+                });
+                await setDoc(doc(db, 'language_partner_chats', activeChatId), {
+                    lastMessage: text,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+                chatInput.value = '';
+                updateTypingStatus(false);
+            } catch (error) {
+                console.error('Gagal mengirim pesan:', error);
+                showNotification('Pesan tidak dapat dikirim.', 'error');
+            } finally {
+                sendChatBtn.disabled = false;
+            }
+        }
+
+        function handleChatInput() {
+            if (!activeChatId) return;
+            if (chatInput.value.trim()) {
+                updateTypingStatus(true);
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => updateTypingStatus(false), 2000);
+            } else {
+                clearTimeout(typingTimeout);
+                updateTypingStatus(false);
+            }
+        }
+
+        function closeChatModal(forceUserId = null) {
+            const chatIdToClose = activeChatId;
+            const userId = forceUserId || currentUser?.uid;
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+                typingTimeout = null;
+            }
+            if (chatIdToClose && userId) {
+                updateTypingStatus(false, chatIdToClose, userId);
+            }
+            if (unsubscribeFromChatMessages) {
+                unsubscribeFromChatMessages();
+                unsubscribeFromChatMessages = null;
+            }
+            if (unsubscribeFromTypingStatus) {
+                unsubscribeFromTypingStatus();
+                unsubscribeFromTypingStatus = null;
+            }
+            activeChatId = null;
+            activeChatPartner = null;
+            chatInput.value = '';
+            chatMessages.innerHTML = '';
+            chatPartnerNameEl.textContent = '';
+            chatTypingIndicator.classList.add('hidden');
+            chatModal.classList.remove('flex');
+        }
+
+        window.startPartnerChat = openPartnerChat;
 
         // --- FUNGSI UNTUK KELOLA PEMBARUAN ---
         function fetchUpdateSummary() {
@@ -4194,19 +4608,25 @@
         }
 
         function initializeSpeechRecognition() { const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRecognition) { speechRecognitionUnsupported.classList.remove('hidden'); micBtn1.disabled = true; micBtn2.disabled = true; return; } recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = true; recognition.onstart = () => { isRecording = true; if(activeMicButton) activeMicButton.classList.add('recording', 'pulse-red'); }; recognition.onend = () => { isRecording = false; if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); activeMicButton = null; }; recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); if(activeMicButton) activeMicButton.classList.remove('recording', 'pulse-red'); }; recognition.onresult = async (event) => { let finalTranscript = ''; for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript; } if (finalTranscript && activeMicButton) { const sourceLang = document.getElementById(activeMicButton.dataset.langSelect).value; const targetLang = activeMicButton.id === 'mic-btn-1' ? conversationLang2.value : conversationLang1.value; const [translated] = await translate(finalTranscript, sourceLang, targetLang); addConversationBubble(finalTranscript, translated, sourceLang); speak(translated, targetLang); saveToHistory({ id: Date.now(), sourceLang, targetLang, sourceText: `[Percakapan] ${finalTranscript}`, translatedText: translated }); logUserActivity('translate_voice'); } }; }
-        window.setupAuthUI = async (user) => { 
+        window.setupAuthUI = async (user) => {
             // PERBAIKAN: Panggil listener notifikasi di sini untuk memastikan Firebase siap.
 
-            currentUser = user; 
+            const previousUserId = currentUser?.uid;
+            const hadActiveChat = !!activeChatId;
+            currentUser = user;
             const isAdmin = user && user.email === ADMIN_EMAIL;
-            
-            if (user) { 
+
+            if (user) {
                 const userIsActive = await checkUserStatus(user);
                 if (!userIsActive) return; // Keluar jika pengguna diblokir
-                
-                authContainer.classList.add('hidden'); 
-                userInfo.classList.remove('hidden'); 
-                userInfo.classList.add('flex'); 
+
+                if (hadActiveChat && previousUserId !== currentUser.uid) {
+                    closeChatModal(previousUserId);
+                }
+
+                authContainer.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                userInfo.classList.add('flex');
                 userEmailEl.textContent = user.email; 
                 loginPrompt.classList.add('hidden'); 
                 mainContentWrapper.classList.remove('hidden'); 
@@ -4224,9 +4644,12 @@
                 await getApiKeyFromFirestore(user.uid); 
                 await getUserProfile(user.uid); 
                 await updatePremiumFeatureUI();
-            } else { 
-                currentUser = null; 
-                userApiKeys = {}; 
+            } else {
+                if (hadActiveChat) {
+                    closeChatModal(previousUserId);
+                }
+                currentUser = null;
+                userApiKeys = {};
                 quizHistory = []; 
                 authContainer.classList.remove('hidden'); 
                 userInfo.classList.add('hidden'); 
@@ -4383,7 +4806,15 @@
         historyBtn.addEventListener('click', () => { renderList(historyList, getFromStorage(HISTORY_KEY), 'history'); historyModal.classList.add('flex'); });
         savedBtn.addEventListener('click', () => { renderList(savedList, getFromStorage(SAVED_KEY), 'saved'); savedModal.classList.add('flex'); });
         settingsBtn.addEventListener('click', () => settingsModal.classList.add('flex'));
-        
+        sendChatBtn.addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+        chatInput.addEventListener('input', handleChatInput);
+
         const apiPlaceholders = {
             gemini: "Kunci dari OpenRouter / Google AI Studio",
             deepseek: "Kunci dari OpenRouter",
@@ -4428,7 +4859,15 @@
             }
         });
 
-        document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal').classList.remove('flex')));
+        document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            const modal = e.target.closest('.modal');
+            if (!modal) return;
+            if (modal.id === 'chat-modal') {
+                closeChatModal();
+            } else {
+                modal.classList.remove('flex');
+            }
+        }));
         historyList.addEventListener('click', mainListClickHandler);
         savedList.addEventListener('click', mainListClickHandler);
         historySearchInput.addEventListener('input', () => {
