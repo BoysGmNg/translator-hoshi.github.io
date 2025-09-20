@@ -14,8 +14,7 @@
     <!-- Firebase SDK - Diperbarui ke versi modular terbaru -->
     <script type="module">
         // Mengimpor fungsi yang diperlukan dari SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword, updateEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/fi        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword, updateEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc, query, orderBy, limit, getDocs, increment } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
@@ -721,11 +720,11 @@
         const deleteConfirmText = document.getElementById('delete-confirm-text');
         const deleteAccountBtn = document.getElementById('delete-account-btn');
         const open = async () => {
-          const user = window.currentUser || (window.firebaseServices && window.firebaseServices.auth && window.firebaseServices.auth.currentUser) || null;
+          if(!wi          const user = window.currentUser || (window.firebaseServices && window.firebaseServices.auth && window.firebaseServices.auth.currentUser) || null;
           if(!user) { showNotif('Silakan login terlebih dahulu.'); return; }
           window.currentUser = user;
           try{
-            emailDisplay && (emailDisplay.value = user.email || '');
+lDisplay && (emailDisplay.value = user.email || '');
             const data = await ensureUserDoc(user);
             usernameDisplay && (usernameDisplay.value = data.username || (user.email||'').split('@')[0]);
             joinDateEl && (joinDateEl.value = formatJoinDate(data.createdAt));
@@ -798,6 +797,21 @@
       document.addEventListener('DOMContentLoaded', bindAccountSettings);
     })();
     </script>
+ass="text-sm font-semibold">Tersimpan</span></button>
+            </div>
+        </main>
+        
+        <!-- Footer with Version Info -->
+        <footer class="text-center p-4 mt-8 text-xs text-slate-500 dark:text-slate-400">
+            <div id="update-summary-container">
+                <!-- Konten akan dimuat dari Firestore -->
+            </div>
+            <!-- Tombol Kelola Pembaruan hanya akan muncul jika pengguna login -->
+            <button id="manage-updates-btn" class="mt-4 hidden text-xs text-blue-600 dark:text-blue-400 hover:underline">Kelola Pembaruan</button>
+        </footer>
+    </div>
+
+    <!-- Modals -->
     <div id="login-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Login</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="login-form" class="p-4 space-y-4"><div><label for="login-email" class="block text-sm font-medium">Email</label><input id="login-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="login-password" class="block text-sm font-medium">Password</label><input id="login-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Login</button><p id="login-error" class="text-red-500 text-sm text-center"></p></form></div></div>
     <div id="register-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50"><div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h3 class="text-lg font-semibold">Daftar Akun Baru</h3><button class="close-modal-btn text-2xl hover:text-red-500">&times;</button></div><form id="register-form" class="p-4 space-y-4"><div><label for="register-email" class="block text-sm font-medium">Email</label><input id="register-email" type="email" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><div><label for="register-password" class="block text-sm font-medium">Password (min. 6 karakter)</label><input id="register-password" type="password" required class="w-full p-2 mt-1 border rounded dark:bg-gray-700 dark:border-gray-600"></div><button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Daftar</button><p id="register-error" class="text-red-500 text-sm text-center"></p></form></div></div>
     <div id="history-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
