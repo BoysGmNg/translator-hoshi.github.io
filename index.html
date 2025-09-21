@@ -16,7 +16,7 @@
         // Mengimpor fungsi yang diperlukan dari SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword, updateEmail, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc, query, where, orderBy, limit, getDocs, increment } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, deleteDoc, updateDoc, query, where, orderBy, limit, getDocs, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // KONFIGURASI FIREBASE ANDA
         // UNTUK MENDAPATKAN KONFIGURASI YANG BENAR:
@@ -99,7 +99,7 @@
                 console.log("✅ Firestore initialized");
                 
                 // Membuat layanan Firebase dapat diakses secara global (TERMASUK 'where')
-                window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, query, where, orderBy, limit, getDocs, increment, updatePassword, updateEmail, deleteUser };
+                window.firebaseServices = { auth, db, collection, addDoc, serverTimestamp, doc, setDoc, getDoc, onSnapshot, deleteDoc, updateDoc, query, where, orderBy, limit, getDocs, increment, updatePassword, updateEmail, deleteUser, writeBatch };
                 console.log("✅ Firebase initialized successfully");
                 console.log("Firebase Services:", window.firebaseServices);
                 
@@ -1186,11 +1186,25 @@ const firebaseConfig = {
                     </div>
                 </div>
 
-                <!-- Ekspor Data -->
+                <!-- Ekspor & Impor Data -->
                 <div class="bg-slate-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Ekspor Data</h4>
-                    <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Unduh semua data akun Anda termasuk riwayat terjemahan, favorit, dan pengaturan.</p>
-                    <button id="export-data-btn" class="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">Ekspor Data Akun</button>
+                    <h4 class="font-semibold mb-3 text-slate-800 dark:text-slate-200">Ekspor & Impor Data</h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">Unduh data akun Anda sebagai cadangan, atau pulihkan dari file cadangan JSON.</p>
+                    
+                    <div class="space-y-3">
+                        <button id="export-data-btn" class="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                            Ekspor Data Akun (JSON)
+                        </button>
+                        <div class="border-t dark:border-gray-600 pt-3">
+                            <label for="import-file-input" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Impor dari file JSON</label>
+                            <input id="import-file-input" type="file" accept=".json" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/50 dark:file:text-blue-300 dark:hover:file:bg-blue-900">
+                            <button id="import-data-btn" class="w-full mt-2 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.5 3a2.5 2.5 0 00-2.416 2.083l-1.425 8.55A2.5 2.5 0 002.5 17h15a2.5 2.5 0 002.416-3.367l-1.425-8.55A2.5 2.5 0 0015.5 3h-11zm1.94 4.293a1 1 0 011.414 0L9 8.586V7a1 1 0 112 0v1.586l1.146-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                Impor Data
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Pengaturan Privasi -->
@@ -5233,6 +5247,7 @@ const firebaseConfig = {
         // Event Listeners untuk Pengaturan Akun
         if(changePasswordBtn) changePasswordBtn.addEventListener('click', handleChangePassword);
         if(changeEmailBtn) changeEmailBtn.addEventListener('click', () => alert('Fitur ini sedang dalam pengembangan.'));
+        if(importDataBtn) importDataBtn.addEventListener('click', handleImportData);
         if(exportDataBtn) exportDataBtn.addEventListener('click', handleExportData);
         if(saveHistoryToggle) saveHistoryToggle.addEventListener('change', () => alert('Fitur ini sedang dalam pengembangan.'));
         if(analyticsToggle) analyticsToggle.addEventListener('change', () => alert('Fitur ini sedang dalam pengembangan.'));
